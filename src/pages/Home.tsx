@@ -33,7 +33,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-slate-900/50 flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-3xl">
+      <div className="w-full max-w-5xl">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold tracking-tight mb-2 vr-gradient-text">
             VR Data Visualization Platform
@@ -47,8 +47,8 @@ const Home = () => {
           {/* Join Visualization */}
           <Card className="shadow-lg border border-slate-800">
             <CardHeader>
-              <CardTitle className="text-2xl flex items-center">
-                <Layers className="mr-2 h-6 w-6 text-primary" />
+              <CardTitle className="text-xl flex items-center">
+                <Layers className="mr-2 h-5 w-5 text-primary" />
                 Join Visualization
               </CardTitle>
               <CardDescription>
@@ -61,10 +61,10 @@ const Home = () => {
                   placeholder="Enter visualization code"
                   value={visualizationId}
                   onChange={(e) => setVisualizationId(e.target.value)}
-                  className="text-lg p-6"
+                  className="text-base p-4"
                 />
                 <Button 
-                  className="w-full text-lg py-6" 
+                  className="w-full text-base py-5" 
                   onClick={handleJoinVisualization}
                 >
                   Join
@@ -76,8 +76,8 @@ const Home = () => {
           {/* Create Visualization */}
           <Card className="shadow-lg border border-slate-800">
             <CardHeader>
-              <CardTitle className="text-2xl flex items-center">
-                <Settings className="mr-2 h-6 w-6 text-primary" />
+              <CardTitle className="text-xl flex items-center">
+                <Settings className="mr-2 h-5 w-5 text-primary" />
                 Visualization Configurator
               </CardTitle>
               <CardDescription>
@@ -91,7 +91,7 @@ const Home = () => {
                   position controls, and advanced settings.
                 </p>
                 <Button 
-                  className="w-full text-lg py-6" 
+                  className="w-full text-base py-5" 
                   variant="outline"
                   onClick={navigateToConfigurator}
                 >
@@ -104,8 +104,8 @@ const Home = () => {
           {/* My Visualizations */}
           <Card className="shadow-lg border border-slate-800">
             <CardHeader>
-              <CardTitle className="text-2xl flex items-center">
-                <User className="mr-2 h-6 w-6 text-primary" />
+              <CardTitle className="text-xl flex items-center">
+                <User className="mr-2 h-5 w-5 text-primary" />
                 My Visualizations
               </CardTitle>
               <CardDescription>
@@ -118,7 +118,7 @@ const Home = () => {
                   View, manage and share your previously created VR data visualization experiences.
                 </p>
                 <Button 
-                  className="w-full text-lg py-6" 
+                  className="w-full text-base py-5" 
                   variant="outline"
                   onClick={navigateToUserVisualizations}
                 >

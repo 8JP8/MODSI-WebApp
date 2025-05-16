@@ -8,6 +8,9 @@ interface VRPosition {
   y: number;
   z: number;
   scale: number;
+  width?: number;
+  height?: number;
+  depth?: number;
   rotation: {
     x: number;
     y: number;
@@ -23,6 +26,7 @@ interface Chart {
   yAxis: string;
   zAxis: string;
   department: string;
+  color?: string;
 }
 
 interface VRScenePreviewProps {
@@ -109,6 +113,7 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
     const handleMouseDown = (e: MouseEvent) => {
       isDraggingRef.current = true;
       previousMousePositionRef.current = { x: e.clientX, y: e.clientY };
+      e.preventDefault(); // Prevent default browser behavior
     };
     
     const handleMouseMove = (e: MouseEvent) => {
@@ -129,10 +134,12 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
       updateCameraPosition();
       
       previousMousePositionRef.current = { x: e.clientX, y: e.clientY };
+      e.preventDefault(); // Prevent default browser behavior
     };
     
-    const handleMouseUp = () => {
+    const handleMouseUp = (e: MouseEvent) => {
       isDraggingRef.current = false;
+      e.preventDefault(); // Prevent default browser behavior
     };
     
     const handleWheel = (e: WheelEvent) => {
@@ -142,13 +149,15 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
         Math.min(10, cameraPositionRef.current.radius + e.deltaY * 0.01)
       );
       updateCameraPosition();
+      e.preventDefault(); // Prevent default scrolling
+      e.stopPropagation(); // Stop event propagation
     };
     
-    // Add event listeners
+    // Add event listeners to canvas
     canvasRef.current.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    canvasRef.current.addEventListener('wheel', handleWheel);
+    canvasRef.current.addEventListener('mousemove', handleMouseMove);
+    canvasRef.current.addEventListener('mouseup', handleMouseUp);
+    canvasRef.current.addEventListener('wheel', handleWheel, { passive: false });
     
     // Handle window resize
     const handleResize = () => {
@@ -165,11 +174,11 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
     
     // Cleanup function
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('resize', handleResize);
       if (canvasRef.current) {
         canvasRef.current.removeEventListener('mousedown', handleMouseDown);
+        canvasRef.current.removeEventListener('mousemove', handleMouseMove);
+        canvasRef.current.removeEventListener('mouseup', handleMouseUp);
         canvasRef.current.removeEventListener('wheel', handleWheel);
       }
     };
@@ -207,28 +216,34 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
     
     let geometry: THREE.BufferGeometry;
     const material = new THREE.MeshPhongMaterial({
-      color: getChartColor(chart.chartType),
+      color: chart.color || getChartColor(chart.chartType),
       side: THREE.DoubleSide,
       transparent: true,
       opacity: 0.8,
     });
     
+    // Get dimensions from position or use defaults
+    const width = chart.position.width || 1;
+    const height = chart.position.height || 1;
+    const depth = chart.position.depth || 1;
+    
     switch (chart.chartType) {
       case "bar":
-        geometry = new THREE.BoxGeometry(1, 1, 1);
+        geometry = new THREE.BoxGeometry(width, height, depth);
         break;
       case "pie":
-        geometry = new THREE.CylinderGeometry(1, 1, 0.2, 32);
+        // For pie charts, use a cylinder with width as radius
+        geometry = new THREE.CylinderGeometry(width, width, height * 0.2, 32);
         break;
       case "line":
-        geometry = new THREE.PlaneGeometry(1.5, 1);
+        geometry = new THREE.PlaneGeometry(width * 1.5, height);
         break;
       case "scatter":
-        // Create a group of spheres for scatter plot
-        geometry = new THREE.SphereGeometry(0.5, 16, 16);
+        // Create a sphere for scatter plot
+        geometry = new THREE.SphereGeometry(width * 0.5, 16, 16);
         break;
       default:
-        geometry = new THREE.BoxGeometry(1, 1, 1);
+        geometry = new THREE.BoxGeometry(width, height, depth);
     }
     
     const mesh = new THREE.Mesh(geometry, material);
@@ -269,9 +284,74 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
     // Update position and rotation
     updateChartMeshPosition(mesh, position);
     
+    // Update dimensions if needed
+    const width = position.width || 1;
+    const height = position.height || 1;
+    const depth = position.depth || 1;
+    
+    // Check if we need to recreate the geometry due to dimension changes
+    let needsNewGeometry = false;
+    
+    if (mesh.geometry instanceof THREE.BoxGeometry && chartType === "bar") {
+      // Box dimensions don't match
+      if (mesh.geometry.parameters.width !== width || 
+          mesh.geometry.parameters.height !== height || 
+          mesh.geometry.parameters.depth !== depth) {
+        needsNewGeometry = true;
+      }
+    } else if (mesh.geometry instanceof THREE.CylinderGeometry && chartType === "pie") {
+      // Cylinder dimensions don't match
+      if (mesh.geometry.parameters.radiusTop !== width || 
+          mesh.geometry.parameters.height !== height * 0.2) {
+        needsNewGeometry = true;
+      }
+    } else if (mesh.geometry instanceof THREE.PlaneGeometry && chartType === "line") {
+      // Plane dimensions don't match
+      if (mesh.geometry.parameters.width !== width * 1.5 || 
+          mesh.geometry.parameters.height !== height) {
+        needsNewGeometry = true;
+      }
+    } else if (mesh.geometry instanceof THREE.SphereGeometry && chartType === "scatter") {
+      // Sphere dimensions don't match
+      if (mesh.geometry.parameters.radius !== width * 0.5) {
+        needsNewGeometry = true;
+      }
+    }
+    
+    // If chart type changed or dimensions changed, recreate geometry
+    if (needsNewGeometry) {
+      let newGeometry: THREE.BufferGeometry;
+      
+      switch (chartType) {
+        case "bar":
+          newGeometry = new THREE.BoxGeometry(width, height, depth);
+          break;
+        case "pie":
+          newGeometry = new THREE.CylinderGeometry(width, width, height * 0.2, 32);
+          break;
+        case "line":
+          newGeometry = new THREE.PlaneGeometry(width * 1.5, height);
+          break;
+        case "scatter":
+          newGeometry = new THREE.SphereGeometry(width * 0.5, 16, 16);
+          break;
+        default:
+          newGeometry = new THREE.BoxGeometry(width, height, depth);
+      }
+      
+      mesh.geometry.dispose();
+      mesh.geometry = newGeometry;
+    }
+    
     // Update material color based on chart type
     if (mesh.material instanceof THREE.MeshPhongMaterial) {
-      mesh.material.color.set(getChartColor(chartType));
+      // Use chart's color if available, otherwise use a default color
+      const chart = charts.find(c => c.id === id);
+      if (chart && chart.color) {
+        mesh.material.color.set(chart.color);
+      } else {
+        mesh.material.color.set(getChartColor(chartType));
+      }
     }
     
     // Highlight active chart
@@ -337,7 +417,7 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
         <div className="mt-4 text-xs text-muted-foreground">
           <p>Mouse controls: Click and drag to rotate view. Use scroll wheel to zoom in/out.</p>
           <p className="mt-1">Active Chart: {chartType} (Scale: {position.scale.toFixed(1)})</p>
-          <p>Rotation: ({position.rotation.x}°, {position.rotation.y}°, {position.rotation.z}°)</p>
+          <p>Dimensions: W:{position.width?.toFixed(1) || "1.0"} H:{position.height?.toFixed(1) || "1.0"} D:{position.depth?.toFixed(1) || "1.0"}</p>
         </div>
       </CardContent>
     </Card>

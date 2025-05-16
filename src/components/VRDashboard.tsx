@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import ChartTypeSelector from "./ChartTypeSelector";
@@ -7,13 +6,13 @@ import VRPositionController from "./VRPositionController";
 import ChartPreview from "./ChartPreview";
 import VRScenePreview from "./VRScenePreview";
 import ConfigurationManager from "./ConfigurationManager";
+import VRLaunchDialog from "./VRLaunchDialog";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Plus, Play, Eye, Settings2, Upload, Save, ArrowLeft, Lock, Home, UserCircle2 } from "lucide-react";
+import { Plus, Play, Eye, Settings2, Upload, Save, ArrowLeft, Home } from "lucide-react";
 import { generateMockData, getAvailableDataIndicators } from "@/utils/mockData";
 import sampleData from "../data/sampleVisualization.json";
 
@@ -22,6 +21,9 @@ interface VRPosition {
   y: number;
   z: number;
   scale: number;
+  width: number;
+  height: number;
+  depth: number;
   rotation: {
     x: number;
     y: number;
@@ -37,6 +39,7 @@ interface Chart {
   yAxis: string;
   zAxis: string;
   department: string;
+  color: string;
 }
 
 const defaultPosition: VRPosition = {
@@ -44,12 +47,21 @@ const defaultPosition: VRPosition = {
   y: 1,
   z: -2,
   scale: 1,
+  width: 1,
+  height: 1, 
+  depth: 1,
   rotation: {
     x: 0,
     y: 0,
     z: 0,
   },
 };
+
+// Chart colors
+const CHART_COLORS = [
+  "#1E90FF", "#FF6384", "#4BC0C0", "#9370DB", 
+  "#FF9F40", "#36A2EB", "#FFCE56", "#9966FF"
+];
 
 const VRDashboard = () => {
   const [charts, setCharts] = useState<Chart[]>([]);
@@ -63,8 +75,8 @@ const VRDashboard = () => {
   const [data, setData] = useState<any[]>([]);
   const [availableIndicators, setAvailableIndicators] = useState<string[]>([]);
   const [availableDatasets, setAvailableDatasets] = useState<Record<string, any[]>>({});
-  const [roomCode, setRoomCode] = useState("");
   const [configSaved, setConfigSaved] = useState(false);
+  const [launchDialogOpen, setLaunchDialogOpen] = useState(false);
   
   // Departments
   const [departments, setDepartments] = useState<string[]>([]);
@@ -133,6 +145,8 @@ const VRDashboard = () => {
   // Adding a new chart
   const addNewChart = () => {
     const newChartId = `chart-${Date.now()}`;
+    const colorIndex = charts.length % CHART_COLORS.length;
+    
     const newChart: Chart = {
       id: newChartId,
       chartType: "bar",
@@ -140,7 +154,8 @@ const VRDashboard = () => {
       xAxis: availableIndicators.length > 0 ? availableIndicators[0] : "",
       yAxis: availableIndicators.length > 1 ? availableIndicators[1] : "",
       zAxis: "",
-      department: selectedDepartment
+      department: selectedDepartment,
+      color: CHART_COLORS[colorIndex]
     };
     
     setCharts(prevCharts => [...prevCharts, newChart]);
@@ -311,7 +326,7 @@ const VRDashboard = () => {
     setConfigSaved(true);
   };
 
-  const joinVisualization = () => {
+  const joinVisualization = (roomCode: string) => {
     if (!roomCode.trim()) {
       toast.error("Please enter a room code");
       return;
@@ -337,6 +352,10 @@ const VRDashboard = () => {
   const saveConfigurationHandler = () => {
     handleExportJSON();
     setConfigSaved(true);
+  };
+
+  const handleLaunchButtonClick = () => {
+    setLaunchDialogOpen(true);
   };
 
   return (
@@ -366,29 +385,16 @@ const VRDashboard = () => {
           </Button>
           <Button 
             className="vr-button" 
-            onClick={launchVR} 
-            disabled={!configSaved}
+            onClick={handleLaunchButtonClick}
           >
-            {configSaved ? (
-              <Play className="mr-2 h-4 w-4" />
-            ) : (
-              <Lock className="mr-2 h-4 w-4" />
-            )}
+            <Play className="mr-2 h-4 w-4" />
             Launch VR Experience
           </Button>
         </div>
       </div>
 
-      {/* Room join section */}
+      {/* Main content area */}
       <div className="flex justify-between items-center">
-        <div className="flex gap-2 items-center max-w-xs">
-          <Input 
-            placeholder="Enter room code to join" 
-            value={roomCode} 
-            onChange={(e) => setRoomCode(e.target.value)}
-          />
-          <Button onClick={joinVisualization}>Join</Button>
-        </div>
         <Button variant="secondary" onClick={addNewChart}>
           <Plus className="mr-2 h-4 w-4" />
           Add Chart
@@ -476,7 +482,10 @@ const VRDashboard = () => {
                   />
                 </div>
                 <div>
-                  <VRPositionController position={position} onPositionChange={handlePositionChange} />
+                  <VRPositionController 
+                    position={position} 
+                    onPositionChange={handlePositionChange} 
+                  />
                 </div>
               </div>
             </TabsContent>
@@ -490,6 +499,15 @@ const VRDashboard = () => {
           />
         </div>
       </div>
+
+      {/* VR Launch Dialog */}
+      <VRLaunchDialog
+        open={launchDialogOpen}
+        onOpenChange={setLaunchDialogOpen}
+        onLaunch={launchVR}
+        onJoin={joinVisualization}
+        hasUnsavedChanges={!configSaved}
+      />
     </div>
   );
 };
