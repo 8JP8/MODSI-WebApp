@@ -54,10 +54,7 @@ const VRPositionController = ({ position, onPositionChange }: VRPositionControll
   const renderSliderWithInput = (name: string, label: string, min: number, max: number, step: number, value: number) => {
     return (
       <div className="space-y-2">
-        <div className="flex justify-between">
-          <Label htmlFor={name}>{label}</Label>
-          <span className="text-xs text-muted-foreground">{value.toFixed(1)}</span>
-        </div>
+        <Label htmlFor={name}>{label}</Label>
         <div className="flex gap-2">
           <div className="flex-grow">
             <Slider
@@ -90,10 +87,10 @@ const VRPositionController = ({ position, onPositionChange }: VRPositionControll
       </CardHeader>
       <CardContent>
         <Tabs value={positionTab} onValueChange={setPositionTab}>
-          <TabsList className="grid grid-cols-3">
-            <TabsTrigger value="position">Position</TabsTrigger>
-            <TabsTrigger value="rotation">Rotation</TabsTrigger>
-            <TabsTrigger value="dimensions">Dimensions</TabsTrigger>
+          <TabsList className="grid grid-cols-3 w-full">
+            <TabsTrigger value="position" className="whitespace-nowrap px-2">Position</TabsTrigger>
+            <TabsTrigger value="rotation" className="whitespace-nowrap px-2">Rotation</TabsTrigger>
+            <TabsTrigger value="dimensions" className="whitespace-nowrap px-2">Dimensions</TabsTrigger>
           </TabsList>
           
           <TabsContent value="position" className="space-y-4 mt-4">

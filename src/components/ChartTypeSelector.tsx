@@ -4,15 +4,17 @@ import {
   BarChart3, 
   PieChart, 
   LineChart, 
-  ScatterChart 
+  ScatterChart,
+  Plus 
 } from "lucide-react";
 
 interface ChartTypeSelectorProps {
   selectedType: string;
   onSelect: (type: string) => void;
+  onAddChart?: () => void;
 }
 
-const ChartTypeSelector = ({ selectedType, onSelect }: ChartTypeSelectorProps) => {
+const ChartTypeSelector = ({ selectedType, onSelect, onAddChart }: ChartTypeSelectorProps) => {
   const chartTypes = [
     { id: "bar", name: "Bar Chart", icon: BarChart3 },
     { id: "pie", name: "Pie Chart", icon: PieChart },
@@ -22,7 +24,20 @@ const ChartTypeSelector = ({ selectedType, onSelect }: ChartTypeSelectorProps) =
 
   return (
     <div className="vr-panel">
-      <h3 className="text-lg font-semibold mb-4">Chart Type</h3>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">Chart Type</h3>
+        {onAddChart && (
+          <Button 
+            variant="secondary" 
+            onClick={onAddChart} 
+            size="sm"
+            className="flex items-center gap-1"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Chart</span>
+          </Button>
+        )}
+      </div>
       <div className="grid grid-cols-2 gap-3">
         {chartTypes.map((chart) => {
           const isSelected = selectedType === chart.id;

@@ -214,37 +214,19 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
   const createChartMesh = (chart: Chart) => {
     if (!sceneRef.current) return;
     
-    let geometry: THREE.BufferGeometry;
+    // Use BoxGeometry for all chart types - cube shape only
+    const width = chart.position.width || 1;
+    const height = chart.position.height || 1;
+    const depth = chart.position.depth || 1;
+    
+    const geometry = new THREE.BoxGeometry(width, height, depth);
+    
     const material = new THREE.MeshPhongMaterial({
       color: chart.color || getChartColor(chart.chartType),
       side: THREE.DoubleSide,
       transparent: true,
       opacity: 0.8,
     });
-    
-    // Get dimensions from position or use defaults
-    const width = chart.position.width || 1;
-    const height = chart.position.height || 1;
-    const depth = chart.position.depth || 1;
-    
-    switch (chart.chartType) {
-      case "bar":
-        geometry = new THREE.BoxGeometry(width, height, depth);
-        break;
-      case "pie":
-        // For pie charts, use a cylinder with width as radius
-        geometry = new THREE.CylinderGeometry(width, width, height * 0.2, 32);
-        break;
-      case "line":
-        geometry = new THREE.PlaneGeometry(width * 1.5, height);
-        break;
-      case "scatter":
-        // Create a sphere for scatter plot
-        geometry = new THREE.SphereGeometry(width * 0.5, 16, 16);
-        break;
-      default:
-        geometry = new THREE.BoxGeometry(width, height, depth);
-    }
     
     const mesh = new THREE.Mesh(geometry, material);
     sceneRef.current.add(mesh);
@@ -254,7 +236,7 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
     updateChartMeshPosition(mesh, chart.position);
   };
   
-  // Update positions of all chart meshes
+  // Update positions of all charts
   const updateAllCharts = () => {
     if (!sceneRef.current) return;
     
@@ -290,60 +272,17 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
     const depth = position.depth || 1;
     
     // Check if we need to recreate the geometry due to dimension changes
-    let needsNewGeometry = false;
-    
-    if (mesh.geometry instanceof THREE.BoxGeometry && chartType === "bar") {
-      // Box dimensions don't match
+    if (mesh.geometry instanceof THREE.BoxGeometry) {
       if (mesh.geometry.parameters.width !== width || 
           mesh.geometry.parameters.height !== height || 
           mesh.geometry.parameters.depth !== depth) {
-        needsNewGeometry = true;
-      }
-    } else if (mesh.geometry instanceof THREE.CylinderGeometry && chartType === "pie") {
-      // Cylinder dimensions don't match
-      if (mesh.geometry.parameters.radiusTop !== width || 
-          mesh.geometry.parameters.height !== height * 0.2) {
-        needsNewGeometry = true;
-      }
-    } else if (mesh.geometry instanceof THREE.PlaneGeometry && chartType === "line") {
-      // Plane dimensions don't match
-      if (mesh.geometry.parameters.width !== width * 1.5 || 
-          mesh.geometry.parameters.height !== height) {
-        needsNewGeometry = true;
-      }
-    } else if (mesh.geometry instanceof THREE.SphereGeometry && chartType === "scatter") {
-      // Sphere dimensions don't match
-      if (mesh.geometry.parameters.radius !== width * 0.5) {
-        needsNewGeometry = true;
+        const newGeometry = new THREE.BoxGeometry(width, height, depth);
+        mesh.geometry.dispose();
+        mesh.geometry = newGeometry;
       }
     }
     
-    // If chart type changed or dimensions changed, recreate geometry
-    if (needsNewGeometry) {
-      let newGeometry: THREE.BufferGeometry;
-      
-      switch (chartType) {
-        case "bar":
-          newGeometry = new THREE.BoxGeometry(width, height, depth);
-          break;
-        case "pie":
-          newGeometry = new THREE.CylinderGeometry(width, width, height * 0.2, 32);
-          break;
-        case "line":
-          newGeometry = new THREE.PlaneGeometry(width * 1.5, height);
-          break;
-        case "scatter":
-          newGeometry = new THREE.SphereGeometry(width * 0.5, 16, 16);
-          break;
-        default:
-          newGeometry = new THREE.BoxGeometry(width, height, depth);
-      }
-      
-      mesh.geometry.dispose();
-      mesh.geometry = newGeometry;
-    }
-    
-    // Update material color based on chart type
+    // Update material color based on chart's assigned color
     if (mesh.material instanceof THREE.MeshPhongMaterial) {
       // Use chart's color if available, otherwise use a default color
       const chart = charts.find(c => c.id === id);
@@ -368,7 +307,7 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
     }
   };
   
-  // Update chart mesh position
+  // Update chart mesh position - each chart has its own individual position and rotation
   const updateChartMeshPosition = (mesh: THREE.Mesh, position: VRPosition) => {
     mesh.position.set(position.x, position.y, position.z);
     mesh.scale.set(position.scale, position.scale, position.scale);

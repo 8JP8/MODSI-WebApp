@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import ChartTypeSelector from "./ChartTypeSelector";
@@ -11,8 +12,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { Plus, Play, Eye, Settings2, Upload, Save, ArrowLeft, Home } from "lucide-react";
+import { Play, Eye, Settings2, Save, ArrowLeft, Home } from "lucide-react";
 import { generateMockData, getAvailableDataIndicators } from "@/utils/mockData";
 import sampleData from "../data/sampleVisualization.json";
 
@@ -375,32 +377,29 @@ const VRDashboard = () => {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={handleExportJSON}>
+          <Button variant="secondary" onClick={saveConfigurationHandler}>
             <Save className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-          <Button variant="outline" onClick={handleImportJSON}>
-            <Upload className="mr-2 h-4 w-4" />
-            Import
+            Save
           </Button>
           <Button 
             className="vr-button" 
-            onClick={handleLaunchButtonClick}
+            onClick={handleLaunchButtonClick} 
+            disabled={!configSaved}
           >
             <Play className="mr-2 h-4 w-4" />
             Launch VR Experience
           </Button>
+          <div className="flex items-center gap-2 ml-2 border-l pl-3 border-gray-600">
+            <Avatar>
+              <AvatarImage src="https://images.unsplash.com/photo-1535268647677-300dbf3d78d1" />
+              <AvatarFallback>U</AvatarFallback>
+            </Avatar>
+            <span className="text-sm text-muted-foreground hidden md:inline">Logged as <span className="font-medium text-foreground">User*</span></span>
+          </div>
         </div>
       </div>
 
       {/* Main content area */}
-      <div className="flex justify-between items-center">
-        <Button variant="secondary" onClick={addNewChart}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Chart
-        </Button>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left column - Chart and data configuration */}
         <div className="space-y-6">
@@ -430,7 +429,11 @@ const VRDashboard = () => {
             </Card>
           )}
           
-          <ChartTypeSelector selectedType={chartType} onSelect={handleChartTypeChange} />
+          <ChartTypeSelector 
+            selectedType={chartType} 
+            onSelect={handleChartTypeChange} 
+            onAddChart={addNewChart}
+          />
           
           <DataIndicatorSelector
             availableIndicators={availableIndicators}
@@ -472,8 +475,8 @@ const VRDashboard = () => {
             </TabsContent>
             
             <TabsContent value="vr" className="mt-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="md:col-span-2">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-2">
                   <VRScenePreview 
                     chartType={chartType} 
                     position={position} 
