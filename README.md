@@ -1,73 +1,73 @@
-# Welcome to your Lovable project
 
-## Project info
+# VR Data Visualization Platform
 
-**URL**: https://lovable.dev/projects/50e0ea25-5f40-4fea-a970-fb53bda0b225
+## Project Overview
 
-## How can I edit this code?
+This application is a VR data visualization platform that allows users to create, configure and explore data visualizations in virtual reality. Users can select chart types, assign data indicators to axes, position charts in a 3D environment, and launch immersive VR experiences.
 
-There are several ways of editing your application.
+## Features
 
-**Use Lovable**
+- **Home Page**: Entry point to join existing visualizations by code or create new ones
+- **Visualization Configurator**: Design dashboard to customize charts, positions, and settings
+- **Multiple Chart Types**: Support for bar charts, line charts, pie charts, and scatter plots
+- **Department Data Selection**: Filter data by department for focused analysis
+- **3D Preview**: Interactive 3D scene with mouse controls for camera movement
+- **Position & Rotation Controls**: Place and orient charts in 3D space
+- **Configuration Management**: Save, load, import and export visualization settings
+- **VR Experience**: Launch configured visualizations in VR (powered by A-Frame and BabiaXR)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/50e0ea25-5f40-4fea-a970-fb53bda0b225) and start prompting.
+## How to Use
 
-Changes made via Lovable will be committed automatically to this repo.
+1. **Home Page**:
+   - Enter a visualization code to join an existing visualization
+   - Click "Launch Configurator" to create a new visualization
 
-**Use your preferred IDE**
+2. **Configurator**:
+   - Select a chart type (Bar, Pie, Line, Scatter)
+   - Choose a department to visualize data from
+   - Assign data indicators to X, Y, and Z axes
+   - Use position controls to place your chart in the VR scene
+   - Preview your visualization in 2D and 3D
+   - Save or export your configuration
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+3. **Data Format**:
+   - The application accepts structured JSON data organized by departments
+   - See `src/data/sampleVisualization.json` for an example data format
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Technical Details
 
-Follow these steps:
+This project uses:
+- React with TypeScript
+- Three.js for 3D previews
+- Recharts for 2D chart previews
+- A-Frame/BabiaXR integration (to be implemented for VR experience)
+- ShadcnUI components for modern UI
+
+## Integration with BabiaXR
+
+The visualization configurations created with this tool can be used with BabiaXR to create immersive data experiences. The exported JSON format contains:
+
+- Chart type specifications
+- Data mapping for each axis
+- Position, rotation and scale information
+- Data source references
+
+## Development
+
+To run this project locally:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Install dependencies
+npm install
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Run development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Future Enhancements
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/50e0ea25-5f40-4fea-a970-fb53bda0b225) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- User authentication and saved visualizations
+- Real-time collaborative editing of VR scenes
+- Additional chart types and visualization options
+- Direct integration with data sources and APIs
+- Full VR mode with A-Frame and BabiaXR

@@ -1,0 +1,193 @@
+
+{
+  "id": "VR001",
+  "name": "Sales Performance by Department",
+  "description": "A visualization of sales performance across different departments",
+  "departments": [
+    {
+      "name": "Electronics",
+      "data": [
+        {
+          "quarter": "Q1",
+          "sales": 523000,
+          "profit": 156900,
+          "units": 5230,
+          "returns": 120,
+          "satisfaction": 4.2
+        },
+        {
+          "quarter": "Q2",
+          "sales": 648000,
+          "profit": 194400,
+          "units": 6480,
+          "returns": 155,
+          "satisfaction": 4.1
+        },
+        {
+          "quarter": "Q3",
+          "sales": 725000,
+          "profit": 217500,
+          "units": 7250,
+          "returns": 170,
+          "satisfaction": 4.3
+        },
+        {
+          "quarter": "Q4",
+          "sales": 892000,
+          "profit": 267600,
+          "units": 8920,
+          "returns": 210,
+          "satisfaction": 4.4
+        }
+      ]
+    },
+    {
+      "name": "Clothing",
+      "data": [
+        {
+          "quarter": "Q1",
+          "sales": 423000,
+          "profit": 126900,
+          "units": 12690,
+          "returns": 430,
+          "satisfaction": 3.9
+        },
+        {
+          "quarter": "Q2",
+          "sales": 512000,
+          "profit": 153600,
+          "units": 15360,
+          "returns": 520,
+          "satisfaction": 4.0
+        },
+        {
+          "quarter": "Q3",
+          "sales": 489000,
+          "profit": 146700,
+          "units": 14670,
+          "returns": 490,
+          "satisfaction": 3.8
+        },
+        {
+          "quarter": "Q4",
+          "sales": 678000,
+          "profit": 203400,
+          "units": 20340,
+          "returns": 680,
+          "satisfaction": 4.1
+        }
+      ]
+    },
+    {
+      "name": "Home & Garden",
+      "data": [
+        {
+          "quarter": "Q1",
+          "sales": 356000,
+          "profit": 106800,
+          "units": 3560,
+          "returns": 85,
+          "satisfaction": 4.5
+        },
+        {
+          "quarter": "Q2",
+          "sales": 489000,
+          "profit": 146700,
+          "units": 4890,
+          "returns": 110,
+          "satisfaction": 4.6
+        },
+        {
+          "quarter": "Q3",
+          "sales": 542000,
+          "profit": 162600,
+          "units": 5420,
+          "returns": 130,
+          "satisfaction": 4.4
+        },
+        {
+          "quarter": "Q4",
+          "sales": 423000,
+          "profit": 126900,
+          "units": 4230,
+          "returns": 100,
+          "satisfaction": 4.3
+        }
+      ]
+    }
+  ],
+  "charts": [
+    {
+      "id": "chart1",
+      "type": "bar",
+      "position": {
+        "x": 0,
+        "y": 1.5,
+        "z": -3,
+        "scale": 1.2,
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "dataMapping": {
+        "xAxis": "quarter",
+        "yAxis": "sales",
+        "zAxis": ""
+      },
+      "department": "Electronics"
+    },
+    {
+      "id": "chart2",
+      "type": "line",
+      "position": {
+        "x": -3,
+        "y": 1.5,
+        "z": -1,
+        "scale": 1,
+        "rotation": {
+          "x": 0,
+          "y": 90,
+          "z": 0
+        }
+      },
+      "dataMapping": {
+        "xAxis": "quarter",
+        "yAxis": "profit",
+        "zAxis": ""
+      },
+      "department": "Clothing"
+    },
+    {
+      "id": "chart3",
+      "type": "pie",
+      "position": {
+        "x": 3,
+        "y": 1,
+        "z": -1,
+        "scale": 1,
+        "rotation": {
+          "x": 90,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "dataMapping": {
+        "xAxis": "quarter",
+        "yAxis": "units",
+        "zAxis": ""
+      },
+      "department": "Home & Garden"
+    }
+  ],
+  "settings": {
+    "backgroundColor": "#1A1F2C",
+    "gridEnabled": true,
+    "userPosition": {
+      "x": 0,
+      "y": 1.6,
+      "z": 0
+    }
+  }
+}

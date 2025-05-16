@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import ChartTypeSelector from "./ChartTypeSelector";
 import DataIndicatorSelector from "./DataIndicatorSelector";
@@ -8,10 +9,11 @@ import ConfigurationManager from "./ConfigurationManager";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { generateMockData, getAvailableDataIndicators, generateDatasets } from "@/utils/mockData";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Play, Eye, Settings2 } from "lucide-react";
+import { Play, Eye, Settings2, Upload, Save } from "lucide-react";
+import { generateMockData, getAvailableDataIndicators } from "@/utils/mockData";
+import sampleData from "../data/sampleVisualization.json";
 
 interface VRPosition {
   x: number;
@@ -47,23 +49,52 @@ const VRDashboard = () => {
   const [data, setData] = useState<any[]>([]);
   const [availableIndicators, setAvailableIndicators] = useState<string[]>([]);
   const [availableDatasets, setAvailableDatasets] = useState<Record<string, any[]>>({});
+  
+  // Departments
+  const [departments, setDepartments] = useState<string[]>([]);
+  const [selectedDepartment, setSelectedDepartment] = useState("");
 
   // Initialize data on component mount
   useEffect(() => {
-    const datasets = generateDatasets();
-    setAvailableDatasets(datasets);
-    setData(datasets.sales);
+    // Load sample data departments
+    const deptNames = sampleData.departments.map(dept => dept.name);
+    setDepartments(deptNames);
     
-    // Set initial indicators based on the first dataset
-    const indicators = Object.keys(datasets.sales[0] || {});
-    setAvailableIndicators(indicators);
-    
-    // Set default axes if available
-    if (indicators.length >= 2) {
-      setXAxis(indicators[0]);
-      setYAxis(indicators[1]);
+    if (deptNames.length > 0) {
+      setSelectedDepartment(deptNames[0]);
+      loadDepartmentData(deptNames[0]);
     }
   }, []);
+
+  // Load department data
+  const loadDepartmentData = (departmentName: string) => {
+    const departmentData = sampleData.departments.find(dept => dept.name === departmentName);
+    
+    if (departmentData) {
+      setData(departmentData.data);
+      
+      // Set available indicators based on the first data item
+      if (departmentData.data.length > 0) {
+        const indicators = Object.keys(departmentData.data[0]);
+        setAvailableIndicators(indicators);
+        
+        // Set default axes
+        if (indicators.length >= 2) {
+          setXAxis(indicators[0]);
+          setYAxis(indicators[1]);
+          if (indicators.length > 2) {
+            setZAxis("");
+          }
+        }
+      }
+    }
+  };
+
+  // Handle department change
+  const handleDepartmentChange = (department: string) => {
+    setSelectedDepartment(department);
+    loadDepartmentData(department);
+  };
 
   // Handle data source change
   useEffect(() => {
@@ -104,11 +135,50 @@ const VRDashboard = () => {
     setYAxis(config.yAxis);
     setZAxis(config.zAxis || "");
     setPosition(config.position);
+    
+    if (config.department) {
+      handleDepartmentChange(config.department);
+    }
   };
 
   const handleZAxisChange = (value: string) => {
     // If "none" is selected, set zAxis to empty string
     setZAxis(value === "none" ? "" : value);
+  };
+
+  const handleImportJSON = () => {
+    // In a real app, this would open a file dialog
+    // For this demo, we'll simulate loading the sample
+    const sampleConfig = sampleData.charts[0];
+    
+    toast.success("Configuration imported successfully");
+    handleLoadConfig({
+      chartType: sampleConfig.type,
+      xAxis: sampleConfig.dataMapping.xAxis,
+      yAxis: sampleConfig.dataMapping.yAxis,
+      zAxis: sampleConfig.dataMapping.zAxis,
+      position: sampleConfig.position,
+      department: sampleConfig.department
+    });
+  };
+  
+  const handleExportJSON = () => {
+    // Create export config
+    const config = {
+      chartType,
+      dataMapping: {
+        xAxis,
+        yAxis,
+        zAxis
+      },
+      position,
+      department: selectedDepartment
+    };
+    
+    // In a real app, this would trigger a download
+    // For this demo, we'll just show the JSON in the console
+    console.log("Export Configuration:", JSON.stringify(config, null, 2));
+    toast.success("Configuration exported to console");
   };
 
   const launchVR = () => {
@@ -131,39 +201,30 @@ const VRDashboard = () => {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold vr-gradient-text">VR Data Visualization Dashboard</h1>
+          <h1 className="text-3xl font-bold vr-gradient-text">VR Data Visualization Configurator</h1>
           <p className="text-muted-foreground mt-2">
             Configure your VR data visualization experience
           </p>
         </div>
-        <Button className="vr-button" onClick={launchVR}>
-          <Play className="mr-2 h-4 w-4" />
-          Launch VR Experience
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" onClick={handleExportJSON}>
+            <Save className="mr-2 h-4 w-4" />
+            Export
+          </Button>
+          <Button variant="outline" onClick={handleImportJSON}>
+            <Upload className="mr-2 h-4 w-4" />
+            Import
+          </Button>
+          <Button className="vr-button" onClick={launchVR}>
+            <Play className="mr-2 h-4 w-4" />
+            Launch VR Experience
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left column - Chart and data configuration */}
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Data Source</CardTitle>
-              <CardDescription>Select the dataset to visualize</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Select value={dataSource} onValueChange={setDataSource}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select data source" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sales">Sales Data</SelectItem>
-                  <SelectItem value="temperature">Temperature Data</SelectItem>
-                  <SelectItem value="analytics">Web Analytics</SelectItem>
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
-          
           <ChartTypeSelector selectedType={chartType} onSelect={setChartType} />
           
           <DataIndicatorSelector
@@ -175,6 +236,9 @@ const VRDashboard = () => {
             selectedY={yAxis}
             selectedZ={zAxis}
             chartType={chartType}
+            departments={departments}
+            selectedDepartment={selectedDepartment}
+            onDepartmentChange={handleDepartmentChange}
           />
         </div>
         

@@ -2,7 +2,6 @@
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState } from "react";
 
 interface VRPosition {
   x: number;
@@ -26,21 +25,21 @@ const VRPositionController = ({
   onPositionChange,
 }: VRPositionControllerProps) => {
   
-  const handleChange = (key: string, value: number | { x: number; y: number; z: number }) => {
-    const newPosition = { ...position };
-    
+  const handleChange = (key: keyof VRPosition, value: number) => {
     if (key === "rotation") {
-      newPosition.rotation = value as { x: number; y: number; z: number };
-    } else {
-      newPosition[key as keyof VRPosition] = value as number;
+      // This case is handled separately by handleRotationChange
+      return;
     }
     
+    const newPosition = { ...position };
+    newPosition[key] = value;
     onPositionChange(newPosition);
   };
 
   const handleRotationChange = (axis: string, value: number) => {
     const newRotation = { ...position.rotation, [axis]: value };
-    handleChange("rotation", newRotation);
+    const newPosition = { ...position, rotation: newRotation };
+    onPositionChange(newPosition);
   };
 
   return (

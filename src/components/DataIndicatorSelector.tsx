@@ -18,6 +18,9 @@ interface DataIndicatorSelectorProps {
   selectedY: string;
   selectedZ?: string;
   chartType: string;
+  departments?: string[];
+  selectedDepartment?: string;
+  onDepartmentChange?: (department: string) => void;
 }
 
 const DataIndicatorSelector = ({
@@ -29,6 +32,9 @@ const DataIndicatorSelector = ({
   selectedY,
   selectedZ,
   chartType,
+  departments = [],
+  selectedDepartment = "",
+  onDepartmentChange,
 }: DataIndicatorSelectorProps) => {
   const isPieChart = chartType === "pie";
   
@@ -38,6 +44,24 @@ const DataIndicatorSelector = ({
         <CardTitle>Data Indicators</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {departments.length > 0 && onDepartmentChange && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Selected Department</label>
+            <Select value={selectedDepartment} onValueChange={onDepartmentChange}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select department" />
+              </SelectTrigger>
+              <SelectContent>
+                {departments.map((department) => (
+                  <SelectItem key={department} value={department}>
+                    {department}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        
         {isPieChart ? (
           <>
             <div className="space-y-2">

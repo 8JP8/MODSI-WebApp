@@ -1,5 +1,7 @@
 
+import { useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import * as THREE from "three";
 
 interface VRPosition {
   x: number;
@@ -19,21 +21,234 @@ interface VRScenePreviewProps {
 }
 
 const VRScenePreview = ({ chartType, position }: VRScenePreviewProps) => {
-  // This is just a placeholder for the actual VR scene
-  // In a real implementation, this would integrate with A-Frame/BabiaXR
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const chartMeshRef = useRef<THREE.Mesh | null>(null);
+  
+  // Mouse controls state
+  const isDraggingRef = useRef(false);
+  const previousMousePositionRef = useRef({ x: 0, y: 0 });
+  const cameraPositionRef = useRef({ radius: 5, phi: Math.PI / 2, theta: Math.PI / 2 });
 
-  const getChartEmoji = () => {
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    
+    // Set up scene
+    const scene = new THREE.Scene();
+    sceneRef.current = scene;
+    scene.background = new THREE.Color(0x1a1f2c);
+    
+    // Set up camera
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      canvasRef.current.clientWidth / canvasRef.current.clientHeight,
+      0.1,
+      1000
+    );
+    cameraRef.current = camera;
+    updateCameraPosition();
+    
+    // Set up renderer
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvasRef.current,
+      antialias: true,
+    });
+    rendererRef.current = renderer;
+    renderer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
+    
+    // Add grid
+    const gridHelper = new THREE.GridHelper(10, 10);
+    gridHelper.position.y = -1;
+    scene.add(gridHelper);
+    
+    // Add axes helper
+    const axesHelper = new THREE.AxesHelper(2);
+    axesHelper.position.y = -1;
+    scene.add(axesHelper);
+    
+    // Add lighting
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(1, 1, 1);
+    scene.add(directionalLight);
+    
+    // Setup chart mesh
+    createChartMesh();
+    
+    // Animation loop
+    const animate = () => {
+      requestAnimationFrame(animate);
+      if (rendererRef.current && sceneRef.current && cameraRef.current) {
+        rendererRef.current.render(sceneRef.current, cameraRef.current);
+      }
+    };
+    animate();
+    
+    // Event listeners for mouse controls
+    const handleMouseDown = (e: MouseEvent) => {
+      isDraggingRef.current = true;
+      previousMousePositionRef.current = { x: e.clientX, y: e.clientY };
+    };
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingRef.current) return;
+      
+      const deltaMove = {
+        x: e.clientX - previousMousePositionRef.current.x,
+        y: e.clientY - previousMousePositionRef.current.y,
+      };
+      
+      // Update camera orbit position
+      cameraPositionRef.current.theta -= deltaMove.x * 0.01;
+      cameraPositionRef.current.phi = Math.max(
+        0.1,
+        Math.min(Math.PI - 0.1, cameraPositionRef.current.phi + deltaMove.y * 0.01)
+      );
+      
+      updateCameraPosition();
+      
+      previousMousePositionRef.current = { x: e.clientX, y: e.clientY };
+    };
+    
+    const handleMouseUp = () => {
+      isDraggingRef.current = false;
+    };
+    
+    const handleWheel = (e: WheelEvent) => {
+      // Zoom in/out
+      cameraPositionRef.current.radius = Math.max(
+        2,
+        Math.min(10, cameraPositionRef.current.radius + e.deltaY * 0.01)
+      );
+      updateCameraPosition();
+    };
+    
+    // Add event listeners
+    canvasRef.current.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    canvasRef.current.addEventListener('wheel', handleWheel);
+    
+    // Handle window resize
+    const handleResize = () => {
+      if (!canvasRef.current || !cameraRef.current || !rendererRef.current) return;
+      
+      const width = canvasRef.current.clientWidth;
+      const height = canvasRef.current.clientHeight;
+      
+      cameraRef.current.aspect = width / height;
+      cameraRef.current.updateProjectionMatrix();
+      rendererRef.current.setSize(width, height);
+    };
+    window.addEventListener('resize', handleResize);
+    
+    // Cleanup function
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('resize', handleResize);
+      if (canvasRef.current) {
+        canvasRef.current.removeEventListener('mousedown', handleMouseDown);
+        canvasRef.current.removeEventListener('wheel', handleWheel);
+      }
+    };
+  }, []);
+  
+  // Update chart when position changes
+  useEffect(() => {
+    updateChartMesh();
+  }, [position, chartType]);
+  
+  // Helper function to update camera position
+  const updateCameraPosition = () => {
+    if (!cameraRef.current) return;
+    
+    const { radius, phi, theta } = cameraPositionRef.current;
+    
+    // Convert spherical coordinates to Cartesian
+    cameraRef.current.position.x = radius * Math.sin(phi) * Math.cos(theta);
+    cameraRef.current.position.y = radius * Math.cos(phi);
+    cameraRef.current.position.z = radius * Math.sin(phi) * Math.sin(theta);
+    
+    cameraRef.current.lookAt(0, 0, 0);
+  };
+  
+  // Create chart mesh based on chart type
+  const createChartMesh = () => {
+    if (!sceneRef.current) return;
+    
+    // Remove existing chart mesh
+    if (chartMeshRef.current) {
+      sceneRef.current.remove(chartMeshRef.current);
+    }
+    
+    let geometry: THREE.BufferGeometry;
+    const material = new THREE.MeshPhongMaterial({
+      color: getChartColor(),
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.8,
+    });
+    
     switch (chartType) {
       case "bar":
-        return "📊";
+        geometry = new THREE.BoxGeometry(1, 1, 1);
+        break;
       case "pie":
-        return "🥧";
+        geometry = new THREE.CylinderGeometry(1, 1, 0.2, 32);
+        break;
       case "line":
-        return "📈";
+        geometry = new THREE.PlaneGeometry(1.5, 1);
+        break;
       case "scatter":
-        return "⚬";
+        // Create a group of spheres for scatter plot
+        geometry = new THREE.SphereGeometry(0.5, 16, 16);
+        break;
       default:
-        return "📊";
+        geometry = new THREE.BoxGeometry(1, 1, 1);
+    }
+    
+    chartMeshRef.current = new THREE.Mesh(geometry, material);
+    sceneRef.current.add(chartMeshRef.current);
+    
+    updateChartMesh();
+  };
+  
+  // Update chart position and rotation
+  const updateChartMesh = () => {
+    if (!chartMeshRef.current) return;
+    
+    chartMeshRef.current.position.set(position.x, position.y, position.z);
+    chartMeshRef.current.scale.set(position.scale, position.scale, position.scale);
+    chartMeshRef.current.rotation.set(
+      (position.rotation.x * Math.PI) / 180,
+      (position.rotation.y * Math.PI) / 180,
+      (position.rotation.z * Math.PI) / 180
+    );
+    
+    // Update material color based on chart type
+    if (chartMeshRef.current.material instanceof THREE.MeshPhongMaterial) {
+      chartMeshRef.current.material.color.set(getChartColor());
+    }
+  };
+  
+  // Get chart color based on chart type
+  const getChartColor = () => {
+    switch (chartType) {
+      case "bar":
+        return 0x1E90FF;
+      case "pie":
+        return 0xFF6384;
+      case "line":
+        return 0x4BC0C0;
+      case "scatter":
+        return 0x9370DB;
+      default:
+        return 0x1E90FF;
     }
   };
 
@@ -43,54 +258,20 @@ const VRScenePreview = ({ chartType, position }: VRScenePreviewProps) => {
         <CardTitle>VR Scene Preview</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="relative w-full h-64 bg-vr-background rounded-md overflow-hidden border border-slate-700">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-lg text-muted-foreground">
-              VR Scene (A-Frame + BabiaXR preview)
-            </div>
+        <div className="relative w-full h-64">
+          <canvas
+            ref={canvasRef}
+            className="w-full h-full rounded-md border border-slate-700"
+          />
+          <div className="absolute bottom-2 left-2 text-xs text-slate-400 bg-slate-900/70 p-1 rounded">
+            Position: ({position.x.toFixed(1)}, {position.y.toFixed(1)}, {position.z.toFixed(1)})
           </div>
-          
-          {/* This would be replaced with actual A-Frame/BabiaXR */}
-          <div 
-            className="absolute p-4 bg-vr-panel rounded-lg shadow-lg animate-float"
-            style={{
-              left: `${(position.x + 10) * 5}%`, 
-              top: `${100 - (position.y + 1) * 10}%`,
-              transform: `scale(${position.scale * 0.3}) rotate(${position.rotation.y}deg)`,
-              zIndex: Math.round(10 - position.z)
-            }}
-          >
-            <div className="text-3xl">
-              {getChartEmoji()}
-              <span className="ml-2 text-xs text-slate-400">
-                {chartType} at ({position.x.toFixed(1)}, {position.y.toFixed(1)}, {position.z.toFixed(1)})
-              </span>
-            </div>
-          </div>
-          
-          {/* Floor grid for reference */}
-          <div className="absolute bottom-0 w-full h-1/4 border-t border-slate-700 bg-gradient-to-t from-slate-900 to-transparent">
-            <div className="absolute inset-0 grid grid-cols-10 grid-rows-10">
-              {Array(10).fill(0).map((_, i) => (
-                Array(10).fill(0).map((_, j) => (
-                  <div key={`${i}-${j}`} className="border border-slate-800 opacity-20" />
-                ))
-              ))}
-            </div>
-          </div>
-          
-          {/* Reference axes */}
-          <div className="absolute bottom-0 left-0 h-12 w-1 bg-red-500" title="Y-axis"></div>
-          <div className="absolute bottom-0 left-0 w-12 h-1 bg-blue-500" title="X-axis"></div>
-          <div className="absolute bottom-0 left-0 w-1 h-1 bg-green-500 transform-gpu -translate-z-12" 
-               style={{ transform: 'translateZ(12px)' }} title="Z-axis"></div>
         </div>
         
-        <div className="mt-4 text-sm text-muted-foreground">
-          <p>This is a simplified preview. In the full implementation, this would use A-Frame and BabiaXR to create an interactive 3D visualization.</p>
-          <p className="mt-2">Position: ({position.x.toFixed(1)}, {position.y.toFixed(1)}, {position.z.toFixed(1)})</p>
+        <div className="mt-4 text-xs text-muted-foreground">
+          <p>Mouse controls: Click and drag to rotate view. Use scroll wheel to zoom in/out.</p>
+          <p className="mt-1">Chart: {chartType} (Scale: {position.scale.toFixed(1)})</p>
           <p>Rotation: ({position.rotation.x}°, {position.rotation.y}°, {position.rotation.z}°)</p>
-          <p>Scale: {position.scale.toFixed(1)}</p>
         </div>
       </CardContent>
     </Card>
