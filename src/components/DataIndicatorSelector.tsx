@@ -106,12 +106,12 @@ const DataIndicatorSelector = ({
             {onSelectZAxis && (
               <div className="space-y-2">
                 <label className="text-sm font-medium">Z Axis (Optional)</label>
-                <Select value={selectedZ || ""} onValueChange={onSelectZAxis}>
+                <Select value={selectedZ || "none"} onValueChange={onSelectZAxis}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select Z axis" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {availableIndicators.map((indicator) => (
                       <SelectItem key={indicator} value={indicator}>
                         {indicator}

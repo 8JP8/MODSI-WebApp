@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import ChartTypeSelector from "./ChartTypeSelector";
 import DataIndicatorSelector from "./DataIndicatorSelector";
@@ -107,6 +106,11 @@ const VRDashboard = () => {
     setPosition(config.position);
   };
 
+  const handleZAxisChange = (value: string) => {
+    // If "none" is selected, set zAxis to empty string
+    setZAxis(value === "none" ? "" : value);
+  };
+
   const launchVR = () => {
     // This would be integrated with A-Frame/BabiaXR in a full implementation
     toast.success("VR scene configuration saved! Ready to launch VR experience.");
@@ -166,7 +170,7 @@ const VRDashboard = () => {
             availableIndicators={availableIndicators}
             onSelectXAxis={setXAxis}
             onSelectYAxis={setYAxis}
-            onSelectZAxis={setZAxis}
+            onSelectZAxis={handleZAxisChange}
             selectedX={xAxis}
             selectedY={yAxis}
             selectedZ={zAxis}
