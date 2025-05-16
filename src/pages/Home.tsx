@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Settings, Layers } from "lucide-react";
+import { Settings, Layers, User } from "lucide-react";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -19,12 +19,16 @@ const Home = () => {
     
     // In a real app, this would validate the ID against an API
     toast.success(`Joining visualization ${visualizationId}`);
-    // Navigate to a visualization view page (not implemented in this demo)
-    console.log(`Joining visualization: ${visualizationId}`);
+    // Navigate to configurator with the visualization ID
+    navigate(`/configurator?room=${visualizationId}`);
   };
 
   const navigateToConfigurator = () => {
     navigate("/configurator");
+  };
+
+  const navigateToUserVisualizations = () => {
+    window.open("https://modsivr.pt", "_blank");
   };
 
   return (
@@ -39,7 +43,7 @@ const Home = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Join Visualization */}
           <Card className="shadow-lg border border-slate-800">
             <CardHeader>
@@ -92,6 +96,33 @@ const Home = () => {
                   onClick={navigateToConfigurator}
                 >
                   Launch Configurator
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* My Visualizations */}
+          <Card className="shadow-lg border border-slate-800">
+            <CardHeader>
+              <CardTitle className="text-2xl flex items-center">
+                <User className="mr-2 h-6 w-6 text-primary" />
+                My Visualizations
+              </CardTitle>
+              <CardDescription>
+                Access your saved VR data visualizations
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-muted-foreground">
+                  View, manage and share your previously created VR data visualization experiences.
+                </p>
+                <Button 
+                  className="w-full text-lg py-6" 
+                  variant="outline"
+                  onClick={navigateToUserVisualizations}
+                >
+                  View My Visualizations
                 </Button>
               </div>
             </CardContent>

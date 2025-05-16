@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,12 +27,14 @@ interface ConfigurationManagerProps {
   currentConfig: ConfigurationSettings;
   onLoadConfig: (config: ConfigurationSettings) => void;
   onResetConfig: () => void;
+  onSaveConfig?: () => void;
 }
 
 const ConfigurationManager = ({
   currentConfig,
   onLoadConfig,
   onResetConfig,
+  onSaveConfig,
 }: ConfigurationManagerProps) => {
   const [savedConfigs, setSavedConfigs] = useState<{ name: string; config: ConfigurationSettings }[]>([]);
   const [configName, setConfigName] = useState("");
@@ -69,6 +70,9 @@ const ConfigurationManager = ({
       localStorage.setItem("vrDataConfigs", JSON.stringify(newConfigs));
       toast.success(`Configuration "${configName}" saved`);
       setConfigName("");
+      if (onSaveConfig) {
+        onSaveConfig();
+      }
     } catch (e) {
       toast.error("Error saving configuration");
       console.error("Error saving configuration", e);
@@ -78,6 +82,9 @@ const ConfigurationManager = ({
   const loadConfig = (config: ConfigurationSettings) => {
     onLoadConfig(config);
     toast.success("Configuration loaded");
+    if (onSaveConfig) {
+      onSaveConfig();
+    }
   };
 
   const deleteConfig = (name: string) => {
@@ -104,6 +111,9 @@ const ConfigurationManager = ({
     linkElement.click();
     
     toast.success("Exported all configurations");
+    if (onSaveConfig) {
+      onSaveConfig();
+    }
   };
 
   const importConfigs = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,6 +131,9 @@ const ConfigurationManager = ({
             JSON.stringify([...savedConfigs, ...imported])
           );
           toast.success(`Imported ${imported.length} configurations`);
+          if (onSaveConfig) {
+            onSaveConfig();
+          }
         } else {
           toast.error("Invalid import file format");
         }

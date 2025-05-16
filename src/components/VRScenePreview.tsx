@@ -15,17 +15,29 @@ interface VRPosition {
   };
 }
 
+interface Chart {
+  id: string;
+  chartType: string;
+  position: VRPosition;
+  xAxis: string;
+  yAxis: string;
+  zAxis: string;
+  department: string;
+}
+
 interface VRScenePreviewProps {
   chartType: string;
   position: VRPosition;
+  charts?: Chart[];
+  activeChartId?: string;
 }
 
-const VRScenePreview = ({ chartType, position }: VRScenePreviewProps) => {
+const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRScenePreviewProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
-  const chartMeshRef = useRef<THREE.Mesh | null>(null);
+  const chartMeshesRef = useRef<Map<string, THREE.Mesh>>(new Map());
   
   // Mouse controls state
   const isDraggingRef = useRef(false);
@@ -77,7 +89,12 @@ const VRScenePreview = ({ chartType, position }: VRScenePreviewProps) => {
     scene.add(directionalLight);
     
     // Setup chart mesh
-    createChartMesh();
+    if (charts.length > 0) {
+      charts.forEach(chart => createChartMesh(chart));
+    } else {
+      // Legacy support for single chart
+      createChartMesh({ id: 'default', chartType, position, xAxis: '', yAxis: '', zAxis: '', department: '' });
+    }
     
     // Animation loop
     const animate = () => {
@@ -158,10 +175,17 @@ const VRScenePreview = ({ chartType, position }: VRScenePreviewProps) => {
     };
   }, []);
   
-  // Update chart when position changes
+  // Update charts when they change
   useEffect(() => {
-    updateChartMesh();
-  }, [position, chartType]);
+    updateAllCharts();
+  }, [charts]);
+  
+  // Update single chart when position or type changes
+  useEffect(() => {
+    if (activeChartId) {
+      updateChartMesh(activeChartId, chartType, position);
+    }
+  }, [position, chartType, activeChartId]);
   
   // Helper function to update camera position
   const updateCameraPosition = () => {
@@ -177,24 +201,19 @@ const VRScenePreview = ({ chartType, position }: VRScenePreviewProps) => {
     cameraRef.current.lookAt(0, 0, 0);
   };
   
-  // Create chart mesh based on chart type
-  const createChartMesh = () => {
+  // Create chart mesh for a new chart
+  const createChartMesh = (chart: Chart) => {
     if (!sceneRef.current) return;
-    
-    // Remove existing chart mesh
-    if (chartMeshRef.current) {
-      sceneRef.current.remove(chartMeshRef.current);
-    }
     
     let geometry: THREE.BufferGeometry;
     const material = new THREE.MeshPhongMaterial({
-      color: getChartColor(),
+      color: getChartColor(chart.chartType),
       side: THREE.DoubleSide,
       transparent: true,
       opacity: 0.8,
     });
     
-    switch (chartType) {
+    switch (chart.chartType) {
       case "bar":
         geometry = new THREE.BoxGeometry(1, 1, 1);
         break;
@@ -212,32 +231,76 @@ const VRScenePreview = ({ chartType, position }: VRScenePreviewProps) => {
         geometry = new THREE.BoxGeometry(1, 1, 1);
     }
     
-    chartMeshRef.current = new THREE.Mesh(geometry, material);
-    sceneRef.current.add(chartMeshRef.current);
+    const mesh = new THREE.Mesh(geometry, material);
+    sceneRef.current.add(mesh);
+    chartMeshesRef.current.set(chart.id, mesh);
     
-    updateChartMesh();
+    // Position the mesh
+    updateChartMeshPosition(mesh, chart.position);
   };
   
-  // Update chart position and rotation
-  const updateChartMesh = () => {
-    if (!chartMeshRef.current) return;
+  // Update positions of all chart meshes
+  const updateAllCharts = () => {
+    if (!sceneRef.current) return;
     
-    chartMeshRef.current.position.set(position.x, position.y, position.z);
-    chartMeshRef.current.scale.set(position.scale, position.scale, position.scale);
-    chartMeshRef.current.rotation.set(
+    // Clear existing meshes that are not in current charts
+    chartMeshesRef.current.forEach((mesh, id) => {
+      if (!charts.some(chart => chart.id === id)) {
+        sceneRef.current?.remove(mesh);
+        chartMeshesRef.current.delete(id);
+      }
+    });
+    
+    // Update or create meshes for all charts
+    charts.forEach(chart => {
+      if (chartMeshesRef.current.has(chart.id)) {
+        updateChartMesh(chart.id, chart.chartType, chart.position);
+      } else {
+        createChartMesh(chart);
+      }
+    });
+  };
+  
+  // Update a specific chart mesh
+  const updateChartMesh = (id: string, chartType: string, position: VRPosition) => {
+    const mesh = chartMeshesRef.current.get(id);
+    if (!mesh || !sceneRef.current) return;
+    
+    // Update position and rotation
+    updateChartMeshPosition(mesh, position);
+    
+    // Update material color based on chart type
+    if (mesh.material instanceof THREE.MeshPhongMaterial) {
+      mesh.material.color.set(getChartColor(chartType));
+    }
+    
+    // Highlight active chart
+    if (id === activeChartId) {
+      if (mesh.material instanceof THREE.MeshPhongMaterial) {
+        mesh.material.opacity = 1.0;
+        mesh.material.emissive.set(0x333333);
+      }
+    } else {
+      if (mesh.material instanceof THREE.MeshPhongMaterial) {
+        mesh.material.opacity = 0.7;
+        mesh.material.emissive.set(0x000000);
+      }
+    }
+  };
+  
+  // Update chart mesh position
+  const updateChartMeshPosition = (mesh: THREE.Mesh, position: VRPosition) => {
+    mesh.position.set(position.x, position.y, position.z);
+    mesh.scale.set(position.scale, position.scale, position.scale);
+    mesh.rotation.set(
       (position.rotation.x * Math.PI) / 180,
       (position.rotation.y * Math.PI) / 180,
       (position.rotation.z * Math.PI) / 180
     );
-    
-    // Update material color based on chart type
-    if (chartMeshRef.current.material instanceof THREE.MeshPhongMaterial) {
-      chartMeshRef.current.material.color.set(getChartColor());
-    }
   };
   
   // Get chart color based on chart type
-  const getChartColor = () => {
+  const getChartColor = (chartType: string) => {
     switch (chartType) {
       case "bar":
         return 0x1E90FF;
@@ -266,11 +329,14 @@ const VRScenePreview = ({ chartType, position }: VRScenePreviewProps) => {
           <div className="absolute bottom-2 left-2 text-xs text-slate-400 bg-slate-900/70 p-1 rounded">
             Position: ({position.x.toFixed(1)}, {position.y.toFixed(1)}, {position.z.toFixed(1)})
           </div>
+          <div className="absolute top-2 right-2 text-xs text-slate-400 bg-slate-900/70 p-1 rounded">
+            Charts: {charts.length}
+          </div>
         </div>
         
         <div className="mt-4 text-xs text-muted-foreground">
           <p>Mouse controls: Click and drag to rotate view. Use scroll wheel to zoom in/out.</p>
-          <p className="mt-1">Chart: {chartType} (Scale: {position.scale.toFixed(1)})</p>
+          <p className="mt-1">Active Chart: {chartType} (Scale: {position.scale.toFixed(1)})</p>
           <p>Rotation: ({position.rotation.x}°, {position.rotation.y}°, {position.rotation.z}°)</p>
         </div>
       </CardContent>
