@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -87,20 +86,38 @@ const Dashboard = () => {
             </div>
           )}
           
-          <div className="w-full h-full relative overflow-hidden">
+          <div 
+            className="w-full h-full relative overflow-hidden"
+            style={{
+              WebkitUserSelect: "none",
+              MozUserSelect: "none",
+              msUserSelect: "none",
+              userSelect: "none"
+            }}
+          >
             <iframe
               id="dashboard-iframe"
               src="https://app.appsmith.com/app/modsi-webapp/main-page-6807db039a00354830a6b72c?embed=true"
               className={`absolute top-0 left-0 w-full border-0 ${isLoading || hasError ? 'invisible' : 'visible'}`}
               style={{ 
-                height: "calc(100% + 70px)",  /* Make iframe 70px taller than container */
-                clipPath: "inset(0px 0px 70px 0px)" /* Cut off bottom 70px */
+                height: "calc(100% + 80px)",  /* Make iframe 80px taller than container to hide footer completely */
+                clipPath: "inset(0px 0px 80px 0px)", /* Cut off bottom 80px */
+                pointerEvents: "auto",
+                userSelect: "none"
               }}
               onLoad={handleIframeLoad}
               onError={handleIframeError}
               allowFullScreen
               title="MODSiVR Dashboard"
             ></iframe>
+            
+            {/* Overlay to prevent selection/interaction with iframe content */}
+            <div 
+              className="absolute inset-0 z-0" 
+              style={{
+                pointerEvents: "none"
+              }}
+            ></div>
           </div>
         </div>
       </main>
