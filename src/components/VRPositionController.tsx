@@ -55,7 +55,7 @@ const VRPositionController = ({ position, onPositionChange }: VRPositionControll
     return (
       <div className="space-y-2">
         <Label htmlFor={name}>{label}</Label>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <div className="flex-grow">
             <Slider
               id={`${name}-slider`}
@@ -83,33 +83,33 @@ const VRPositionController = ({ position, onPositionChange }: VRPositionControll
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle>Position Controls</CardTitle>
+        <CardTitle>Controles de Posição</CardTitle>
       </CardHeader>
       <CardContent>
         <Tabs value={positionTab} onValueChange={setPositionTab}>
           <TabsList className="grid grid-cols-3 w-full">
-            <TabsTrigger value="position" className="whitespace-nowrap px-2">Position</TabsTrigger>
-            <TabsTrigger value="rotation" className="whitespace-nowrap px-2">Rotation</TabsTrigger>
-            <TabsTrigger value="dimensions" className="whitespace-nowrap px-2">Dimensions</TabsTrigger>
+            <TabsTrigger value="position" className="px-2 py-1.5 whitespace-nowrap">Posição</TabsTrigger>
+            <TabsTrigger value="rotation" className="px-2 py-1.5 whitespace-nowrap">Rotação</TabsTrigger>
+            <TabsTrigger value="dimensions" className="px-2 py-1.5 whitespace-nowrap">Dimensões</TabsTrigger>
           </TabsList>
           
           <TabsContent value="position" className="space-y-4 mt-4">
-            {renderSliderWithInput("x", "X Position", -5, 5, 0.1, position.x)}
-            {renderSliderWithInput("y", "Y Position", -5, 5, 0.1, position.y)}
-            {renderSliderWithInput("z", "Z Position", -10, 5, 0.1, position.z)}
-            {renderSliderWithInput("scale", "Scale", 0.1, 3, 0.1, position.scale)}
+            {renderSliderWithInput("x", "Posição X", -5, 5, 0.1, position.x)}
+            {renderSliderWithInput("y", "Posição Y", -5, 5, 0.1, position.y)}
+            {renderSliderWithInput("z", "Posição Z", -10, 5, 0.1, position.z)}
+            {renderSliderWithInput("scale", "Escala", 0.1, 3, 0.1, position.scale)}
           </TabsContent>
           
           <TabsContent value="rotation" className="space-y-4 mt-4">
-            {renderSliderWithInput("rotation.x", "X Rotation", 0, 360, 5, position.rotation.x)}
-            {renderSliderWithInput("rotation.y", "Y Rotation", 0, 360, 5, position.rotation.y)}
-            {renderSliderWithInput("rotation.z", "Z Rotation", 0, 360, 5, position.rotation.z)}
+            {renderSliderWithInput("rotation.x", "Rotação X", 0, 360, 5, position.rotation.x)}
+            {renderSliderWithInput("rotation.y", "Rotação Y", 0, 360, 5, position.rotation.y)}
+            {renderSliderWithInput("rotation.z", "Rotação Z", 0, 360, 5, position.rotation.z)}
           </TabsContent>
           
           <TabsContent value="dimensions" className="space-y-4 mt-4">
-            {renderSliderWithInput("width", "Width", 0.1, 3, 0.1, position.width || 1)}
-            {renderSliderWithInput("height", "Height", 0.1, 3, 0.1, position.height || 1)}
-            {renderSliderWithInput("depth", "Depth", 0.1, 3, 0.1, position.depth || 1)}
+            {renderSliderWithInput("width", "Largura", 0.1, 3, 0.1, position.width || 1)}
+            {renderSliderWithInput("height", "Altura", 0.1, 3, 0.1, position.height || 1)}
+            {renderSliderWithInput("depth", "Profundidade", 0.1, 3, 0.1, position.depth || 1)}
           </TabsContent>
         </Tabs>
       </CardContent>

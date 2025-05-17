@@ -34,28 +34,28 @@ const VRLaunchDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>VR Experience</DialogTitle>
+          <DialogTitle>Experiência VR</DialogTitle>
           <DialogDescription>
-            Launch your VR visualization experience
+            Inicie a sua experiência de visualização VR
           </DialogDescription>
         </DialogHeader>
         
         <Tabs defaultValue="launch" className="w-full">
           <TabsList className="grid grid-cols-2">
-            <TabsTrigger value="launch">Launch Own Room</TabsTrigger>
-            <TabsTrigger value="join">Join Room</TabsTrigger>
+            <TabsTrigger value="launch">Iniciar Sala</TabsTrigger>
+            <TabsTrigger value="join">Entrar em Sala</TabsTrigger>
           </TabsList>
           
           <TabsContent value="launch" className="space-y-4 py-4">
             <div>
               <p className="text-sm text-muted-foreground">
-                Start a new VR visualization room with your current configuration.
+                Inicie uma nova sala de visualização VR com a sua configuração atual.
               </p>
               
               {hasUnsavedChanges && (
                 <div className="bg-yellow-500/10 border border-yellow-600 mt-4 p-3 rounded-md">
                   <p className="text-sm text-yellow-600">
-                    You have unsaved changes. Please save your configuration before launching.
+                    Tem alterações não guardadas. Por favor, guarde a sua configuração antes de iniciar.
                   </p>
                 </div>
               )}
@@ -67,7 +67,7 @@ const VRLaunchDialog = ({
                 onClick={onLaunch}
                 disabled={hasUnsavedChanges}
               >
-                Launch VR Experience
+                Iniciar Experiência VR
               </Button>
             </DialogFooter>
           </TabsContent>
@@ -75,11 +75,11 @@ const VRLaunchDialog = ({
           <TabsContent value="join" className="space-y-4 py-4">
             <div className="grid gap-4">
               <p className="text-sm text-muted-foreground">
-                Enter a room code to join an existing VR visualization.
+                Insira um código de sala para entrar numa visualização VR existente.
               </p>
               <Input
                 id="room-code"
-                placeholder="Enter room code"
+                placeholder="Insira o código da sala"
                 value={roomCode}
                 onChange={(e) => setRoomCode(e.target.value)}
               />
@@ -91,7 +91,7 @@ const VRLaunchDialog = ({
                 onClick={() => onJoin(roomCode)}
                 disabled={!roomCode.trim()}
               >
-                Join Room
+                Entrar na Sala
               </Button>
             </DialogFooter>
           </TabsContent>

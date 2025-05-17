@@ -13,9 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { Play, Eye, Settings2, Save, ArrowLeft, Plus } from "lucide-react";
+import { Play, Eye, Settings2, Save, ArrowLeft, Plus, Moon, Sun } from "lucide-react";
 import { generateMockData, getAvailableDataIndicators } from "@/utils/mockData";
 import sampleData from "../data/sampleVisualization.json";
+import { useTheme } from "@/hooks/use-theme";
 
 interface VRPosition {
   x: number;
@@ -78,6 +79,7 @@ const VRDashboard = () => {
   const [availableDatasets, setAvailableDatasets] = useState<Record<string, any[]>>({});
   const [configSaved, setConfigSaved] = useState(false);
   const [launchDialogOpen, setLaunchDialogOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
   
   // Departments
   const [departments, setDepartments] = useState<string[]>([]);
@@ -161,7 +163,7 @@ const VRDashboard = () => {
     
     setCharts(prevCharts => [...prevCharts, newChart]);
     setActiveChartId(newChartId);
-    toast.success("New chart added");
+    toast.success("Novo gráfico adicionado");
   };
 
   // Handle department change
@@ -260,16 +262,28 @@ const VRDashboard = () => {
       });
     }
     
-    toast.info("Configuration reset to defaults");
+    toast.info("Configuração restaurada aos padrões");
   };
 
   const handleLoadConfig = (config: any) => {
     // Handle loading a full configuration with multiple charts
     if (config.charts && Array.isArray(config.charts)) {
-      setCharts(config.charts);
-      if (config.charts.length > 0) {
-        setActiveChartId(config.charts[0].id);
-        const firstChart = config.charts[0];
+      // Ensure each chart has proper position properties
+      const completeCharts = config.charts.map((chart: any) => ({
+        ...chart,
+        position: {
+          ...chart.position,
+          width: chart.position.width || 1,
+          height: chart.position.height || 1,
+          depth: chart.position.depth || 1
+        }
+      }));
+      
+      setCharts(completeCharts);
+      
+      if (completeCharts.length > 0) {
+        setActiveChartId(completeCharts[0].id);
+        const firstChart = completeCharts[0];
         setChartType(firstChart.chartType);
         setPosition(firstChart.position);
         setXAxis(firstChart.xAxis);
@@ -287,7 +301,16 @@ const VRDashboard = () => {
       setXAxis(config.xAxis);
       setYAxis(config.yAxis);
       setZAxis(config.zAxis || "");
-      setPosition(config.position);
+      
+      // Ensure position has all required properties
+      const completePosition = {
+        ...config.position,
+        width: config.position.width || 1,
+        height: config.position.height || 1,
+        depth: config.position.depth || 1
+      };
+      
+      setPosition(completePosition);
       
       if (config.department) {
         handleDepartmentChange(config.department);
@@ -297,7 +320,7 @@ const VRDashboard = () => {
       if (activeChartId) {
         updateActiveChart({
           chartType: config.chartType,
-          position: config.position,
+          position: completePosition,
           xAxis: config.xAxis,
           yAxis: config.yAxis,
           zAxis: config.zAxis || "",
@@ -307,7 +330,7 @@ const VRDashboard = () => {
     }
     
     setConfigSaved(true);
-    toast.success("Configuration loaded successfully");
+    toast.success("Configuração carregada com sucesso");
   };
 
   const handleImportJSON = () => {
@@ -322,7 +345,12 @@ const VRDashboard = () => {
       yAxis: chart.dataMapping.yAxis,
       zAxis: chart.dataMapping.zAxis || "",
       department: chart.department,
-      position: chart.position,
+      position: {
+        ...chart.position,
+        width: chart.position.width || 1,
+        height: chart.position.height || 1,
+        depth: chart.position.depth || 1
+      },
       color: CHART_COLORS[Math.floor(Math.random() * CHART_COLORS.length)]
     }));
     
@@ -331,7 +359,7 @@ const VRDashboard = () => {
       setActiveChartId(chartConfigs[0].id);
     }
     
-    toast.success("Configuration imported successfully");
+    toast.success("Configuração importada com sucesso");
     setConfigSaved(true);
   };
   
@@ -355,24 +383,24 @@ const VRDashboard = () => {
     // In a real app, this would trigger a download
     // For this demo, we'll just show the JSON in the console
     console.log("Export Configuration:", JSON.stringify(config, null, 2));
-    toast.success("Configuration exported to console");
+    toast.success("Configuração exportada para o console");
     setConfigSaved(true);
   };
 
   const joinVisualization = (roomCode: string) => {
     if (!roomCode.trim()) {
-      toast.error("Please enter a room code");
+      toast.error("Por favor, insira um código de sala");
       return;
     }
     
-    toast.success(`Joining visualization room: ${roomCode}`);
+    toast.success(`Entrando na sala de visualização: ${roomCode}`);
     setConfigSaved(true);
     setLaunchDialogOpen(false);
   };
 
   const launchVR = () => {
     // This would be integrated with A-Frame/BabiaXR in a full implementation
-    toast.success("VR scene configuration saved! Ready to launch VR experience.");
+    toast.success("Configuração de cena VR salva! Pronto para iniciar a experiência VR.");
     
     // In a real app, we would either:
     // 1. Navigate to a VR scene page
@@ -394,6 +422,10 @@ const VRDashboard = () => {
     setLaunchDialogOpen(true);
   };
 
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -404,16 +436,16 @@ const VRDashboard = () => {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold vr-gradient-text">VR Data Visualization Configurator</h1>
+            <h1 className="text-3xl font-bold vr-gradient-text">Configurador de Visualização de Dados VR</h1>
             <p className="text-muted-foreground mt-2">
-              Configure your VR data visualization experience
+              Configure sua experiência de visualização de dados VR
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="secondary" onClick={saveConfigurationHandler}>
             <Save className="mr-2 h-4 w-4" />
-            Save
+            Salvar
           </Button>
           <Button 
             className="vr-button" 
@@ -421,14 +453,14 @@ const VRDashboard = () => {
             disabled={!configSaved}
           >
             <Play className="mr-2 h-4 w-4" />
-            Launch VR Experience
+            Iniciar Experiência VR
           </Button>
           <div className="flex items-center gap-2 ml-2 border-l pl-3 border-gray-600">
             <Avatar>
               <AvatarImage src="https://images.unsplash.com/photo-1535268647677-300dbf3d78d1" />
               <AvatarFallback>U</AvatarFallback>
             </Avatar>
-            <span className="text-sm text-muted-foreground hidden md:inline">Logged as <span className="font-medium text-foreground">User*</span></span>
+            <span className="text-sm text-muted-foreground hidden md:inline">Conectado como <span className="font-medium text-foreground">Utilizador*</span></span>
           </div>
         </div>
       </div>
@@ -441,7 +473,7 @@ const VRDashboard = () => {
           {charts.length > 0 && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Active Chart</CardTitle>
+                <CardTitle>Gráfico Ativo</CardTitle>
                 <Button 
                   variant="secondary" 
                   onClick={addNewChart} 
@@ -449,7 +481,7 @@ const VRDashboard = () => {
                   className="flex items-center gap-1"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>Add Chart</span>
+                  <span>Adicionar Gráfico</span>
                 </Button>
               </CardHeader>
               <CardContent>
@@ -458,12 +490,12 @@ const VRDashboard = () => {
                   onValueChange={setActiveChartId}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a chart" />
+                    <SelectValue placeholder="Selecione um gráfico" />
                   </SelectTrigger>
                   <SelectContent>
                     {charts.map((chart, index) => (
                       <SelectItem key={chart.id} value={chart.id}>
-                        Chart {index + 1} ({chart.chartType})
+                        Gráfico {index + 1} ({chart.chartType})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -494,11 +526,11 @@ const VRDashboard = () => {
             <TabsList className="grid grid-cols-2">
               <TabsTrigger value="preview">
                 <Eye className="mr-2 h-4 w-4" />
-                Chart Preview
+                Pré-visualização do Gráfico
               </TabsTrigger>
               <TabsTrigger value="vr">
                 <Settings2 className="mr-2 h-4 w-4" />
-                VR Scene
+                Cena VR
               </TabsTrigger>
             </TabsList>
             
@@ -515,12 +547,25 @@ const VRDashboard = () => {
             <TabsContent value="vr" className="mt-4">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="lg:col-span-2">
-                  <VRScenePreview 
-                    chartType={chartType} 
-                    position={position} 
-                    charts={charts}
-                    activeChartId={activeChartId}
-                  />
+                  <div className="space-y-4">
+                    <VRScenePreview 
+                      chartType={chartType} 
+                      position={position} 
+                      charts={charts}
+                      activeChartId={activeChartId}
+                    />
+                    <Card>
+                      <CardContent className="pt-4">
+                        <Tabs defaultValue="position">
+                          <TabsList className="w-full grid grid-cols-3">
+                            <TabsTrigger value="position">Posição</TabsTrigger>
+                            <TabsTrigger value="rotation">Rotação</TabsTrigger>
+                            <TabsTrigger value="dimensions">Dimensões</TabsTrigger>
+                          </TabsList>
+                        </Tabs>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
                 <div>
                   <VRPositionController 

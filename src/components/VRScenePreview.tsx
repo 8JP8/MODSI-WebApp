@@ -38,6 +38,7 @@ interface VRScenePreviewProps {
 
 const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRScenePreviewProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -161,16 +162,41 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
     
     // Handle window resize
     const handleResize = () => {
-      if (!canvasRef.current || !cameraRef.current || !rendererRef.current) return;
+      if (!canvasRef.current || !cameraRef.current || !rendererRef.current || !containerRef.current) return;
       
-      const width = canvasRef.current.clientWidth;
-      const height = canvasRef.current.clientHeight;
+      const width = containerRef.current.clientWidth;
+      const height = containerRef.current.clientHeight;
       
       cameraRef.current.aspect = width / height;
       cameraRef.current.updateProjectionMatrix();
       rendererRef.current.setSize(width, height);
     };
+    
+    // Initial resize to set correct dimensions
+    if (containerRef.current) {
+      const width = containerRef.current.clientWidth;
+      const height = containerRef.current.clientHeight;
+      
+      if (rendererRef.current) {
+        rendererRef.current.setSize(width, height);
+      }
+      
+      if (cameraRef.current) {
+        cameraRef.current.aspect = width / height;
+        cameraRef.current.updateProjectionMatrix();
+      }
+    }
+    
     window.addEventListener('resize', handleResize);
+    
+    // Observe size changes with ResizeObserver
+    const resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
+    
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
     
     // Cleanup function
     return () => {
@@ -181,6 +207,10 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
         canvasRef.current.removeEventListener('mouseup', handleMouseUp);
         canvasRef.current.removeEventListener('wheel', handleWheel);
       }
+      if (containerRef.current) {
+        resizeObserver.unobserve(containerRef.current);
+      }
+      resizeObserver.disconnect();
     };
   }, []);
   
@@ -217,7 +247,7 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
   const createChartMesh = (chart: Chart) => {
     if (!sceneRef.current) return;
     
-    // Use BoxGeometry for all chart types - cube shape only
+    // Always use BoxGeometry for all chart types (cube shape only)
     const width = chart.position.width || 1;
     const height = chart.position.height || 1;
     const depth = chart.position.depth || 1;
@@ -340,26 +370,26 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle>VR Scene Preview</CardTitle>
+        <CardTitle>Pré-visualização da Cena VR</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="relative w-full h-64">
+        <div ref={containerRef} className="relative w-full h-64">
           <canvas
             ref={canvasRef}
             className="w-full h-full rounded-md border border-slate-700"
           />
           <div className="absolute bottom-2 left-2 text-xs text-slate-400 bg-slate-900/70 p-1 rounded">
-            Position: ({position.x.toFixed(1)}, {position.y.toFixed(1)}, {position.z.toFixed(1)})
+            Posição: ({position.x.toFixed(1)}, {position.y.toFixed(1)}, {position.z.toFixed(1)})
           </div>
           <div className="absolute top-2 right-2 text-xs text-slate-400 bg-slate-900/70 p-1 rounded">
-            Charts: {charts.length}
+            Gráficos: {charts.length}
           </div>
         </div>
         
         <div className="mt-4 text-xs text-muted-foreground">
-          <p>Mouse controls: Click and drag to rotate view. Use scroll wheel to zoom in/out.</p>
-          <p className="mt-1">Active Chart: {chartType} (Scale: {position.scale.toFixed(1)})</p>
-          <p>Dimensions: W:{position.width?.toFixed(1) || "1.0"} H:{position.height?.toFixed(1) || "1.0"} D:{position.depth?.toFixed(1) || "1.0"}</p>
+          <p>Controles do mouse: Clique e arraste para rotacionar. Use a roda do mouse para ampliar/reduzir.</p>
+          <p className="mt-1">Gráfico Ativo: {chartType} (Escala: {position.scale.toFixed(1)})</p>
+          <p>Dimensões: L:{position.width?.toFixed(1) || "1.0"} A:{position.height?.toFixed(1) || "1.0"} P:{position.depth?.toFixed(1) || "1.0"}</p>
         </div>
       </CardContent>
     </Card>

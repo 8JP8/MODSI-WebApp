@@ -14,15 +14,15 @@ interface ChartTypeSelectorProps {
 
 const ChartTypeSelector = ({ selectedType, onSelect }: ChartTypeSelectorProps) => {
   const chartTypes = [
-    { id: "bar", name: "Bar Chart", icon: BarChart3 },
-    { id: "pie", name: "Pie Chart", icon: PieChart },
-    { id: "line", name: "Line Chart", icon: LineChart },
-    { id: "scatter", name: "Scatter Plot", icon: ScatterChart },
+    { id: "bar", name: "Gráfico de Barras", icon: BarChart3 },
+    { id: "pie", name: "Gráfico Circular", icon: PieChart },
+    { id: "line", name: "Gráfico de Linhas", icon: LineChart },
+    { id: "scatter", name: "Gráfico de Dispersão", icon: ScatterChart },
   ];
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Chart Type</h3>
+      <h3 className="text-lg font-semibold">Tipo de Gráfico</h3>
       <div className="grid grid-cols-2 gap-3">
         {chartTypes.map((chart) => {
           const isSelected = selectedType === chart.id;
