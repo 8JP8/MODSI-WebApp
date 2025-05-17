@@ -100,8 +100,8 @@ const Dashboard = () => {
               src="https://app.appsmith.com/app/modsi-webapp/main-page-6807db039a00354830a6b72c?embed=true"
               className={`absolute top-0 left-0 w-full border-0 ${isLoading || hasError ? 'invisible' : 'visible'}`}
               style={{ 
-                height: "calc(100% + 80px)",  /* Make iframe 80px taller than container to hide footer completely */
-                clipPath: "inset(0px 0px 80px 0px)", /* Cut off bottom 80px */
+                height: "calc(100% + 80px)",  // 80px taller than container
+                clipPath: "inset(0px 0px 80px 0px)", // cutting off bottom 80px
                 pointerEvents: "auto",
                 userSelect: "none"
               }}
