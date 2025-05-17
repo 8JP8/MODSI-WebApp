@@ -4,20 +4,21 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 interface VRLaunchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onLaunch: () => void;
   onJoin: (roomCode: string) => void;
-  hasUnsavedChanges: boolean;
+  hasUnsavedChanges?: boolean;
 }
 
 const VRLaunchDialog = ({
@@ -25,81 +26,76 @@ const VRLaunchDialog = ({
   onOpenChange,
   onLaunch,
   onJoin,
-  hasUnsavedChanges,
+  hasUnsavedChanges = false,
 }: VRLaunchDialogProps) => {
   const [roomCode, setRoomCode] = useState("");
-
-  const handleJoinVisualization = () => {
-    if (!roomCode.trim()) {
-      toast.error("Please enter a visualization ID");
-      return;
-    }
-    
-    onJoin(roomCode);
-    onOpenChange(false);
-  };
   
-  const handleLaunchVisualization = () => {
-    if (hasUnsavedChanges) {
-      toast.error("Please save your configuration before launching");
-      return;
-    }
-    
-    onLaunch();
-    onOpenChange(false);
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Launch VR Experience</DialogTitle>
+          <DialogTitle>VR Experience</DialogTitle>
           <DialogDescription>
-            Choose how you want to enter the VR experience
+            Launch your VR visualization experience
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-6 py-4">
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium">Launch your configuration</h3>
-            <p className="text-sm text-muted-foreground">
-              Launch the VR experience with your current configuration
-            </p>
-            <Button 
-              onClick={handleLaunchVisualization}
-              className="w-full"
-              disabled={hasUnsavedChanges}
-            >
-              Launch My Configuration
-            </Button>
-            {hasUnsavedChanges && (
-              <p className="text-xs text-amber-500">
-                Save your configuration before launching
-              </p>
-            )}
-          </div>
+        <Tabs defaultValue="launch" className="w-full">
+          <TabsList className="grid grid-cols-2">
+            <TabsTrigger value="launch">Launch Own Room</TabsTrigger>
+            <TabsTrigger value="join">Join Room</TabsTrigger>
+          </TabsList>
           
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium">Join existing visualization</h3>
-            <p className="text-sm text-muted-foreground">
-              Enter a visualization ID to join an existing VR experience
-            </p>
-            <div className="flex gap-2">
+          <TabsContent value="launch" className="space-y-4 py-4">
+            <div>
+              <p className="text-sm text-muted-foreground">
+                Start a new VR visualization room with your current configuration.
+              </p>
+              
+              {hasUnsavedChanges && (
+                <div className="bg-yellow-500/10 border border-yellow-600 mt-4 p-3 rounded-md">
+                  <p className="text-sm text-yellow-600">
+                    You have unsaved changes. Please save your configuration before launching.
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            <DialogFooter>
+              <Button 
+                className="w-full vr-button" 
+                onClick={onLaunch}
+                disabled={hasUnsavedChanges}
+              >
+                Launch VR Experience
+              </Button>
+            </DialogFooter>
+          </TabsContent>
+          
+          <TabsContent value="join" className="space-y-4 py-4">
+            <div className="grid gap-4">
+              <p className="text-sm text-muted-foreground">
+                Enter a room code to join an existing VR visualization.
+              </p>
               <Input
-                placeholder="Enter visualization ID"
+                id="room-code"
+                placeholder="Enter room code"
                 value={roomCode}
                 onChange={(e) => setRoomCode(e.target.value)}
               />
-              <Button onClick={handleJoinVisualization}>Join</Button>
             </div>
-          </div>
-        </div>
-        
-        <DialogFooter className="justify-end">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-        </DialogFooter>
+            
+            <DialogFooter>
+              <Button 
+                className="w-full vr-button" 
+                onClick={() => onJoin(roomCode)}
+                disabled={!roomCode.trim()}
+              >
+                Join Room
+              </Button>
+            </DialogFooter>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

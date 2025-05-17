@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import ChartTypeSelector from "./ChartTypeSelector";
 import DataIndicatorSelector from "./DataIndicatorSelector";
 import VRPositionController from "./VRPositionController";
 import ChartPreview from "./ChartPreview";
@@ -14,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { Play, Eye, Settings2, Save, ArrowLeft, Home } from "lucide-react";
+import { Play, Eye, Settings2, Save, ArrowLeft, Plus } from "lucide-react";
 import { generateMockData, getAvailableDataIndicators } from "@/utils/mockData";
 import sampleData from "../data/sampleVisualization.json";
 
@@ -265,60 +264,92 @@ const VRDashboard = () => {
   };
 
   const handleLoadConfig = (config: any) => {
-    setChartType(config.chartType);
-    setXAxis(config.xAxis);
-    setYAxis(config.yAxis);
-    setZAxis(config.zAxis || "");
-    setPosition(config.position);
-    
-    if (config.department) {
-      handleDepartmentChange(config.department);
-    }
-    
-    // Update active chart
-    if (activeChartId) {
-      updateActiveChart({
-        chartType: config.chartType,
-        position: config.position,
-        xAxis: config.xAxis,
-        yAxis: config.yAxis,
-        zAxis: config.zAxis || "",
-        department: config.department || selectedDepartment
-      });
+    // Handle loading a full configuration with multiple charts
+    if (config.charts && Array.isArray(config.charts)) {
+      setCharts(config.charts);
+      if (config.charts.length > 0) {
+        setActiveChartId(config.charts[0].id);
+        const firstChart = config.charts[0];
+        setChartType(firstChart.chartType);
+        setPosition(firstChart.position);
+        setXAxis(firstChart.xAxis);
+        setYAxis(firstChart.yAxis);
+        setZAxis(firstChart.zAxis || "");
+        setSelectedDepartment(firstChart.department);
+        
+        if (firstChart.department) {
+          loadDepartmentData(firstChart.department);
+        }
+      }
+    } else {
+      // Legacy support for single chart configuration
+      setChartType(config.chartType);
+      setXAxis(config.xAxis);
+      setYAxis(config.yAxis);
+      setZAxis(config.zAxis || "");
+      setPosition(config.position);
+      
+      if (config.department) {
+        handleDepartmentChange(config.department);
+      }
+      
+      // Update active chart
+      if (activeChartId) {
+        updateActiveChart({
+          chartType: config.chartType,
+          position: config.position,
+          xAxis: config.xAxis,
+          yAxis: config.yAxis,
+          zAxis: config.zAxis || "",
+          department: config.department || selectedDepartment
+        });
+      }
     }
     
     setConfigSaved(true);
+    toast.success("Configuration loaded successfully");
   };
 
   const handleImportJSON = () => {
     // In a real app, this would open a file dialog
     // For this demo, we'll simulate loading the sample
-    const sampleConfig = sampleData.charts[0];
+    
+    // Import multiple charts
+    const chartConfigs = sampleData.charts.map(chart => ({
+      id: `chart-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      chartType: chart.type,
+      xAxis: chart.dataMapping.xAxis,
+      yAxis: chart.dataMapping.yAxis,
+      zAxis: chart.dataMapping.zAxis || "",
+      department: chart.department,
+      position: chart.position,
+      color: CHART_COLORS[Math.floor(Math.random() * CHART_COLORS.length)]
+    }));
+    
+    setCharts(chartConfigs);
+    if (chartConfigs.length > 0) {
+      setActiveChartId(chartConfigs[0].id);
+    }
     
     toast.success("Configuration imported successfully");
-    handleLoadConfig({
-      chartType: sampleConfig.type,
-      xAxis: sampleConfig.dataMapping.xAxis,
-      yAxis: sampleConfig.dataMapping.yAxis,
-      zAxis: sampleConfig.dataMapping.zAxis,
-      position: sampleConfig.position,
-      department: sampleConfig.department
-    });
-    
     setConfigSaved(true);
   };
   
   const handleExportJSON = () => {
-    // Create export config
+    // Create export config with all charts
     const config = {
-      chartType,
-      dataMapping: {
-        xAxis,
-        yAxis,
-        zAxis
-      },
-      position,
-      department: selectedDepartment
+      charts: charts.map(chart => ({
+        id: chart.id,
+        chartType: chart.chartType,
+        dataMapping: {
+          xAxis: chart.xAxis,
+          yAxis: chart.yAxis,
+          zAxis: chart.zAxis
+        },
+        position: chart.position,
+        department: chart.department,
+        color: chart.color
+      }))
     };
     
     // In a real app, this would trigger a download
@@ -336,6 +367,7 @@ const VRDashboard = () => {
     
     toast.success(`Joining visualization room: ${roomCode}`);
     setConfigSaved(true);
+    setLaunchDialogOpen(false);
   };
 
   const launchVR = () => {
@@ -349,6 +381,8 @@ const VRDashboard = () => {
     console.log("Launching VR with configuration:", {
       charts
     });
+    
+    setLaunchDialogOpen(false);
   };
 
   const saveConfigurationHandler = () => {
@@ -406,8 +440,17 @@ const VRDashboard = () => {
           {/* Chart Selection */}
           {charts.length > 0 && (
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Active Chart</CardTitle>
+                <Button 
+                  variant="secondary" 
+                  onClick={addNewChart} 
+                  size="sm"
+                  className="flex items-center gap-1"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Add Chart</span>
+                </Button>
               </CardHeader>
               <CardContent>
                 <Select 
@@ -429,12 +472,6 @@ const VRDashboard = () => {
             </Card>
           )}
           
-          <ChartTypeSelector 
-            selectedType={chartType} 
-            onSelect={handleChartTypeChange} 
-            onAddChart={addNewChart}
-          />
-          
           <DataIndicatorSelector
             availableIndicators={availableIndicators}
             onSelectXAxis={handleXAxisChange}
@@ -444,6 +481,7 @@ const VRDashboard = () => {
             selectedY={yAxis}
             selectedZ={zAxis}
             chartType={chartType}
+            onSelectChartType={handleChartTypeChange}
             departments={departments}
             selectedDepartment={selectedDepartment}
             onDepartmentChange={handleDepartmentChange}
@@ -495,7 +533,10 @@ const VRDashboard = () => {
           </Tabs>
           
           <ConfigurationManager
-            currentConfig={{ chartType, xAxis, yAxis, zAxis, position }}
+            currentConfig={{ 
+              charts,
+              activeChartId
+            }}
             onLoadConfig={handleLoadConfig}
             onResetConfig={resetConfiguration}
             onSaveConfig={saveConfigurationHandler}

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,16 +6,32 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Save, Trash2, RefreshCw, FileDown, FileUp } from "lucide-react";
 
-interface ConfigurationSettings {
+interface Chart {
+  id: string;
   chartType: string;
+  position: any;
   xAxis: string;
   yAxis: string;
+  zAxis: string;
+  department: string;
+  color: string;
+}
+
+interface ConfigurationSettings {
+  charts?: Chart[];
+  activeChartId?: string;
+  chartType?: string;
+  xAxis?: string;
+  yAxis?: string;
   zAxis?: string;
-  position: {
+  position?: {
     x: number;
     y: number;
     z: number;
     scale: number;
+    width?: number;
+    height?: number;
+    depth?: number;
     rotation: {
       x: number;
       y: number;

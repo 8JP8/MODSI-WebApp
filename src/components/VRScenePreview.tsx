@@ -192,9 +192,12 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
   // Update single chart when position or type changes
   useEffect(() => {
     if (activeChartId) {
-      updateChartMesh(activeChartId, chartType, position);
+      const chart = charts.find(c => c.id === activeChartId);
+      if (chart) {
+        updateChartMesh(activeChartId, chart.chartType, chart.position);
+      }
     }
-  }, [position, chartType, activeChartId]);
+  }, [position, chartType, activeChartId, charts]);
   
   // Helper function to update camera position
   const updateCameraPosition = () => {
