@@ -24,7 +24,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/visualization-hub" element={<VisualizationLanding />} />
+            <Route path="/visualization-hub" element={<VisualizationHub />} />
             <Route path="/configurator" element={<VRDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
