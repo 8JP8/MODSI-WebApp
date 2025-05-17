@@ -203,11 +203,16 @@ const Home = () => {
             </div>
 
             {/* NOVO BLOCO AUTORES - depois dos botões, horizontal, espaçado */}
-            <div className="mt-8 grid grid-cols-3 gap-x-16 text-white font-bold text-lg select-none">
-              <span className="text-center">João Oliveira - 1240369</span>
-              <span className="text-center">Rui Costa - 1210971</span>
-              <span className="text-center">Simão Soares - 1211630</span>
-            </div>
+            <div
+            className="mt-8 grid grid-cols-3 gap-x-16 text-black text-lg font-semibold select-none
+                      border border-solid rounded-lg
+                      dark:border-gray-300 border-gray-700
+                      p-4"
+            style={{ color: theme === 'dark' ? '#eee' : '#000' }}
+          >
+            <span className="text-center">João Oliveira - 1240369</span>
+            <span className="text-center">Rui Costa - 1210971</span>
+            <span className="text-center">Simão Soares - 1211630</span>
           </div>
         </main>
 
