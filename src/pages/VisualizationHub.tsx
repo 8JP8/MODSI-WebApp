@@ -87,7 +87,7 @@ const Home = () => {
             <CardHeader>
               <CardTitle className="text-xl flex items-center">
                 <Settings className="mr-2 h-5 w-5 text-primary" />
-                Configurador de Visualização
+                Editor de Visualizações
               </CardTitle>
               <CardDescription>
                 Crie e personalize as suas experiências VR de visualização de dados
