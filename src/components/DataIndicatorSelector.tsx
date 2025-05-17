@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { 
   Select, 
   SelectContent, 
@@ -40,11 +39,17 @@ const DataIndicatorSelector = ({
   onDepartmentChange,
 }: DataIndicatorSelectorProps) => {
   const isPieChart = chartType === "pie";
+
+  const handleZAxisChange = (value: string) => {
+    if (onSelectZAxis) {
+      onSelectZAxis(value === "none" ? "" : value);
+    }
+  };
   
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Chart Configuration</CardTitle>
+        <CardTitle>Configuração do Gráfico</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Chart Type Section */}
@@ -54,14 +59,14 @@ const DataIndicatorSelector = ({
         />
         
         <div className="border-t border-slate-700 pt-5">
-          <h3 className="text-lg font-semibold mb-4">Data Indicators</h3>
+          <h3 className="text-lg font-semibold mb-4">Indicadores de Dados</h3>
           
           {departments.length > 0 && onDepartmentChange && (
             <div className="space-y-2 mb-4">
-              <label className="text-sm font-medium">Selected Department</label>
+              <label className="text-sm font-medium">Departamento Selecionado</label>
               <Select value={selectedDepartment} onValueChange={onDepartmentChange}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select department" />
+                  <SelectValue placeholder="Selecione o departamento" />
                 </SelectTrigger>
                 <SelectContent>
                   {departments.map((department) => (
@@ -77,10 +82,10 @@ const DataIndicatorSelector = ({
           {isPieChart ? (
             <>
               <div className="space-y-2 mb-4">
-                <label className="text-sm font-medium">Categories</label>
+                <label className="text-sm font-medium">Categorias</label>
                 <Select value={selectedX} onValueChange={onSelectXAxis}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder="Selecione a categoria" />
                   </SelectTrigger>
                   <SelectContent>
                     {availableIndicators.map((indicator) => (
@@ -92,10 +97,10 @@ const DataIndicatorSelector = ({
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Values</label>
+                <label className="text-sm font-medium">Valores</label>
                 <Select value={selectedY} onValueChange={onSelectYAxis}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select values" />
+                    <SelectValue placeholder="Selecione os valores" />
                   </SelectTrigger>
                   <SelectContent>
                     {availableIndicators.map((indicator) => (
@@ -110,10 +115,10 @@ const DataIndicatorSelector = ({
           ) : (
             <>
               <div className="space-y-2 mb-4">
-                <label className="text-sm font-medium">X Axis</label>
+                <label className="text-sm font-medium">Eixo X</label>
                 <Select value={selectedX} onValueChange={onSelectXAxis}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select X axis" />
+                    <SelectValue placeholder="Selecione o eixo X" />
                   </SelectTrigger>
                   <SelectContent>
                     {availableIndicators.map((indicator) => (
@@ -125,10 +130,10 @@ const DataIndicatorSelector = ({
                 </Select>
               </div>
               <div className="space-y-2 mb-4">
-                <label className="text-sm font-medium">Y Axis</label>
+                <label className="text-sm font-medium">Eixo Y</label>
                 <Select value={selectedY} onValueChange={onSelectYAxis}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select Y axis" />
+                    <SelectValue placeholder="Selecione o eixo Y" />
                   </SelectTrigger>
                   <SelectContent>
                     {availableIndicators.map((indicator) => (
@@ -141,13 +146,13 @@ const DataIndicatorSelector = ({
               </div>
               {onSelectZAxis && (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Z Axis (Optional)</label>
-                  <Select value={selectedZ || "none"} onValueChange={onSelectZAxis}>
+                  <label className="text-sm font-medium">Eixo Z (Opcional)</label>
+                  <Select value={selectedZ || "none"} onValueChange={handleZAxisChange}>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select Z axis" />
+                      <SelectValue placeholder="Selecione o eixo Z" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value="none">Nenhum</SelectItem>
                       {availableIndicators.map((indicator) => (
                         <SelectItem key={indicator} value={indicator}>
                           {indicator}

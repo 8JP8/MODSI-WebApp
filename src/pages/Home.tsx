@@ -5,6 +5,8 @@ import * as THREE from 'three';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useTheme } from '@/hooks/use-theme';
+import { GitHub } from 'lucide-react';
+import { HelpButton } from '@/components/HelpButton';
 
 const Home = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -63,15 +65,15 @@ const Home = () => {
       bars.push(bar);
     }
 
-    // Add a plane as a base
-    const planeGeometry = new THREE.PlaneGeometry(areaSize * 1.5, areaSize * 1.5);
-    const planeMaterial = new THREE.MeshBasicMaterial({
+    // Add a circular plane as a base
+    const circleGeometry = new THREE.CircleGeometry(areaSize * 0.8, 64);
+    const circleMaterial = new THREE.MeshBasicMaterial({
       color: theme === 'dark' ? 0x111111 : 0xf5f5f5,
       side: THREE.DoubleSide
     });
-    const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-    plane.rotation.x = -Math.PI / 2;
-    scene.add(plane);
+    const circle = new THREE.Mesh(circleGeometry, circleMaterial);
+    circle.rotation.x = -Math.PI / 2;
+    scene.add(circle);
 
     // Add ambient and directional light
     const ambientLight = new THREE.AmbientLight(0x404040, 1);
@@ -151,7 +153,7 @@ const Home = () => {
     if (!sceneRef.current) return;
     
     sceneRef.current.traverse((object) => {
-      if (object instanceof THREE.Mesh && object.geometry instanceof THREE.PlaneGeometry) {
+      if (object instanceof THREE.Mesh && object.geometry instanceof THREE.CircleGeometry) {
         if (object.material instanceof THREE.MeshBasicMaterial) {
           object.material.color.set(theme === 'dark' ? 0x111111 : 0xf5f5f5);
           object.material.needsUpdate = true;
@@ -202,18 +204,45 @@ const Home = () => {
         </main>
 
         {/* Footer */}
-        <footer className="w-full py-6 px-6 bg-background/70 backdrop-blur-md text-center">
-          <div className="flex flex-col items-center gap-2">
-            <a href="https://isep.ipp.pt" target="_blank" rel="noopener noreferrer" className="inline-block">
-              <img 
-                src="https://www.isep.ipp.pt/images/ISEP_marca_cor.png" 
-                alt="ISEP Logo" 
-                className="h-10"
-              />
-            </a>
-            <p className="text-sm text-muted-foreground mt-2">
-              Desenvolvido com A-Frame e BabiaXR para experiências imersivas de visualização de dados
-            </p>
+        <footer className="w-full py-6 px-6 bg-background/70 backdrop-blur-md">
+          <div className="flex flex-col md:flex-row justify-between items-center px-4">
+            <div className="repos-container mb-4 md:mb-0">
+              <h4 className="text-sm font-semibold mb-2">Repositórios:</h4>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <a href="https://github.com/8JP8/MODSI-VRVisualization" 
+                   className="text-sm flex items-center gap-1 hover:text-primary transition-colors" 
+                   target="_blank" 
+                   rel="noopener noreferrer">
+                  <GitHub className="h-4 w-4" />
+                  <span>MODSI-VRVisualization</span>
+                </a>
+                <a href="https://github.com/8JP8/MODSI-WebApp" 
+                   className="text-sm flex items-center gap-1 hover:text-primary transition-colors" 
+                   target="_blank" 
+                   rel="noopener noreferrer">
+                  <GitHub className="h-4 w-4" />
+                  <span>MODSI-WebApp</span>
+                </a>
+                <a href="https://github.com/8JP8/MODSI-SQLRestAPI" 
+                   className="text-sm flex items-center gap-1 hover:text-primary transition-colors" 
+                   target="_blank" 
+                   rel="noopener noreferrer">
+                  <GitHub className="h-4 w-4" />
+                  <span>MODSI-SQLRestAPI</span>
+                </a>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <HelpButton />
+              <a href="https://isep.ipp.pt" target="_blank" rel="noopener noreferrer" className="inline-block ml-3">
+                <img 
+                  src="https://www.isep.ipp.pt/images/ISEP_marca_cor.png" 
+                  alt="ISEP Logo" 
+                  className="h-10"
+                />
+              </a>
+            </div>
           </div>
         </footer>
       </div>

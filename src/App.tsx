@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import VisualizationHub from "./pages/VisualizationHub";
+import VisualizationLanding from "./pages/VisualizationLanding";
 import VRDashboard from "./components/VRDashboard";
 import NotFound from "./pages/NotFound";
 
@@ -23,7 +24,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/visualization-hub" element={<VisualizationHub />} />
+            <Route path="/visualization-hub" element={<VisualizationLanding />} />
             <Route path="/configurator" element={<VRDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

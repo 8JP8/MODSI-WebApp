@@ -1,25 +1,9 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-interface VRPosition {
-  x: number;
-  y: number;
-  z: number;
-  scale: number;
-  width?: number;
-  height?: number;
-  depth?: number;
-  rotation: {
-    x: number;
-    y: number;
-    z: number;
-  };
-}
+import { VRPosition } from "@/types/vr-dashboard";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface VRPositionControllerProps {
   position: VRPosition;
@@ -27,90 +11,183 @@ interface VRPositionControllerProps {
 }
 
 const VRPositionController = ({ position, onPositionChange }: VRPositionControllerProps) => {
-  const [positionTab, setPositionTab] = useState("position");
+  const [activeTab, setActiveTab] = useState("position");
 
-  const handlePositionChange = (key: string, value: number) => {
-    const updatedPosition = { ...position };
-    
-    if (key.includes(".")) {
-      const [parent, child] = key.split(".");
-      (updatedPosition as any)[parent][child] = value;
-    } else {
-      (updatedPosition as any)[key] = value;
-    }
-    
-    onPositionChange(updatedPosition);
-  };
-  
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    handlePositionChange(name, Number(value));
-  };
-  
-  const handleSliderChange = (name: string, value: number[]) => {
-    handlePositionChange(name, value[0]);
+  const handlePositionChange = (axis: "x" | "y" | "z", value: number) => {
+    const newPosition = { ...position, [axis]: value };
+    onPositionChange(newPosition);
   };
 
-  const renderSliderWithInput = (name: string, label: string, min: number, max: number, step: number, value: number) => {
-    return (
-      <div className="space-y-2">
-        <Label htmlFor={name}>{label}</Label>
-        <div className="flex items-center gap-2">
-          <div className="flex-grow">
-            <Slider
-              id={`${name}-slider`}
-              min={min}
-              max={max}
-              step={step}
-              value={[value]}
-              onValueChange={(vals) => handleSliderChange(name, vals)}
-            />
-          </div>
-          <Input
-            id={name}
-            name={name}
-            type="number"
-            value={value}
-            onChange={handleInputChange}
-            className="w-20 text-xs"
-            step={step}
-          />
-        </div>
-      </div>
-    );
+  const handleRotationChange = (axis: "x" | "y" | "z", value: number) => {
+    const newPosition = {
+      ...position,
+      rotation: { ...position.rotation, [axis]: value },
+    };
+    onPositionChange(newPosition);
+  };
+
+  const handleSizeChange = (dim: "width" | "height" | "depth" | "scale", value: number) => {
+    const newPosition = { ...position, [dim]: value };
+    onPositionChange(newPosition);
   };
 
   return (
-    <Card className="h-full">
+    <Card>
       <CardHeader>
-        <CardTitle>Controlos de Posição</CardTitle>
+        <CardTitle>Controlo de Posicionamento 3D</CardTitle>
       </CardHeader>
-      <CardContent>
-        <Tabs value={positionTab} onValueChange={setPositionTab}>
-          <TabsList className="grid grid-cols-3 w-full">
-            <TabsTrigger value="position" className="px-2 py-1 text-xs whitespace-nowrap">Posição</TabsTrigger>
-            <TabsTrigger value="rotation" className="px-2 py-1 text-xs whitespace-nowrap">Rotação</TabsTrigger>
-            <TabsTrigger value="dimensions" className="px-2 py-1 text-xs whitespace-nowrap">Dimensões</TabsTrigger>
+      <CardContent className="space-y-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-3 mb-4">
+            <TabsTrigger value="position" className="text-xs sm:text-sm">Posição</TabsTrigger>
+            <TabsTrigger value="rotation" className="text-xs sm:text-sm">Rotação</TabsTrigger>
+            <TabsTrigger value="size" className="text-xs sm:text-sm">Dimensões</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="position" className="space-y-4 mt-4">
-            {renderSliderWithInput("x", "Posição X", -5, 5, 0.1, position.x)}
-            {renderSliderWithInput("y", "Posição Y", -5, 5, 0.1, position.y)}
-            {renderSliderWithInput("z", "Posição Z", -10, 5, 0.1, position.z)}
-            {renderSliderWithInput("scale", "Escala", 0.1, 3, 0.1, position.scale)}
-          </TabsContent>
-          
-          <TabsContent value="rotation" className="space-y-4 mt-4">
-            {renderSliderWithInput("rotation.x", "Rotação X", 0, 360, 5, position.rotation.x)}
-            {renderSliderWithInput("rotation.y", "Rotação Y", 0, 360, 5, position.rotation.y)}
-            {renderSliderWithInput("rotation.z", "Rotação Z", 0, 360, 5, position.rotation.z)}
-          </TabsContent>
-          
-          <TabsContent value="dimensions" className="space-y-4 mt-4">
-            {renderSliderWithInput("width", "Largura", 0.1, 3, 0.1, position.width || 1)}
-            {renderSliderWithInput("height", "Altura", 0.1, 3, 0.1, position.height || 1)}
-            {renderSliderWithInput("depth", "Profundidade", 0.1, 3, 0.1, position.depth || 1)}
-          </TabsContent>
+
+          {activeTab === "position" && (
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-medium">Eixo X: {position.x.toFixed(1)}</label>
+                  <span className="text-xs text-muted-foreground">[-5, 5]</span>
+                </div>
+                <Slider 
+                  value={[position.x]} 
+                  min={-5} 
+                  max={5} 
+                  step={0.1} 
+                  onValueChange={(values) => handlePositionChange("x", values[0])} 
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-medium">Eixo Y: {position.y.toFixed(1)}</label>
+                  <span className="text-xs text-muted-foreground">[0, 5]</span>
+                </div>
+                <Slider 
+                  value={[position.y]} 
+                  min={0} 
+                  max={5} 
+                  step={0.1} 
+                  onValueChange={(values) => handlePositionChange("y", values[0])} 
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-medium">Eixo Z: {position.z.toFixed(1)}</label>
+                  <span className="text-xs text-muted-foreground">[-5, 0]</span>
+                </div>
+                <Slider 
+                  value={[position.z]} 
+                  min={-5} 
+                  max={0} 
+                  step={0.1} 
+                  onValueChange={(values) => handlePositionChange("z", values[0])} 
+                />
+              </div>
+            </div>
+          )}
+
+          {activeTab === "rotation" && (
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-medium">Rotação X: {position.rotation.x.toFixed(1)}°</label>
+                  <span className="text-xs text-muted-foreground">[0°, 360°]</span>
+                </div>
+                <Slider 
+                  value={[position.rotation.x]} 
+                  min={0} 
+                  max={360} 
+                  step={1} 
+                  onValueChange={(values) => handleRotationChange("x", values[0])} 
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-medium">Rotação Y: {position.rotation.y.toFixed(1)}°</label>
+                  <span className="text-xs text-muted-foreground">[0°, 360°]</span>
+                </div>
+                <Slider 
+                  value={[position.rotation.y]} 
+                  min={0} 
+                  max={360} 
+                  step={1} 
+                  onValueChange={(values) => handleRotationChange("y", values[0])} 
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-medium">Rotação Z: {position.rotation.z.toFixed(1)}°</label>
+                  <span className="text-xs text-muted-foreground">[0°, 360°]</span>
+                </div>
+                <Slider 
+                  value={[position.rotation.z]} 
+                  min={0} 
+                  max={360} 
+                  step={1} 
+                  onValueChange={(values) => handleRotationChange("z", values[0])} 
+                />
+              </div>
+            </div>
+          )}
+
+          {activeTab === "size" && (
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-medium">Escala: {position.scale.toFixed(1)}x</label>
+                  <span className="text-xs text-muted-foreground">[0.5, 2]</span>
+                </div>
+                <Slider 
+                  value={[position.scale]} 
+                  min={0.5} 
+                  max={2} 
+                  step={0.1} 
+                  onValueChange={(values) => handleSizeChange("scale", values[0])} 
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-medium">Largura: {position.width.toFixed(1)}</label>
+                  <span className="text-xs text-muted-foreground">[0.5, 3]</span>
+                </div>
+                <Slider 
+                  value={[position.width]} 
+                  min={0.5} 
+                  max={3} 
+                  step={0.1} 
+                  onValueChange={(values) => handleSizeChange("width", values[0])} 
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-medium">Altura: {position.height.toFixed(1)}</label>
+                  <span className="text-xs text-muted-foreground">[0.5, 3]</span>
+                </div>
+                <Slider 
+                  value={[position.height]} 
+                  min={0.5} 
+                  max={3} 
+                  step={0.1} 
+                  onValueChange={(values) => handleSizeChange("height", values[0])} 
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-medium">Profundidade: {position.depth.toFixed(1)}</label>
+                  <span className="text-xs text-muted-foreground">[0.5, 3]</span>
+                </div>
+                <Slider 
+                  value={[position.depth]} 
+                  min={0.5} 
+                  max={3} 
+                  step={0.1} 
+                  onValueChange={(values) => handleSizeChange("depth", values[0])} 
+                />
+              </div>
+            </div>
+          )}
         </Tabs>
       </CardContent>
     </Card>
