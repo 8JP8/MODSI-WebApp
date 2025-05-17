@@ -59,8 +59,14 @@ const Dashboard = () => {
       </header>
 
       {/* Main content with iframe */}
-      <main className="flex-1 relative">
-        <div className="iframe-container w-full h-[calc(100vh-80px)]">
+      <main className="flex-1 relative overflow-hidden">
+        <div 
+          className="iframe-container w-full" 
+          style={{
+            height: "calc(100vh - 70px)", // Adjust if your header height differs
+            overflow: "hidden",
+          }}
+        >
           {isLoading && (
             <div 
               className="absolute inset-0 bg-background z-10 flex flex-col items-center justify-center"
@@ -69,7 +75,7 @@ const Dashboard = () => {
               <p className="mt-4 text-foreground">A carregar a Dashboard...</p>
             </div>
           )}
-          
+
           {hasError && (
             <div 
               className="absolute inset-0 bg-background z-10 flex flex-col items-center justify-center text-center"
@@ -86,17 +92,20 @@ const Dashboard = () => {
               </div>
             </div>
           )}
-          
-          <iframe
-              id="dashboard-iframe"
-              src="https://app.appsmith.com/app/modsi-webapp/main-page-6807db039a00354830a6b72c?embed=true"
-              className={`absolute top-0 left-0 w-full border-0 ${isLoading || hasError ? 'invisible' : 'visible'}`}
-              style={{ height: "calc(100vh - 70px)" }}
-              onLoad={handleIframeLoad}
-              onError={handleIframeError}
-              allowFullScreen
-              title="MODSiVR Dashboard"
-            ></iframe>
+
+          <iframe  
+            id="dashboard-iframe" 
+            src="https://app.appsmith.com/app/modsi-webapp/main-page-6807db039a00354830a6b72c?embed=true" 
+            className={`absolute top-0 left-0 w-full border-0 ${isLoading || hasError ? 'invisible' : 'visible'}`}
+            style={{
+              height: "100%",
+              clipPath: "inset(0px 0px 100px 0px)", // Adjust this to hide the watermark
+            }}
+            onLoad={handleIframeLoad}
+            onError={handleIframeError}
+            allowFullScreen
+            title="MODSiVR Dashboard"
+          ></iframe>
         </div>
       </main>
     </div>
