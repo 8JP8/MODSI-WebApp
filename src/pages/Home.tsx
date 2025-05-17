@@ -1,139 +1,221 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import { Settings, Layers, User } from "lucide-react";
+import { useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import * as THREE from 'three';
+import { Button } from '@/components/ui/button';
+import ThemeToggle from '@/components/ThemeToggle';
+import { useTheme } from '@/hooks/use-theme';
 
 const Home = () => {
-  const navigate = useNavigate();
-  const [visualizationId, setVisualizationId] = useState("");
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const { theme } = useTheme();
 
-  const handleJoinVisualization = () => {
-    if (!visualizationId.trim()) {
-      toast.error("Please enter a visualization ID");
-      return;
-    }
+  useEffect(() => {
+    if (!canvasRef.current) return;
+
+    // Setup
+    const scene = new THREE.Scene();
+    sceneRef.current = scene;
     
-    // In a real app, this would validate the ID against an API
-    toast.success(`Joining visualization ${visualizationId}`);
-    // Navigate to configurator with the visualization ID
-    navigate(`/configurator?room=${visualizationId}`);
-  };
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 5, 10);
+    camera.lookAt(0, 2, 0);
 
-  const navigateToConfigurator = () => {
-    navigate("/configurator");
-  };
+    const renderer = new THREE.WebGLRenderer({ 
+      canvas: canvasRef.current, 
+      alpha: true,
+      antialias: true
+    });
+    rendererRef.current = renderer;
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
 
-  const navigateToUserVisualizations = () => {
-    window.open("https://modsivr.pt", "_blank");
-  };
+    // Create dynamic 3D bar graph
+    const bars: THREE.Mesh[] = [];
+    const barCount = 30;
+    const barMaxHeight = 5;
+    const spacing = 1.2;
+    const areaSize = Math.sqrt(barCount) * spacing;
+
+    // Create bars with random heights
+    for (let i = 0; i < barCount; i++) {
+      const x = (i % Math.sqrt(barCount)) * spacing - (areaSize / 2);
+      const z = Math.floor(i / Math.sqrt(barCount)) * spacing - (areaSize / 2);
+      const height = Math.random() * barMaxHeight + 0.5;
+
+      const geometry = new THREE.BoxGeometry(0.5, 1, 0.5);
+      const material = new THREE.MeshPhongMaterial({
+        color: new THREE.Color(0.2 + Math.random() * 0.2, 0.4 + Math.random() * 0.3, 0.7 + Math.random() * 0.3),
+        transparent: true,
+        opacity: 0.8,
+        shininess: 80
+      });
+
+      const bar = new THREE.Mesh(geometry, material);
+      bar.position.set(x, height / 2, z);
+      bar.userData = {
+        targetHeight: height,
+        speed: 0.02 + Math.random() * 0.02
+      };
+      scene.add(bar);
+      bars.push(bar);
+    }
+
+    // Add a plane as a base
+    const planeGeometry = new THREE.PlaneGeometry(areaSize * 1.5, areaSize * 1.5);
+    const planeMaterial = new THREE.MeshBasicMaterial({
+      color: theme === 'dark' ? 0x111111 : 0xf5f5f5,
+      side: THREE.DoubleSide
+    });
+    const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    plane.rotation.x = -Math.PI / 2;
+    scene.add(plane);
+
+    // Add ambient and directional light
+    const ambientLight = new THREE.AmbientLight(0x404040, 1);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(5, 10, 5);
+    scene.add(directionalLight);
+
+    // Animation loop
+    let animationFrameId: number;
+    
+    const animate = () => {
+      animationFrameId = requestAnimationFrame(animate);
+      
+      // Rotate the scene slightly
+      scene.rotation.y += 0.002;
+
+      // Animate bar heights smoothly
+      bars.forEach(bar => {
+        if (Math.random() < 0.01) {
+          bar.userData.targetHeight = Math.random() * barMaxHeight + 0.5;
+        }
+
+        const currentHeight = bar.scale.y;
+        const targetHeight = bar.userData.targetHeight;
+        const diff = targetHeight - currentHeight;
+
+        if (Math.abs(diff) > 0.01) {
+          bar.scale.y += diff * bar.userData.speed;
+          bar.position.y = (bar.scale.y * bar.geometry.parameters.height) / 2;
+        }
+      });
+
+      renderer.render(scene, camera);
+    };
+
+    animate();
+
+    // Handle window resize
+    const handleResize = () => {
+      if (!renderer || !camera) return;
+      
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationFrameId);
+      
+      // Dispose of resources
+      if (sceneRef.current) {
+        sceneRef.current.traverse((object) => {
+          if (object instanceof THREE.Mesh) {
+            object.geometry.dispose();
+            
+            if (Array.isArray(object.material)) {
+              object.material.forEach(material => material.dispose());
+            } else {
+              object.material.dispose();
+            }
+          }
+        });
+      }
+      
+      rendererRef.current?.dispose();
+    };
+  }, [theme]);
+
+  // Update the base plane color when theme changes
+  useEffect(() => {
+    if (!sceneRef.current) return;
+    
+    sceneRef.current.traverse((object) => {
+      if (object instanceof THREE.Mesh && object.geometry instanceof THREE.PlaneGeometry) {
+        if (object.material instanceof THREE.MeshBasicMaterial) {
+          object.material.color.set(theme === 'dark' ? 0x111111 : 0xf5f5f5);
+          object.material.needsUpdate = true;
+        }
+      }
+    });
+  }, [theme]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-slate-900/50 flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-5xl">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold tracking-tight mb-2 vr-gradient-text">
-            VR Data Visualization Platform
-          </h1>
-          <p className="text-xl text-muted-foreground">
-            Create, share, and explore data in virtual reality
-          </p>
-        </div>
+    <div className="relative min-h-screen overflow-hidden">
+      {/* Canvas background */}
+      <canvas ref={canvasRef} className="fixed inset-0 -z-10" />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Join Visualization */}
-          <Card className="shadow-lg border border-slate-800">
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center">
-                <Layers className="mr-2 h-5 w-5 text-primary" />
-                Join Visualization
-              </CardTitle>
-              <CardDescription>
-                Enter a visualization code to join an existing VR data experience
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <Input
-                  placeholder="Enter visualization code"
-                  value={visualizationId}
-                  onChange={(e) => setVisualizationId(e.target.value)}
-                  className="text-base p-4"
-                />
-                <Button 
-                  className="w-full text-base py-5" 
-                  onClick={handleJoinVisualization}
-                >
-                  Join
+      {/* Content overlay */}
+      <div className="relative z-10 min-h-screen flex flex-col">
+        {/* Header */}
+        <header className="w-full py-4 px-6 flex justify-between items-center bg-background/70 backdrop-blur-md">
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-bold vr-gradient-text">MODSiVR</h1>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+          </div>
+        </header>
+
+        {/* Main content */}
+        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <div className="max-w-4xl w-full backdrop-blur-md bg-background/40 p-8 rounded-xl shadow-lg border border-border">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 vr-gradient-text">MODSiVR</h1>
+            <p className="text-xl mb-10 text-foreground/80">
+              Plataforma de Modelação e Simulação Interativa em VR para Treino em Redes de Comunicação
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+              <Link to="/visualization-hub">
+                <Button size="lg" className="vr-button min-w-[200px]">
+                  Visualizações VR
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Create Visualization */}
-          <Card className="shadow-lg border border-slate-800">
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center">
-                <Settings className="mr-2 h-5 w-5 text-primary" />
-                Visualization Configurator
-              </CardTitle>
-              <CardDescription>
-                Create and customize your own VR data visualization experiences
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p className="text-muted-foreground">
-                  Design interactive VR visualizations with multiple chart types, 
-                  position controls, and advanced settings.
-                </p>
-                <Button 
-                  className="w-full text-base py-5" 
-                  variant="outline"
-                  onClick={navigateToConfigurator}
-                >
-                  Launch Configurator
+              </Link>
+              <Link to="/dashboard">
+                <Button size="lg" variant="outline" className="min-w-[200px]">
+                  Dashboard
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </Link>
+            </div>
+          </div>
+        </main>
 
-          {/* My Visualizations */}
-          <Card className="shadow-lg border border-slate-800">
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center">
-                <User className="mr-2 h-5 w-5 text-primary" />
-                My Visualizations
-              </CardTitle>
-              <CardDescription>
-                Access your saved VR data visualizations
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p className="text-muted-foreground">
-                  View, manage and share your previously created VR data visualization experiences.
-                </p>
-                <Button 
-                  className="w-full text-base py-5" 
-                  variant="outline"
-                  onClick={navigateToUserVisualizations}
-                >
-                  View My Visualizations
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="mt-8 text-center text-sm text-muted-foreground">
-          <p>
-            Built with A-Frame and BabiaXR for immersive data visualization experiences
-          </p>
-        </div>
+        {/* Footer */}
+        <footer className="w-full py-6 px-6 bg-background/70 backdrop-blur-md text-center">
+          <div className="flex flex-col items-center gap-2">
+            <a href="https://isep.ipp.pt" target="_blank" rel="noopener noreferrer" className="inline-block">
+              <img 
+                src="https://www.isep.ipp.pt/images/ISEP_marca_cor.png" 
+                alt="ISEP Logo" 
+                className="h-10"
+              />
+            </a>
+            <p className="text-sm text-muted-foreground mt-2">
+              Desenvolvido com A-Frame e BabiaXR para experiências imersivas de visualização de dados
+            </p>
+          </div>
+        </footer>
       </div>
     </div>
   );

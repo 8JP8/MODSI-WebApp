@@ -24,17 +24,6 @@ const VRSceneTab = ({ chartType, position, charts, activeChartId, onPositionChan
             charts={charts}
             activeChartId={activeChartId}
           />
-          <Card>
-            <CardContent className="pt-4">
-              <Tabs defaultValue="position">
-                <TabsList className="w-full grid grid-cols-3">
-                  <TabsTrigger value="position">Posição</TabsTrigger>
-                  <TabsTrigger value="rotation">Rotação</TabsTrigger>
-                  <TabsTrigger value="dimensions">Dimensões</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </CardContent>
-          </Card>
         </div>
       </div>
       <div>

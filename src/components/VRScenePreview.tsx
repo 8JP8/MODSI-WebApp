@@ -1,5 +1,5 @@
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import * as THREE from "three";
 
@@ -43,14 +43,21 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const chartMeshesRef = useRef<Map<string, THREE.Mesh>>(new Map());
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   
   // Mouse controls state
   const isDraggingRef = useRef(false);
   const previousMousePositionRef = useRef({ x: 0, y: 0 });
   const cameraPositionRef = useRef({ radius: 5, phi: Math.PI / 2, theta: Math.PI / 2 });
 
+  // Initialize scene
   useEffect(() => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || !containerRef.current) return;
+    
+    // Get initial container size
+    const width = containerRef.current.clientWidth;
+    const height = containerRef.current.clientHeight;
+    setContainerSize({ width, height });
     
     // Set up scene
     const scene = new THREE.Scene();
@@ -58,12 +65,7 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
     scene.background = new THREE.Color(0x1a1f2c);
     
     // Set up camera
-    const camera = new THREE.PerspectiveCamera(
-      75,
-      canvasRef.current.clientWidth / canvasRef.current.clientHeight,
-      0.1,
-      1000
-    );
+    const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
     cameraRef.current = camera;
     updateCameraPosition();
     
@@ -73,7 +75,7 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
       antialias: true,
     });
     rendererRef.current = renderer;
-    renderer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
+    renderer.setSize(width, height);
     
     // Add grid
     const gridHelper = new THREE.GridHelper(10, 10);
@@ -160,59 +162,49 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
     canvasRef.current.addEventListener('mouseup', handleMouseUp);
     canvasRef.current.addEventListener('wheel', handleWheel, { passive: false });
     
-    // Handle window resize
-    const handleResize = () => {
-      if (!canvasRef.current || !cameraRef.current || !rendererRef.current || !containerRef.current) return;
-      
-      const width = containerRef.current.clientWidth;
-      const height = containerRef.current.clientHeight;
-      
-      cameraRef.current.aspect = width / height;
-      cameraRef.current.updateProjectionMatrix();
-      rendererRef.current.setSize(width, height);
-    };
-    
-    // Initial resize to set correct dimensions
-    if (containerRef.current) {
-      const width = containerRef.current.clientWidth;
-      const height = containerRef.current.clientHeight;
-      
-      if (rendererRef.current) {
-        rendererRef.current.setSize(width, height);
-      }
-      
-      if (cameraRef.current) {
-        cameraRef.current.aspect = width / height;
-        cameraRef.current.updateProjectionMatrix();
-      }
-    }
-    
-    window.addEventListener('resize', handleResize);
-    
-    // Observe size changes with ResizeObserver
-    const resizeObserver = new ResizeObserver(() => {
-      handleResize();
-    });
-    
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
-    }
-    
     // Cleanup function
     return () => {
-      window.removeEventListener('resize', handleResize);
       if (canvasRef.current) {
         canvasRef.current.removeEventListener('mousedown', handleMouseDown);
         canvasRef.current.removeEventListener('mousemove', handleMouseMove);
         canvasRef.current.removeEventListener('mouseup', handleMouseUp);
         canvasRef.current.removeEventListener('wheel', handleWheel);
       }
+    };
+  }, []);
+  
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (!containerRef.current || !canvasRef.current || !rendererRef.current || !cameraRef.current) return;
+      
+      const width = containerRef.current.clientWidth;
+      const height = containerRef.current.clientHeight;
+      
+      // Only update if dimensions actually changed
+      if (width !== containerSize.width || height !== containerSize.height) {
+        setContainerSize({ width, height });
+        
+        cameraRef.current.aspect = width / height;
+        cameraRef.current.updateProjectionMatrix();
+        rendererRef.current.setSize(width, height);
+      }
+    };
+    
+    // Use ResizeObserver instead of window.resize to properly handle container size changes
+    const resizeObserver = new ResizeObserver(handleResize);
+    
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+    
+    return () => {
       if (containerRef.current) {
         resizeObserver.unobserve(containerRef.current);
       }
       resizeObserver.disconnect();
     };
-  }, []);
+  }, [containerSize]);
   
   // Update charts when they change
   useEffect(() => {
@@ -387,7 +379,7 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
         </div>
         
         <div className="mt-4 text-xs text-muted-foreground">
-          <p>Controles do mouse: Clique e arraste para rotacionar. Use a roda do mouse para ampliar/reduzir.</p>
+          <p>Controlos do rato: Clique e arraste para rodar. Use a roda do rato para ampliar/reduzir.</p>
           <p className="mt-1">Gráfico Ativo: {chartType} (Escala: {position.scale.toFixed(1)})</p>
           <p>Dimensões: L:{position.width?.toFixed(1) || "1.0"} A:{position.height?.toFixed(1) || "1.0"} P:{position.depth?.toFixed(1) || "1.0"}</p>
         </div>

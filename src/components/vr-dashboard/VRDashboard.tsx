@@ -14,17 +14,17 @@ const VRDashboard = () => {
   
   const joinVisualization = (roomCode: string) => {
     if (!roomCode.trim()) {
-      toast.error("Por favor, insira um código de sala");
+      toast.error("Por favor, introduza um código de sala");
       return;
     }
     
-    toast.success(`Entrando na sala de visualização: ${roomCode}`);
+    toast.success(`A entrar na sala de visualização: ${roomCode}`);
     setLaunchDialogOpen(false);
   };
 
   const launchVR = () => {
     // This would be integrated with A-Frame/BabiaXR in a full implementation
-    toast.success("Configuração de cena VR salva! Pronto para iniciar a experiência VR.");
+    toast.success("Configuração da cena VR guardada! Pronto para iniciar a experiência VR.");
     
     // In a real app, we would either:
     // 1. Navigate to a VR scene page

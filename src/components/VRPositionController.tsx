@@ -72,7 +72,7 @@ const VRPositionController = ({ position, onPositionChange }: VRPositionControll
             type="number"
             value={value}
             onChange={handleInputChange}
-            className="w-16 text-xs"
+            className="w-20 text-xs"
             step={step}
           />
         </div>
@@ -83,14 +83,14 @@ const VRPositionController = ({ position, onPositionChange }: VRPositionControll
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle>Controles de Posição</CardTitle>
+        <CardTitle>Controlos de Posição</CardTitle>
       </CardHeader>
       <CardContent>
         <Tabs value={positionTab} onValueChange={setPositionTab}>
           <TabsList className="grid grid-cols-3 w-full">
-            <TabsTrigger value="position" className="px-2 py-1.5 whitespace-nowrap">Posição</TabsTrigger>
-            <TabsTrigger value="rotation" className="px-2 py-1.5 whitespace-nowrap">Rotação</TabsTrigger>
-            <TabsTrigger value="dimensions" className="px-2 py-1.5 whitespace-nowrap">Dimensões</TabsTrigger>
+            <TabsTrigger value="position" className="px-2 py-1 text-xs whitespace-nowrap">Posição</TabsTrigger>
+            <TabsTrigger value="rotation" className="px-2 py-1 text-xs whitespace-nowrap">Rotação</TabsTrigger>
+            <TabsTrigger value="dimensions" className="px-2 py-1 text-xs whitespace-nowrap">Dimensões</TabsTrigger>
           </TabsList>
           
           <TabsContent value="position" className="space-y-4 mt-4">

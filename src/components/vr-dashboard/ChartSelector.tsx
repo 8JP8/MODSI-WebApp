@@ -1,9 +1,9 @@
 
-import { Chart } from "@/types/vr-dashboard";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PlusCircle } from "lucide-react";
+import { Chart } from "@/types/vr-dashboard";
 
 interface ChartSelectorProps {
   charts: Chart[];
@@ -13,40 +13,57 @@ interface ChartSelectorProps {
 }
 
 const ChartSelector = ({ charts, activeChartId, onChartSelect, onAddChart }: ChartSelectorProps) => {
-  if (charts.length === 0) {
-    return null;
-  }
-
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Gráfico Ativo</CardTitle>
-        <Button 
-          variant="secondary" 
-          onClick={onAddChart} 
-          size="sm"
-          className="flex items-center gap-1"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Adicionar Gráfico</span>
-        </Button>
+    <Card className="overflow-hidden">
+      <CardHeader className="p-4">
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-lg">Gráficos ({charts.length})</CardTitle>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 px-2"
+            onClick={onAddChart}
+          >
+            <PlusCircle className="mr-1 h-4 w-4" />
+            Adicionar
+          </Button>
+        </div>
       </CardHeader>
-      <CardContent>
-        <Select 
-          value={activeChartId} 
-          onValueChange={onChartSelect}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione um gráfico" />
-          </SelectTrigger>
-          <SelectContent>
-            {charts.map((chart, index) => (
-              <SelectItem key={chart.id} value={chart.id}>
-                Gráfico {index + 1} ({chart.chartType})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <CardContent className="p-0">
+        <div className="max-h-[300px] overflow-y-auto">
+          <div className="flex flex-col p-2">
+            {charts.length > 0 ? (
+              charts.map((chart) => (
+                <div
+                  key={chart.id}
+                  className={`
+                    flex items-center p-3 rounded-md mb-1 cursor-pointer transition-colors
+                    ${activeChartId === chart.id ? "bg-accent text-accent-foreground" : "hover:bg-accent/50"}
+                  `}
+                  onClick={() => onChartSelect(chart.id)}
+                >
+                  <div>
+                    <p className="font-medium">{chart.chartType}</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {chart.xAxis && chart.yAxis ? `${chart.xAxis} vs ${chart.yAxis}` : "Não configurado"}
+                    </p>
+                    {chart.department && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Departamento: {chart.department}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-4 text-muted-foreground">
+                Nenhum gráfico configurado.
+                <br />
+                Clique em "Adicionar" para começar.
+              </div>
+            )}
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
