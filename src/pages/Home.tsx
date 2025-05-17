@@ -185,10 +185,17 @@ const Home = () => {
         <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <div className="max-w-4xl w-full backdrop-blur-md bg-background/40 p-8 rounded-xl shadow-lg border border-border">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 vr-gradient-text">MODSiVR</h1>
-            <p className="text-xl mb-10 text-foreground/80">
+            <p className="text-xl mb-6 text-foreground/80">
               Plataforma de Modelação e Simulação Interativa em VR para Treino em Redes de Comunicação
             </p>
-            
+
+            {/* NOVO BLOCO - AUTHORS */}
+            <div className="mb-10 text-lg font-medium text-primary/90 space-y-1.5">
+              <p>João Oliveira - 1240369</p>
+              <p>Rui Costa - 1210971</p>
+              <p>Simão Soares - 1211630</p>
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
               <Link to="/visualization-hub">
                 <Button size="lg" className="vr-button min-w-[200px]">
