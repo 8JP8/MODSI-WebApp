@@ -203,7 +203,7 @@ const Home = () => {
             </div>
 
             {/* NOVO BLOCO AUTORES - depois dos botões, horizontal, espaçado */}
-            <div className="mt-8 grid grid-cols-3 gap-x-16 text-black text-lg font-semibold select-none">
+            <div className="mt-8 grid grid-cols-3 gap-x-16 text-white font-bold text-lg select-none">
               <span className="text-center">João Oliveira - 1240369</span>
               <span className="text-center">Rui Costa - 1210971</span>
               <span className="text-center">Simão Soares - 1211630</span>
