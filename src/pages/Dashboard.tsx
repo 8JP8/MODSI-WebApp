@@ -59,69 +59,42 @@ const Dashboard = () => {
       </header>
 
       {/* Main content with iframe */}
-      <main
-        className="flex-1 flex flex-col bg-black overflow-hidden relative"
-      >
-        <header
-          className="w-full bg-blue-900 text-white p-4"
-          style={{
-            height: "70px"
-          }}
-        >
-          <h1>MODSiVR Dashboard</h1>
-        </header>
-
-        <div
-          className="iframe-container w-full h-full relative"
-          style={{
-            overflow: "hidden"
-          }}
-        >
+      <main className="flex-1 relative">
+        <div className="iframe-container w-full h-[calc(100vh-80px)] overflow-hidden">
           {isLoading && (
-            <div
+            <div 
               className="absolute inset-0 bg-background z-10 flex flex-col items-center justify-center"
             >
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
               <p className="mt-4 text-foreground">A carregar a Dashboard...</p>
             </div>
           )}
-
+          
           {hasError && (
-            <div
+            <div 
               className="absolute inset-0 bg-background z-10 flex flex-col items-center justify-center text-center"
             >
               <div className="p-6 max-w-md">
                 <h2 className="text-xl font-bold mb-2">Erro ao carregar a Dashboard</h2>
-                <p className="mb-4">
-                  Não foi possível carregar a Dashboard. Verifique a sua ligação ou
-                  tente novamente.
-                </p>
-                <Button onClick={retryLoading} className="vr-button">
+                <p className="mb-4">Não foi possível carregar a Dashboard. Verifique a sua ligação ou tente novamente.</p>
+                <Button 
+                  onClick={retryLoading} 
+                  className="vr-button"
+                >
                   Tentar Novamente
                 </Button>
               </div>
             </div>
           )}
-
-          <div 
-            className="w-full h-full relative"
-            style={{
-              height: "calc(100vh - 70px - 70px)", /* Viewport minus header minus bottom 70px to cut */
-              overflow: "hidden"
-            }}
-          >
+          
+          <div className="w-full h-full relative overflow-hidden">
             <iframe
               id="dashboard-iframe"
               src="https://app.appsmith.com/app/modsi-webapp/main-page-6807db039a00354830a6b72c?embed=true"
-              className={`w-full border-0 ${
-                isLoading || hasError ? "invisible" : "visible"
-              }`}
-              style={{
-                height: "calc(100vh - 70px)", /* Height is viewport minus header */
-                marginTop: "-70px", /* Shifts iframe content up to hide the header */
-                position: "absolute",
-                top: "0",
-                left: "0"
+              className={`absolute top-0 left-0 w-full border-0 ${isLoading || hasError ? 'invisible' : 'visible'}`}
+              style={{ 
+                height: "calc(100% + 70px)",  /* Make iframe 70px taller than container */
+                clipPath: "inset(0px 0px 70px 0px)" /* Cut off bottom 70px */
               }}
               onLoad={handleIframeLoad}
               onError={handleIframeError}
