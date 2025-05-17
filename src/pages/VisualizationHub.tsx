@@ -1,137 +1,151 @@
-       import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-import ThemeToggle from '@/components/ThemeToggle';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { Settings, Layers, User, ArrowLeft } from "lucide-react";
 
-const Dashboard = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
+const Home = () => {
+  const navigate = useNavigate();
+  const [visualizationId, setVisualizationId] = useState("");
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      // Se após 10 segundos ainda estiver carregando, consideramos um erro
-      if (isLoading) {
-        setHasError(true);
-      }
-    }, 10000);
-
-    return () => clearTimeout(timeoutId);
-  }, [isLoading]);
-
-  const handleIframeLoad = () => {
-    setIsLoading(false);
-    setHasError(false);
-  };
-
-  const handleIframeError = () => {
-    setIsLoading(false);
-    setHasError(true);
-  };
-
-  const retryLoading = () => {
-    setIsLoading(true);
-    setHasError(false);
-    // Forçar recarregamento do iframe
-    const iframe = document.getElementById('dashboard-iframe') as HTMLIFrameElement;
-    if (iframe) {
-      iframe.src = iframe.src;
+  const handleJoinVisualization = () => {
+    if (!visualizationId.trim()) {
+      toast.error("Por favor, insira um código de visualização.");
+      return;
     }
+
+    toast.success(`A entrar na visualização ${visualizationId}`);
+    navigate(`/configurator?room=${visualizationId}`);
+  };
+
+  const navigateToConfigurator = () => {
+    navigate("/configurator");
+  };
+
+  const navigateToUserVisualizations = () => {
+    window.open("https://modsivr.pt", "_blank");
+  };
+
+  const handleBack = () => {
+    navigate(-1); // Voltar à página anterior
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      {/* Header */}
-      <header className="w-full py-4 px-6 flex justify-between items-center bg-background border-b border-border">
-        <div className="flex items-center gap-4">
-          <Link to="/">
-            <Button variant="outline" size="icon" className="h-10 w-10">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <h1 className="text-2xl font-bold vr-gradient-text">MODSiVR Dashboard</h1>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <ThemeToggle />
-        </div>
-      </header>
-
-      {/* Main content with iframe */}
-      <main 
-        className="flex-1 relative bg-black"
-        style={{
-          overflow: "hidden"
-        }}
-      >
-        <div 
-          className="iframe-container w-full h-[calc(100vh-80px)]"
-          style={{
-            overflow: "hidden",
-            position: "relative"
-          }}
+    <div className="min-h-screen bg-gradient-to-b from-background to-slate-900/50 flex flex-col items-center justify-center p-6">
+      <div className="w-full max-w-5xl relative">
+        {/* Botão Voltar */}
+        <button
+          onClick={handleBack}
+          className="absolute top-0 left-0 h-10 w-10 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground"
         >
-          {isLoading && (
-            <div 
-              className="absolute inset-0 bg-background z-10 flex flex-col items-center justify-center"
-            >
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-              <p className="mt-4 text-foreground">A carregar a Dashboard...</p>
-            </div>
-          )}
-          
-          {hasError && (
-            <div 
-              className="absolute inset-0 bg-background z-10 flex flex-col items-center justify-center text-center"
-            >
-              <div className="p-6 max-w-md">
-                <h2 className="text-xl font-bold mb-2">Erro ao carregar a Dashboard</h2>
-                <p className="mb-4">Não foi possível carregar a Dashboard. Verifique a sua ligação ou tente novamente.</p>
+          <ArrowLeft className="h-4 w-4" />
+        </button>
+
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold tracking-tight mb-2 vr-gradient-text">
+            Plataforma de Visualização de Dados VR
+          </h1>
+          <p className="text-xl text-muted-foreground">
+            Crie, partilhe e explore dados em realidade virtual
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Entrar na Visualização */}
+          <Card className="shadow-lg border border-slate-800">
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center">
+                <Layers className="mr-2 h-5 w-5 text-primary" />
+                Entrar na Visualização
+              </CardTitle>
+              <CardDescription>
+                Insira um código para entrar numa experiência VR existente
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Input
+                  placeholder="Insira o código de visualização"
+                  value={visualizationId}
+                  onChange={(e) => setVisualizationId(e.target.value)}
+                  className="text-base p-4"
+                />
                 <Button 
-                  onClick={retryLoading} 
-                  className="vr-button"
+                  className="w-full text-base py-5" 
+                  onClick={handleJoinVisualization}
                 >
-                  Tentar Novamente
+                  Entrar
                 </Button>
               </div>
-            </div>
-          )}
-          
-          <div 
-            className="w-full h-full relative overflow-hidden"
-            style={{
-              WebkitUserSelect: "none",
-              MozUserSelect: "none",
-              msUserSelect: "none",
-              userSelect: "none"
-            }}
-          >
-            <iframe
-              id="dashboard-iframe"
-              src="https://app.appsmith.com/app/modsi-webapp/main-page-6807db039a00354830a6b72c?embed=true"
-              className={`absolute top-0 left-0 w-full border-0 ${isLoading || hasError ? 'invisible' : 'visible'}`}
-              style={{ 
-                height: "calc(100% + 120px)",  /* Make iframe much taller than container to ensure footer is hidden */
-                clipPath: "inset(0px 0px 120px 0px)", /* Cut off bottom 120px */
-                pointerEvents: "auto",
-                userSelect: "none"
-              }}
-              onLoad={handleIframeLoad}
-              onError={handleIframeError}
-              allowFullScreen
-              title="MODSiVR Dashboard"
-            ></iframe>
-            
-            {/* Add a black bar at the bottom to cover any footer */}
-            <div 
-              className="absolute bottom-0 left-0 right-0 bg-black" 
-              style={{ height: "5px", zIndex: 5 }}
-            ></div>
-          </div>
+            </CardContent>
+          </Card>
+
+          {/* Criar Visualização */}
+          <Card className="shadow-lg border border-slate-800">
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center">
+                <Settings className="mr-2 h-5 w-5 text-primary" />
+                Configurador de Visualização
+              </CardTitle>
+              <CardDescription>
+                Crie e personalize as suas experiências VR de visualização de dados
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-muted-foreground">
+                  Projete visualizações interativas com múltiplos tipos de gráficos, 
+                  controlo de posições e definições avançadas.
+                </p>
+                <Button 
+                  className="w-full text-base py-5" 
+                  variant="outline"
+                  onClick={navigateToConfigurator}
+                >
+                  Abrir Configurador
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* As Minhas Visualizações */}
+          <Card className="shadow-lg border border-slate-800">
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center">
+                <User className="mr-2 h-5 w-5 text-primary" />
+                As Minhas Visualizações
+              </CardTitle>
+              <CardDescription>
+                Aceda às suas visualizações de dados VR guardadas
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-muted-foreground">
+                  Visualize, gere e partilhe as suas experiências de visualização de dados.
+                </p>
+                <Button 
+                  className="w-full text-base py-5" 
+                  variant="outline"
+                  onClick={navigateToUserVisualizations}
+                >
+                  Ver Minhas Visualizações
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </main>
+
+        <div className="mt-8 text-center text-sm text-muted-foreground">
+          <p>
+            Desenvolvido com A-Frame e BabiaXR para experiências imersivas de visualização de dados
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
 
-export default Dashboard;
+export default Home;
