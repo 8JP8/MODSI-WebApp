@@ -213,21 +213,21 @@ const Home = () => {
                    className="text-sm flex items-center gap-1 hover:text-primary transition-colors" 
                    target="_blank" 
                    rel="noopener noreferrer">
-                  <GitHub className="h-4 w-4" />
+                  <Github className="h-4 w-4" />
                   <span>MODSI-VRVisualization</span>
                 </a>
                 <a href="https://github.com/8JP8/MODSI-WebApp" 
                    className="text-sm flex items-center gap-1 hover:text-primary transition-colors" 
                    target="_blank" 
                    rel="noopener noreferrer">
-                  <GitHub className="h-4 w-4" />
+                  <Github className="h-4 w-4" />
                   <span>MODSI-WebApp</span>
                 </a>
                 <a href="https://github.com/8JP8/MODSI-SQLRestAPI" 
                    className="text-sm flex items-center gap-1 hover:text-primary transition-colors" 
                    target="_blank" 
                    rel="noopener noreferrer">
-                  <GitHub className="h-4 w-4" />
+                  <Github className="h-4 w-4" />
                   <span>MODSI-SQLRestAPI</span>
                 </a>
               </div>
