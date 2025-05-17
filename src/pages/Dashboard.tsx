@@ -60,23 +60,21 @@ const Dashboard = () => {
 
       {/* Main content with iframe */}
       <main
-        className="flex flex-col bg-black overflow-hidden"
-        style={{ height: "100vh" }} // Ensures the full viewport height
+        className="flex-1 flex flex-col bg-black overflow-hidden relative"
       >
         <header
           className="w-full bg-blue-900 text-white p-4"
           style={{
-            height: "70px", // Adjust based on your header's height
+            height: "70px"
           }}
         >
           <h1>MODSiVR Dashboard</h1>
         </header>
 
         <div
-          className="iframe-container w-full relative"
+          className="iframe-container w-full h-full relative"
           style={{
-            flexGrow: 1,
-            overflow: "hidden", // Ensures no scrollbars appear
+            overflow: "hidden"
           }}
         >
           {isLoading && (
@@ -105,22 +103,32 @@ const Dashboard = () => {
             </div>
           )}
 
-          <iframe
-            id="dashboard-iframe"
-            src="https://app.appsmith.com/app/modsi-webapp/main-page-6807db039a00354830a6b72c?embed=true"
-            className={`absolute top-0 left-0 w-full border-0 ${
-              isLoading || hasError ? "invisible" : "visible"
-            }`}
+          <div 
+            className="w-full h-full relative"
             style={{
-              height: "calc(100vh - 70px)", // Adjust for header height
-              marginTop: "-70px", // Shifts the `iframe` content up to hide the watermark
-              clipPath: "inset(70px 0px 70px 0px)", // Hides the bottom 70px
+              height: "calc(100vh - 70px - 70px)", /* Viewport minus header minus bottom 70px to cut */
+              overflow: "hidden"
             }}
-            onLoad={handleIframeLoad}
-            onError={handleIframeError}
-            allowFullScreen
-            title="MODSiVR Dashboard"
-          ></iframe>
+          >
+            <iframe
+              id="dashboard-iframe"
+              src="https://app.appsmith.com/app/modsi-webapp/main-page-6807db039a00354830a6b72c?embed=true"
+              className={`w-full border-0 ${
+                isLoading || hasError ? "invisible" : "visible"
+              }`}
+              style={{
+                height: "calc(100vh - 70px)", /* Height is viewport minus header */
+                marginTop: "-70px", /* Shifts iframe content up to hide the header */
+                position: "absolute",
+                top: "0",
+                left: "0"
+              }}
+              onLoad={handleIframeLoad}
+              onError={handleIframeError}
+              allowFullScreen
+              title="MODSiVR Dashboard"
+            ></iframe>
+          </div>
         </div>
       </main>
     </div>
