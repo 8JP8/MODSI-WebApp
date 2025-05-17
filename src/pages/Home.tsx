@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useTheme } from '@/hooks/use-theme';
-import { GitHub } from 'lucide-react';
+import { Github } from 'lucide-react';
 import { HelpButton } from '@/components/HelpButton';
 
 const Home = () => {
