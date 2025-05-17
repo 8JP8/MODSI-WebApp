@@ -186,7 +186,7 @@ const Home = () => {
           <div className="max-w-4xl w-full backdrop-blur-md bg-background/40 p-8 rounded-xl shadow-lg border border-border">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 vr-gradient-text">MODSiVR</h1>
             <p className="text-xl mb-10 text-foreground/80">
-              Plataforma de Modelação e Simulação Interativa em VR para Treino em Redes de Comunicação
+              Sistema de Gestão e Visualização de Indicadores
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
@@ -204,9 +204,9 @@ const Home = () => {
 
             {/* NOVO BLOCO AUTORES - depois dos botões, horizontal, espaçado */}
             <div className="mt-8 grid grid-cols-3 gap-x-16 text-white font-semibold text-lg select-none">
-              <span className="text-center">João Oliveira - 1240369</span>
-              <span className="text-center">Rui Costa - 1210971</span>
-              <span className="text-center">Simão Soares - 1211630</span>
+              <span className="text-center">João Oliveira 1240369</span>
+              <span className="text-center">Rui Costa 1210971</span>
+              <span className="text-center">Simão Soares 1211630</span>
             </div>
           </div>
         </main>
