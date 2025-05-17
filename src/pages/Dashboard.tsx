@@ -59,16 +59,28 @@ const Dashboard = () => {
       </header>
 
       {/* Main content with iframe */}
-      <main className="flex-1 relative overflow-hidden">
-        <div 
-          className="iframe-container w-full" 
+      <main
+        className="flex flex-col bg-black overflow-hidden"
+        style={{ height: "100vh" }} // Ensures the full viewport height
+      >
+        <header
+          className="w-full bg-blue-900 text-white p-4"
           style={{
-            height: "calc(100vh - 70px)", // Adjust if your header height differs
-            overflow: "hidden",
+            height: "70px", // Adjust based on your header's height
+          }}
+        >
+          <h1>MODSiVR Dashboard</h1>
+        </header>
+
+        <div
+          className="iframe-container w-full relative"
+          style={{
+            flexGrow: 1,
+            overflow: "hidden", // Ensures no scrollbars appear
           }}
         >
           {isLoading && (
-            <div 
+            <div
               className="absolute inset-0 bg-background z-10 flex flex-col items-center justify-center"
             >
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -77,29 +89,32 @@ const Dashboard = () => {
           )}
 
           {hasError && (
-            <div 
+            <div
               className="absolute inset-0 bg-background z-10 flex flex-col items-center justify-center text-center"
             >
               <div className="p-6 max-w-md">
                 <h2 className="text-xl font-bold mb-2">Erro ao carregar a Dashboard</h2>
-                <p className="mb-4">Não foi possível carregar a Dashboard. Verifique a sua ligação ou tente novamente.</p>
-                <Button 
-                  onClick={retryLoading} 
-                  className="vr-button"
-                >
+                <p className="mb-4">
+                  Não foi possível carregar a Dashboard. Verifique a sua ligação ou
+                  tente novamente.
+                </p>
+                <Button onClick={retryLoading} className="vr-button">
                   Tentar Novamente
                 </Button>
               </div>
             </div>
           )}
 
-          <iframe  
-            id="dashboard-iframe" 
-            src="https://app.appsmith.com/app/modsi-webapp/main-page-6807db039a00354830a6b72c?embed=true" 
-            className={`absolute top-0 left-0 w-full border-0 ${isLoading || hasError ? 'invisible' : 'visible'}`}
+          <iframe
+            id="dashboard-iframe"
+            src="https://app.appsmith.com/app/modsi-webapp/main-page-6807db039a00354830a6b72c?embed=true"
+            className={`absolute top-0 left-0 w-full border-0 ${
+              isLoading || hasError ? "invisible" : "visible"
+            }`}
             style={{
-              height: "100%",
-              clipPath: "inset(0px 0px 100px 0px)", // Adjust this to hide the watermark
+              height: "calc(100vh - 70px)", // Adjust for header height
+              marginTop: "-70px", // Shifts the `iframe` content up to hide the watermark
+              clipPath: "inset(70px 0px 70px 0px)", // Hides the bottom 70px
             }}
             onLoad={handleIframeLoad}
             onError={handleIframeError}
