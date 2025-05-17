@@ -176,6 +176,7 @@ const Home = () => {
           </div>
           
           <div className="flex items-center gap-4">
+            <HelpButton />
             <ThemeToggle />
           </div>
         </header>
@@ -234,7 +235,6 @@ const Home = () => {
             </div>
             
             <div className="flex items-center gap-3">
-              <HelpButton />
               <a href="https://isep.ipp.pt" target="_blank" rel="noopener noreferrer" className="inline-block ml-3">
                 <img 
                   src="https://www.isep.ipp.pt/images/ISEP_marca_cor.png" 
