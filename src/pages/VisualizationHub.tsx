@@ -29,7 +29,8 @@ const Home = () => {
   };
 
   const handleBack = () => {
-    navigate(-1); // Voltar à página anterior
+    navigate('/');
+    //navigate(-1); // Voltar à página anterior
   };
 
   return (
