@@ -22,6 +22,7 @@ interface DataIndicatorSelectorProps {
   departments?: string[];
   selectedDepartment?: string;
   onDepartmentChange?: (department: string) => void;
+  allowDeselectDepartment?: boolean;
 }
 
 const DataIndicatorSelector = ({
@@ -37,12 +38,19 @@ const DataIndicatorSelector = ({
   departments = [],
   selectedDepartment = "",
   onDepartmentChange,
+  allowDeselectDepartment = false,
 }: DataIndicatorSelectorProps) => {
   const isPieChart = chartType === "pie";
 
   const handleZAxisChange = (value: string) => {
     if (onSelectZAxis) {
       onSelectZAxis(value === "none" ? "" : value);
+    }
+  };
+
+  const handleDepartmentChange = (value: string) => {
+    if (onDepartmentChange) {
+      onDepartmentChange(value === "none" ? "" : value);
     }
   };
   
@@ -64,11 +72,14 @@ const DataIndicatorSelector = ({
           {departments.length > 0 && onDepartmentChange && (
             <div className="space-y-2 mb-4">
               <label className="text-sm font-medium">Departamento Selecionado</label>
-              <Select value={selectedDepartment} onValueChange={onDepartmentChange}>
+              <Select value={selectedDepartment || "none"} onValueChange={handleDepartmentChange}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione o departamento" />
                 </SelectTrigger>
                 <SelectContent>
+                  {allowDeselectDepartment && (
+                    <SelectItem value="none">Nenhum (Todos os Departamentos)</SelectItem>
+                  )}
                   {departments.map((department) => (
                     <SelectItem key={department} value={department}>
                       {department}

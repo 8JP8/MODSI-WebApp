@@ -1,36 +1,70 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Settings, Layers, User, ArrowLeft } from "lucide-react";
+import { Settings, Layers, User, ArrowLeft, Clock } from "lucide-react";
 
-const Home = () => {
+const VisualizationHub = () => {
   const navigate = useNavigate();
   const [visualizationId, setVisualizationId] = useState("");
+  const [visualizationHistory, setVisualizationHistory] = useState<string[]>([]);
 
-  const handleJoinVisualization = () => {
-    if (!visualizationId.trim()) {
+  useEffect(() => {
+    // Load visualization history from localStorage
+    try {
+      const historyStr = localStorage.getItem("visualizationHistory");
+      if (historyStr) {
+        const history = JSON.parse(historyStr);
+        setVisualizationHistory(Array.isArray(history) ? history : []);
+      }
+    } catch (error) {
+      console.error("Error loading visualization history:", error);
+    }
+  }, []);
+
+  const handleJoinVisualization = (code?: string) => {
+    const roomCode = code || visualizationId;
+    
+    if (!roomCode.trim()) {
       toast.error("Por favor, insira um código de visualização.");
       return;
     }
 
-    toast.success(`A entrar na visualização ${visualizationId}`);
-    navigate(`/configurator?room=${visualizationId}`);
+    // Save to history
+    saveVisualizationToHistory(roomCode);
+    
+    toast.success(`A entrar na visualização ${roomCode}`);
+    navigate(`/configurator?room=${roomCode}`);
+  };
+
+  const saveVisualizationToHistory = (code: string) => {
+    try {
+      // Add to local state
+      const updatedHistory = [code, ...visualizationHistory.filter(c => c !== code)].slice(0, 10);
+      setVisualizationHistory(updatedHistory);
+      
+      // Save to localStorage
+      localStorage.setItem("visualizationHistory", JSON.stringify(updatedHistory));
+    } catch (error) {
+      console.error("Error saving visualization to history:", error);
+    }
   };
 
   const navigateToConfigurator = () => {
     navigate("/configurator");
   };
 
-  const navigateToUserVisualizations = () => {
-    window.open("https://modsivr.pt", "_blank");
-  };
-
   const handleBack = () => {
     navigate('/');
-    //navigate(-1); // Voltar à página anterior
+  };
+
+  const clearVisualizationHistory = () => {
+    localStorage.removeItem("visualizationHistory");
+    setVisualizationHistory([]);
+    toast.success("Histórico de visualizações limpo");
   };
 
   return (
@@ -75,7 +109,7 @@ const Home = () => {
                 />
                 <Button 
                   className="w-full text-base py-5" 
-                  onClick={handleJoinVisualization}
+                  onClick={() => handleJoinVisualization()}
                 >
                   Entrar
                 </Button>
@@ -119,21 +153,42 @@ const Home = () => {
                 As Minhas Visualizações
               </CardTitle>
               <CardDescription>
-                Aceda às suas visualizações de dados VR guardadas
+                Aceda às suas visualizações de dados VR recentes
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <p className="text-muted-foreground">
-                  Visualize, gere e partilhe as suas experiências de visualização de dados.
-                </p>
-                <Button 
-                  className="w-full text-base py-5" 
-                  variant="outline"
-                  onClick={navigateToUserVisualizations}
-                >
-                  Ver Minhas Visualizações
-                </Button>
+                {visualizationHistory.length > 0 ? (
+                  <div className="max-h-[200px] overflow-y-auto space-y-2">
+                    {visualizationHistory.map((code, index) => (
+                      <div key={index} className="flex justify-between items-center p-2 bg-secondary/50 rounded-md">
+                        <div className="flex items-center">
+                          <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span className="text-sm font-medium">{code}</span>
+                        </div>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => handleJoinVisualization(code)}
+                        >
+                          Entrar
+                        </Button>
+                      </div>
+                    ))}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full mt-2" 
+                      onClick={clearVisualizationHistory}
+                    >
+                      Limpar Histórico
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">
+                    Não tem visualizações recentes. Entre num código de visualização para o adicionar ao histórico.
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -149,4 +204,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default VisualizationHub;

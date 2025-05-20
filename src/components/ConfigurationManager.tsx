@@ -64,14 +64,14 @@ const ConfigurationManager = ({
         const parsed = JSON.parse(savedConfigsStr);
         setSavedConfigs(parsed);
       } catch (e) {
-        console.error("Error loading saved configurations", e);
+        console.error("Erro ao carregar configurações guardadas", e);
       }
     }
   }, []);
 
   const saveCurrentConfig = () => {
     if (!configName.trim()) {
-      toast.error("Please enter a configuration name");
+      toast.error("Por favor, introduza um nome para a configuração");
       return;
     }
 
@@ -85,20 +85,20 @@ const ConfigurationManager = ({
     
     try {
       localStorage.setItem("vrDataConfigs", JSON.stringify(newConfigs));
-      toast.success(`Configuration "${configName}" saved`);
+      toast.success(`Configuração "${configName}" guardada`);
       setConfigName("");
       if (onSaveConfig) {
         onSaveConfig();
       }
     } catch (e) {
-      toast.error("Error saving configuration");
-      console.error("Error saving configuration", e);
+      toast.error("Erro ao guardar configuração");
+      console.error("Erro ao guardar configuração", e);
     }
   };
 
   const loadConfig = (config: ConfigurationSettings) => {
     onLoadConfig(config);
-    toast.success("Configuration loaded");
+    toast.success("Configuração carregada");
     if (onSaveConfig) {
       onSaveConfig();
     }
@@ -110,9 +110,9 @@ const ConfigurationManager = ({
     
     try {
       localStorage.setItem("vrDataConfigs", JSON.stringify(newConfigs));
-      toast.success(`Configuration "${name}" deleted`);
+      toast.success(`Configuração "${name}" eliminada`);
     } catch (e) {
-      toast.error("Error deleting configuration");
+      toast.error("Erro ao eliminar configuração");
     }
   };
 
@@ -127,7 +127,7 @@ const ConfigurationManager = ({
     linkElement.setAttribute("download", exportFileDefaultName);
     linkElement.click();
     
-    toast.success("Exported all configurations");
+    toast.success("Exportadas todas as configurações");
     if (onSaveConfig) {
       onSaveConfig();
     }
@@ -147,15 +147,15 @@ const ConfigurationManager = ({
             "vrDataConfigs",
             JSON.stringify([...savedConfigs, ...imported])
           );
-          toast.success(`Imported ${imported.length} configurations`);
+          toast.success(`Importadas ${imported.length} configurações`);
           if (onSaveConfig) {
             onSaveConfig();
           }
         } else {
-          toast.error("Invalid import file format");
+          toast.error("Formato de ficheiro inválido");
         }
       } catch (e) {
-        toast.error("Error importing configurations");
+        toast.error("Erro ao importar configurações");
       }
     };
     reader.readAsText(file);
@@ -167,7 +167,7 @@ const ConfigurationManager = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Configuration Management</CardTitle>
+        <CardTitle>Gestão de Configurações</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -175,29 +175,29 @@ const ConfigurationManager = ({
             <Input
               value={configName}
               onChange={(e) => setConfigName(e.target.value)}
-              placeholder="Configuration name"
+              placeholder="Nome da configuração"
               className="flex-1"
             />
             <Button variant="outline" onClick={saveCurrentConfig}>
               <Save className="w-4 h-4 mr-2" />
-              Save
+              Guardar
             </Button>
           </div>
 
           <div className="flex items-center justify-between">
             <Button variant="outline" onClick={onResetConfig}>
               <RefreshCw className="w-4 h-4 mr-2" />
-              Reset
+              Repor
             </Button>
             <div className="flex items-center gap-2">
               <Button variant="outline" onClick={exportAllConfigs}>
                 <FileDown className="w-4 h-4 mr-2" />
-                Export
+                Exportar
               </Button>
               <div className="relative">
                 <Button variant="outline" className="relative">
                   <FileUp className="w-4 h-4 mr-2" />
-                  Import
+                  Importar
                   <input
                     type="file"
                     onChange={importConfigs}
@@ -211,7 +211,7 @@ const ConfigurationManager = ({
 
           {savedConfigs.length > 0 && (
             <div className="mt-4">
-              <h4 className="text-sm font-medium mb-2">Saved Configurations</h4>
+              <h4 className="text-sm font-medium mb-2">Configurações Guardadas</h4>
               <div className="space-y-2 max-h-40 overflow-y-auto">
                 {savedConfigs.map((saved, index) => (
                   <div
@@ -225,7 +225,7 @@ const ConfigurationManager = ({
                         variant="ghost"
                         onClick={() => loadConfig(saved.config)}
                       >
-                        Load
+                        Carregar
                       </Button>
                       <Button
                         size="sm"
