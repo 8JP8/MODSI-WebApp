@@ -35,10 +35,6 @@ jobs:
       - name: 🛠️ Create 404.html
         run: cp dist/index.html dist/404.html
         
-      # Criar arquivo .nojekyll para evitar processamento pelo Jekyll
-      - name: 📄 Create .nojekyll file
-        run: touch dist/.nojekyll
-
       - name: 🚀 Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
