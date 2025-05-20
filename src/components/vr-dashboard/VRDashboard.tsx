@@ -8,9 +8,12 @@ import DataIndicatorSelector from "@/components/DataIndicatorSelector";
 import MainPreviewTabs from "./MainPreviewTabs";
 import VRLaunchDialog from "@/components/VRLaunchDialog";
 import { toast } from "sonner";
+import { generateRoomCode, saveVisualizationToHistory } from "@/utils/visualizationUtils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const VRDashboard = () => {
   const [launchDialogOpen, setLaunchDialogOpen] = useState(false);
+  const isMobile = useIsMobile();
   
   const joinVisualization = (roomCode: string) => {
     if (!roomCode.trim()) {
@@ -18,19 +21,25 @@ const VRDashboard = () => {
       return;
     }
     
-    toast.success(`A entrar na sala de visualização: ${roomCode}`);
-    setLaunchDialogOpen(false);
+    // Save the visualization code to history
+    saveVisualizationToHistory(roomCode);
+    
+    // Redirect to the VR experience with room code
+    window.location.href = `https://modsi-vr.pt/${roomCode}`;
   };
 
   const launchVR = () => {
-    // This would be integrated with A-Frame/BabiaXR in a full implementation
-    toast.success("Configuração da cena VR guardada! Pronto para iniciar a experiência VR.");
+    // Generate a random room code
+    const roomCode = generateRoomCode();
     
-    // In a real app, we would either:
-    // 1. Navigate to a VR scene page
-    // 2. Launch a VR experience in a new window/tab
-    // 3. Initialize A-Frame in the current page
-    console.log("Launching VR with configuration");
+    // Save to history
+    saveVisualizationToHistory(roomCode);
+    
+    toast.success("Configuração da cena VR guardada! Pronto para iniciar a experiência VR.");
+    console.log("Launching VR with configuration, room code:", roomCode);
+    
+    // Redirect to the VR experience with room code
+    window.location.href = `https://modsi-vr.pt/${roomCode}`;
     
     setLaunchDialogOpen(false);
   };
@@ -67,15 +76,15 @@ const VRDashboard = () => {
         handleExportJSON,
         setConfigSaved
       }) => (
-        <div className="container mx-auto py-6 space-y-6">
+        <div className="container mx-auto px-2 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
           <DashboardHeader 
             onSave={handleExportJSON}
             onLaunch={handleLaunchButtonClick}
             configSaved={configSaved}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+            <div className="space-y-4 md:space-y-6">
               <ChartSelector 
                 charts={charts}
                 activeChartId={activeChartId}

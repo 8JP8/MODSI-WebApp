@@ -5,6 +5,7 @@ import ChartPreviewTab from "./ChartPreviewTab";
 import VRSceneTab from "./VRSceneTab";
 import ConfigurationManager from "@/components/ConfigurationManager";
 import { Chart, VRPosition } from "@/types/vr-dashboard";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface MainPreviewTabsProps {
   chartType: string;
@@ -37,21 +38,23 @@ const MainPreviewTabs = ({
   onResetConfig,
   onSaveConfig
 }: MainPreviewTabsProps) => {
+  const isMobile = useIsMobile();
+  
   return (
-    <div className="space-y-6 md:col-span-2">
-      <Tabs defaultValue="preview">
-        <TabsList className="grid grid-cols-2">
-          <TabsTrigger value="preview">
-            <Eye className="mr-2 h-4 w-4" />
-            Pré-visualização do Gráfico
+    <div className="space-y-4 md:space-y-6 md:col-span-2">
+      <Tabs defaultValue="preview" className="w-full">
+        <TabsList className="grid grid-cols-2 w-full">
+          <TabsTrigger value="preview" className="text-xs md:text-sm">
+            <Eye className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+            {isMobile ? "Gráfico" : "Pré-visualização do Gráfico"}
           </TabsTrigger>
-          <TabsTrigger value="vr">
-            <Settings2 className="mr-2 h-4 w-4" />
+          <TabsTrigger value="vr" className="text-xs md:text-sm">
+            <Settings2 className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
             Cena VR
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="preview" className="mt-4">
+        <TabsContent value="preview" className="mt-2 md:mt-4">
           <ChartPreviewTab 
             chartType={chartType} 
             data={data} 
@@ -61,7 +64,7 @@ const MainPreviewTabs = ({
           />
         </TabsContent>
         
-        <TabsContent value="vr" className="mt-4">
+        <TabsContent value="vr" className="mt-2 md:mt-4">
           <VRSceneTab 
             chartType={chartType}
             position={position}
