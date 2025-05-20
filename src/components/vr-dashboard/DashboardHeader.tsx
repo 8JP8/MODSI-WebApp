@@ -11,9 +11,10 @@ import { useNavigate } from "react-router-dom";
 interface DashboardHeaderProps {
   onLaunch: () => void;
   configSaved: boolean;
+  onSave?: () => void; // Make onSave optional
 }
 
-const DashboardHeader = ({ onLaunch, configSaved }: DashboardHeaderProps) => {
+const DashboardHeader = ({ onLaunch, configSaved, onSave }: DashboardHeaderProps) => {
   const { logout, username } = useAuth();
   const navigate = useNavigate();
 
