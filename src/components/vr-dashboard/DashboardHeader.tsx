@@ -15,7 +15,7 @@ interface DashboardHeaderProps {
 }
 
 const DashboardHeader = ({ onLaunch, configSaved, onSave }: DashboardHeaderProps) => {
-  const { logout, username } = useAuth();
+  const { logout, username, userData } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -55,7 +55,7 @@ const DashboardHeader = ({ onLaunch, configSaved, onSave }: DashboardHeaderProps
         </Button>
         <div className="flex items-center gap-2 ml-2 border-l pl-3 border-gray-600">
           <Avatar>
-            <AvatarImage src="https://images.unsplash.com/photo-1535268647677-300dbf3d78d1" />
+            <AvatarImage src={userData?.photo || ""} />
             <AvatarFallback>{username ? username[0].toUpperCase() : "U"}</AvatarFallback>
           </Avatar>
           <span className="text-sm text-muted-foreground hidden md:inline">Ligado como <span className="font-medium text-foreground">{username || "Utilizador"}</span></span>

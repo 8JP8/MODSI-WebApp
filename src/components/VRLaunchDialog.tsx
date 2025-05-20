@@ -21,6 +21,16 @@ interface VRLaunchDialogProps {
   hasUnsavedChanges?: boolean;
 }
 
+// Generate a random room code
+const generateRoomCode = () => {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 6; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+};
+
 const VRLaunchDialog = ({
   open,
   onOpenChange,
@@ -29,6 +39,33 @@ const VRLaunchDialog = ({
   hasUnsavedChanges = false,
 }: VRLaunchDialogProps) => {
   const [roomCode, setRoomCode] = useState("");
+  
+  // Handle room creation and add to history
+  const handleCreateRoom = () => {
+    const newRoomCode = generateRoomCode();
+    
+    // Save to history
+    try {
+      const historyStr = localStorage.getItem("visualizationHistory");
+      let history: string[] = [];
+      
+      if (historyStr) {
+        history = JSON.parse(historyStr);
+        if (!Array.isArray(history)) history = [];
+      }
+      
+      const updatedHistory = [newRoomCode, ...history.filter(c => c !== newRoomCode)].slice(0, 10);
+      localStorage.setItem("visualizationHistory", JSON.stringify(updatedHistory));
+    } catch (error) {
+      console.error("Error saving room code to history:", error);
+    }
+    
+    // Call the original onLaunch function
+    onLaunch();
+    
+    // Redirect to the VR experience
+    window.location.href = `https://modsi-vr.pt/${newRoomCode}`;
+  };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -64,7 +101,7 @@ const VRLaunchDialog = ({
             <DialogFooter>
               <Button 
                 className="w-full vr-button" 
-                onClick={onLaunch}
+                onClick={handleCreateRoom}
                 disabled={hasUnsavedChanges}
               >
                 Iniciar Experiência VR

@@ -16,17 +16,21 @@ export function HelpButton() {
         <DialogHeader>
           <DialogTitle className="vr-gradient-text">Sobre o MODSiVR</DialogTitle>
           <DialogDescription>
-            Plataforma de Modelação e Simulação Interativa em VR para Treino em Redes de Comunicação
+            Plataforma de Gestão e Visualização de Indicadores em Realidade Virtual
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <p className="text-sm text-muted-foreground">
-            O MODSiVR é uma plataforma de visualização de dados em realidade virtual desenvolvida
-            no Instituto Superior de Engenharia do Porto (ISEP).
+            O MODSiVR é uma ferramenta avançada de visualização de dados e KPIs empresariais em realidade virtual 
+            desenvolvida para análise de dados internos complexos para investidores e gestores.
           </p>
           <p className="text-sm text-muted-foreground">
-            Esta ferramenta permite a visualização interativa de dados de redes de comunicação
-            em ambientes imersivos, facilitando a análise e compreensão de dados complexos.
+            Esta plataforma permite a visualização interativa de indicadores-chave de desempenho em ambientes imersivos, 
+            facilitando a tomada de decisões estratégicas através de uma melhor compreensão de dados complexos.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Ideal para reuniões de investidores, análise financeira, monitorização de performance e apresentação 
+            de resultados, o MODSiVR transforma dados em experiências visuais ricas e intuitivas.
           </p>
         </div>
       </DialogContent>

@@ -36,8 +36,8 @@ const VisualizationHub = () => {
     // Save to history
     saveVisualizationToHistory(roomCode);
     
-    toast.success(`A entrar na visualização ${roomCode}`);
-    navigate(`/configurator?room=${roomCode}`);
+    // Redirect to external URL with room code
+    window.location.href = `https://modsi-vr.pt/${roomCode}`;
   };
 
   const saveVisualizationToHistory = (code: string) => {
@@ -83,7 +83,7 @@ const VisualizationHub = () => {
             Plataforma de Visualização de Dados VR
           </h1>
           <p className="text-xl text-muted-foreground">
-            Crie, partilhe e explore dados em realidade virtual
+            Visualize e analise KPIs empresariais em realidade virtual
           </p>
         </div>
 
@@ -196,7 +196,7 @@ const VisualizationHub = () => {
 
         <div className="mt-8 text-center text-sm text-muted-foreground">
           <p>
-            Desenvolvido com A-Frame e BabiaXR para experiências imersivas de visualização de dados
+            Plataforma de gestão e visualização de indicadores empresariais em VR para análise de dados internos complexos
           </p>
         </div>
       </div>
