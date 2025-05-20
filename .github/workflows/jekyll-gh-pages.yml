@@ -31,17 +31,13 @@ jobs:
         run: npm ci
 
       - name: 🏗️ Build React app
-        # Ensure your build output folder matches the expected folder below.
+        # if your build dir is something other than "build", update DEST
         run: npm run build
-
-      - name: 🚧 Disable Jekyll
-        # Create a `.nojekyll` file to prevent Jekyll processing
-        run: echo > build/.nojekyll
 
       - name: 📤 Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: build  # Ensure this matches your build folder
+          path: build             # <-- your build folder
 
   deploy:
     needs: build
