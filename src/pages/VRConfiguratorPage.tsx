@@ -1,8 +1,15 @@
 
 import VRDashboard from "@/components/vr-dashboard/VRDashboard";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const VRConfiguratorPage = () => {
-  return <VRDashboard />;
+  const isMobile = useIsMobile();
+  
+  return (
+    <div className={isMobile ? "pb-16" : ""}>
+      <VRDashboard />
+    </div>
+  );
 };
 
 export default VRConfiguratorPage;

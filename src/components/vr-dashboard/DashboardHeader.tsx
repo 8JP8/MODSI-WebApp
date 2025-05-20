@@ -29,23 +29,25 @@ const DashboardHeader = ({ onLaunch, configSaved, onSave }: DashboardHeaderProps
 
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <div className="flex items-center gap-4 w-full md:w-auto">
+      <div className="flex items-center gap-3 w-full md:w-auto">
         <Link to="/visualization-hub">
-          <Button variant="outline" size="icon" className="h-10 w-10">
+          <Button variant="outline" size="icon" className="h-9 w-9 md:h-10 md:w-10">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
         <div className="max-w-full">
-          <h1 className="text-xl md:text-3xl font-bold vr-gradient-text truncate">
+          <h1 className={`font-bold vr-gradient-text truncate ${isMobile ? 'text-lg' : 'text-xl md:text-3xl'}`}>
             Configurador de Visualização de Dados VR
           </h1>
-          <p className="text-muted-foreground mt-2 text-sm md:text-base">
-            Configure a sua experiência de visualização de dados VR
-          </p>
+          {!isMobile && (
+            <p className="text-muted-foreground mt-2 text-sm md:text-base">
+              Configure a sua experiência de visualização de dados VR
+            </p>
+          )}
         </div>
       </div>
       
-      <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+      <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-between md:justify-end">
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <HelpButton />
@@ -73,7 +75,7 @@ const DashboardHeader = ({ onLaunch, configSaved, onSave }: DashboardHeaderProps
             <AvatarImage src={userData?.photo || ""} />
             <AvatarFallback>{username ? username[0].toUpperCase() : "U"}</AvatarFallback>
           </Avatar>
-          <span className="text-sm text-muted-foreground hidden md:inline">
+          <span className="text-sm hidden md:inline text-muted-foreground">
             Ligado como <span className="font-medium text-foreground">{username || "Utilizador"}</span>
           </span>
         </div>
