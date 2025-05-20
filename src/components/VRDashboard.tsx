@@ -1,6 +1,5 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import sampleData from "../data/sampleVisualization.json";
 import ChartDataManager from "./vr-dashboard/ChartDataManager";
 import DashboardHeader from "./vr-dashboard/DashboardHeader";
@@ -13,27 +12,6 @@ import RequireAuth from "./RequireAuth";
 
 const VRDashboard = () => {
   const [launchDialogOpen, setLaunchDialogOpen] = useState(false);
-  const navigate = useNavigate();
-  
-  // Check authentication on component mount
-  useEffect(() => {
-    const tokenData = localStorage.getItem("authToken");
-    if (!tokenData) {
-      navigate("/login");
-      return;
-    }
-    
-    try {
-      const { expiry } = JSON.parse(tokenData);
-      if (new Date().getTime() >= expiry) {
-        localStorage.removeItem("authToken");
-        navigate("/login");
-        toast.error("Sessão expirada. Por favor, faça login novamente.");
-      }
-    } catch (error) {
-      navigate("/login");
-    }
-  }, [navigate]);
   
   const joinVisualization = (roomCode: string) => {
     if (!roomCode.trim()) {
