@@ -6,8 +6,8 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  // Use the repository name for GitHub Pages
-  base: mode === 'production' ? '/MODSI-VRConfigurator/' : '/',
+  // Use custom domain for production, no path prefix needed with custom domain
+  base: mode === 'production' ? '/' : '/',
   server: {
     host: "::",
     port: 8080,
