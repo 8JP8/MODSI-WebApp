@@ -4,15 +4,30 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlusCircle } from "lucide-react";
 import { Chart } from "@/types/vr-dashboard";
+import { Department } from "@/utils/apiService";
 
 interface ChartSelectorProps {
   charts: Chart[];
   activeChartId: string;
   onChartSelect: (id: string) => void;
   onAddChart: () => void;
+  departments?: Department[];
 }
 
-const ChartSelector = ({ charts, activeChartId, onChartSelect, onAddChart }: ChartSelectorProps) => {
+const ChartSelector = ({ 
+  charts, 
+  activeChartId, 
+  onChartSelect, 
+  onAddChart,
+  departments = []
+}: ChartSelectorProps) => {
+  
+  // Helper to get department name by ID
+  const getDepartmentName = (id: number): string => {
+    const department = departments.find(dept => dept.Id === id);
+    return department ? department.Name : `Department ${id}`;
+  };
+  
   return (
     <Card className="overflow-hidden">
       <CardHeader className="p-4">
@@ -47,9 +62,9 @@ const ChartSelector = ({ charts, activeChartId, onChartSelect, onAddChart }: Cha
                     <p className="text-sm text-muted-foreground mt-1">
                       {chart.xAxis && chart.yAxis ? `${chart.xAxis} vs ${chart.yAxis}` : "Não configurado"}
                     </p>
-                    {chart.department && (
+                    {chart.departmentId > 0 && (
                       <p className="text-xs text-muted-foreground mt-1">
-                        Departamento: {chart.department}
+                        Departamento: {getDepartmentName(chart.departmentId)}
                       </p>
                     )}
                   </div>

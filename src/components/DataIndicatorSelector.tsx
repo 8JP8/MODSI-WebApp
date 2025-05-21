@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ChartTypeSelector from "./ChartTypeSelector";
+import { Department } from "@/utils/apiService";
 
 interface DataIndicatorSelectorProps {
   availableIndicators: string[];
@@ -19,9 +20,9 @@ interface DataIndicatorSelectorProps {
   selectedZ?: string;
   chartType: string;
   onSelectChartType: (type: string) => void;
-  departments?: string[];
-  selectedDepartment?: string;
-  onDepartmentChange?: (department: string) => void;
+  departments?: Department[];
+  selectedDepartment?: number;
+  onDepartmentChange?: (department: number) => void;
   allowDeselectDepartment?: boolean;
 }
 
@@ -36,7 +37,7 @@ const DataIndicatorSelector = ({
   chartType,
   onSelectChartType,
   departments = [],
-  selectedDepartment = "",
+  selectedDepartment,
   onDepartmentChange,
   allowDeselectDepartment = false,
 }: DataIndicatorSelectorProps) => {
@@ -50,7 +51,8 @@ const DataIndicatorSelector = ({
 
   const handleDepartmentChange = (value: string) => {
     if (onDepartmentChange) {
-      onDepartmentChange(value === "none" ? "" : value);
+      const departmentId = parseInt(value, 10);
+      onDepartmentChange(value === "none" ? 0 : departmentId);
     }
   };
   
@@ -69,10 +71,13 @@ const DataIndicatorSelector = ({
         <div className="border-t border-slate-700 pt-5">
           <h3 className="text-lg font-semibold mb-4">Indicadores de Dados</h3>
           
-          {departments.length > 0 && onDepartmentChange && (
+          {departments && departments.length > 0 && onDepartmentChange && (
             <div className="space-y-2 mb-4">
               <label className="text-sm font-medium">Departamento Selecionado</label>
-              <Select value={selectedDepartment || "none"} onValueChange={handleDepartmentChange}>
+              <Select 
+                value={selectedDepartment ? selectedDepartment.toString() : "none"} 
+                onValueChange={handleDepartmentChange}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione o departamento" />
                 </SelectTrigger>
@@ -81,8 +86,8 @@ const DataIndicatorSelector = ({
                     <SelectItem value="none">Nenhum (Todos os Departamentos)</SelectItem>
                   )}
                   {departments.map((department) => (
-                    <SelectItem key={department} value={department}>
-                      {department}
+                    <SelectItem key={department.Id} value={department.Id.toString()}>
+                      {department.Name}
                     </SelectItem>
                   ))}
                 </SelectContent>
