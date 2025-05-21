@@ -1,10 +1,21 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Save, Trash2, RefreshCw, FileDown, FileUp } from "lucide-react";
-import { Chart } from "@/types/vr-dashboard";
+
+interface Chart {
+  id: string;
+  chartType: string;
+  position: any;
+  xAxis: string;
+  yAxis: string;
+  zAxis: string;
+  department: string;
+  color: string;
+}
 
 interface ConfigurationSettings {
   charts?: Chart[];

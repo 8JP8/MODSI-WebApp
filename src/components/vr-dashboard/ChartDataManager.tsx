@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { Chart, VRPosition, defaultPosition, CHART_COLORS } from "@/types/vr-dashboard";
 import { toast } from "sonner";
-import { Department, KPI, fetchDepartments, fetchDepartmentKPIs, kpiToIndicator } from "@/utils/apiService";
 
 interface ChartDataManagerProps {
   children: (props: ChartDataManagerChildProps) => React.ReactNode;
@@ -19,8 +18,8 @@ export interface ChartDataManagerChildProps {
   zAxis: string;
   data: any[];
   availableIndicators: string[];
-  departments: Department[];
-  selectedDepartment: number;
+  departments: string[];
+  selectedDepartment: string;
   configSaved: boolean;
   setActiveChartId: (id: string) => void;
   setChartType: (type: string) => void;
@@ -29,7 +28,7 @@ export interface ChartDataManagerChildProps {
   handleXAxisChange: (value: string) => void;
   handleYAxisChange: (value: string) => void;
   handleZAxisChange: (value: string) => void;
-  handleDepartmentChange: (departmentId: number) => void;
+  handleDepartmentChange: (department: string) => void;
   addNewChart: () => void;
   resetConfiguration: () => void;
   handleLoadConfig: (config: any) => void;
@@ -41,89 +40,32 @@ const ChartDataManager = ({ children, sampleData }: ChartDataManagerProps) => {
   const [charts, setCharts] = useState<Chart[]>([]);
   const [activeChartId, setActiveChartId] = useState<string>("");
   const [chartType, setChartType] = useState("bar");
+  const [dataSource, setDataSource] = useState("sales");
   const [position, setPosition] = useState<VRPosition>(defaultPosition);
   const [xAxis, setXAxis] = useState("");
   const [yAxis, setYAxis] = useState("");
   const [zAxis, setZAxis] = useState("");
   const [data, setData] = useState<any[]>([]);
   const [availableIndicators, setAvailableIndicators] = useState<string[]>([]);
+  const [availableDatasets, setAvailableDatasets] = useState<Record<string, any[]>>({});
   const [configSaved, setConfigSaved] = useState(false);
-  
-  // New state for API data
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [selectedDepartment, setSelectedDepartment] = useState<number>(0);
-  const [departmentKPIs, setDepartmentKPIs] = useState<KPI[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [departments, setDepartments] = useState<string[]>([]);
+  const [selectedDepartment, setSelectedDepartment] = useState("");
 
-  // Fetch departments from API
+  // Initialize data on component mount
   useEffect(() => {
-    const loadDepartments = async () => {
-      setIsLoading(true);
-      try {
-        const deptData = await fetchDepartments();
-        setDepartments(deptData);
-        
-        // Select first department by default if available
-        if (deptData.length > 0) {
-          setSelectedDepartment(deptData[0].Id);
-        }
-      } catch (error) {
-        console.error("Error loading departments:", error);
-        toast.error("Erro ao carregar departamentos");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    // Load sample data departments
+    const deptNames = sampleData.departments.map((dept: any) => dept.name);
+    setDepartments(deptNames);
     
-    loadDepartments();
-    
-    // Initialize with one chart
-    if (charts.length === 0) {
-      addNewChart();
+    if (deptNames.length > 0) {
+      setSelectedDepartment(deptNames[0]);
+      loadDepartmentData(deptNames[0]);
     }
-  }, []); // Run once on component mount
 
-  // Fetch KPIs when department changes
-  useEffect(() => {
-    const loadDepartmentKPIs = async () => {
-      if (selectedDepartment === 0) return;
-      
-      setIsLoading(true);
-      try {
-        const kpisData = await fetchDepartmentKPIs(selectedDepartment);
-        setDepartmentKPIs(kpisData);
-        
-        // Transform KPIs to indicators
-        const indicators: string[] = [];
-        kpisData.forEach(kpi => {
-          const kpiIndicators = kpiToIndicator(kpi);
-          indicators.push(...kpiIndicators);
-        });
-        
-        setAvailableIndicators(indicators);
-        
-        // Set default axes if we have indicators
-        if (indicators.length >= 2) {
-          setXAxis(indicators[0]);
-          setYAxis(indicators[1]);
-          if (indicators.length > 2) {
-            setZAxis("");
-          }
-        }
-        
-        // Generate mock data based on KPIs
-        generateMockDataFromKPIs(kpisData, indicators);
-        
-      } catch (error) {
-        console.error(`Error loading KPIs for department ${selectedDepartment}:`, error);
-        toast.error("Erro ao carregar KPIs do departamento");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadDepartmentKPIs();
-  }, [selectedDepartment]);
+    // Initialize with one chart
+    addNewChart();
+  }, [sampleData]);
 
   // When a chart is added or selected
   useEffect(() => {
@@ -136,31 +78,38 @@ const ChartDataManager = ({ children, sampleData }: ChartDataManagerProps) => {
         setXAxis(activeChart.xAxis);
         setYAxis(activeChart.yAxis);
         setZAxis(activeChart.zAxis);
+        setSelectedDepartment(activeChart.department);
         
-        // Load the department for this chart if it exists
-        if (activeChart.departmentId) {
-          setSelectedDepartment(activeChart.departmentId);
+        // Load the department data for this chart
+        if (activeChart.department) {
+          loadDepartmentData(activeChart.department);
         }
       }
     }
   }, [activeChartId, charts]);
 
-  // Generate mock data from KPIs for visualization purposes
-  const generateMockDataFromKPIs = (kpis: KPI[], indicators: string[]) => {
-    // Create sample data entries for visualization
-    const mockData = indicators.map((indicator, index) => {
-      const dataPoint: any = {};
-      
-      // For each indicator, add a value for every other indicator
-      indicators.forEach(ind => {
-        // Generate some random value for this combination
-        dataPoint[ind] = Math.floor(Math.random() * 100);
-      });
-      
-      return dataPoint;
-    });
+  // Load department data
+  const loadDepartmentData = (departmentName: string) => {
+    const departmentData = sampleData.departments.find((dept: any) => dept.name === departmentName);
     
-    setData(mockData);
+    if (departmentData) {
+      setData(departmentData.data);
+      
+      // Set available indicators based on the first data item
+      if (departmentData.data.length > 0) {
+        const indicators = Object.keys(departmentData.data[0]);
+        setAvailableIndicators(indicators);
+        
+        // Set default axes
+        if (indicators.length >= 2) {
+          setXAxis(indicators[0]);
+          setYAxis(indicators[1]);
+          if (indicators.length > 2) {
+            setZAxis("");
+          }
+        }
+      }
+    }
   };
 
   // Adding a new chart
@@ -175,7 +124,7 @@ const ChartDataManager = ({ children, sampleData }: ChartDataManagerProps) => {
       xAxis: availableIndicators.length > 0 ? availableIndicators[0] : "",
       yAxis: availableIndicators.length > 1 ? availableIndicators[1] : "",
       zAxis: "",
-      departmentId: selectedDepartment,
+      department: selectedDepartment,
       color: CHART_COLORS[colorIndex]
     };
     
@@ -185,12 +134,13 @@ const ChartDataManager = ({ children, sampleData }: ChartDataManagerProps) => {
   };
 
   // Handle department change
-  const handleDepartmentChange = (departmentId: number) => {
-    setSelectedDepartment(departmentId);
+  const handleDepartmentChange = (department: string) => {
+    setSelectedDepartment(department);
+    loadDepartmentData(department);
     
     // Update the active chart if there is one
     if (activeChartId) {
-      updateActiveChart({ departmentId });
+      updateActiveChart({ department });
     }
   };
 
@@ -236,6 +186,27 @@ const ChartDataManager = ({ children, sampleData }: ChartDataManagerProps) => {
     setZAxis(zAxisValue);
     updateActiveChart({ zAxis: zAxisValue });
   };
+
+  // Handle data source change
+  useEffect(() => {
+    if (availableDatasets[dataSource]) {
+      const newData = availableDatasets[dataSource];
+      setData(newData);
+      
+      // Update available indicators
+      if (newData.length > 0) {
+        const indicators = Object.keys(newData[0]);
+        setAvailableIndicators(indicators);
+        
+        // Reset axes
+        if (indicators.length >= 2) {
+          setXAxis(indicators[0]);
+          setYAxis(indicators[1]);
+          setZAxis("");
+        }
+      }
+    }
+  }, [dataSource, availableDatasets]);
 
   const resetConfiguration = () => {
     setChartType("bar");
@@ -285,9 +256,10 @@ const ChartDataManager = ({ children, sampleData }: ChartDataManagerProps) => {
         setXAxis(firstChart.xAxis);
         setYAxis(firstChart.yAxis);
         setZAxis(firstChart.zAxis || "");
+        setSelectedDepartment(firstChart.department);
         
-        if (firstChart.departmentId) {
-          setSelectedDepartment(firstChart.departmentId);
+        if (firstChart.department) {
+          loadDepartmentData(firstChart.department);
         }
       }
     } else {
@@ -307,8 +279,8 @@ const ChartDataManager = ({ children, sampleData }: ChartDataManagerProps) => {
       
       setPosition(completePosition);
       
-      if (config.departmentId) {
-        setSelectedDepartment(config.departmentId);
+      if (config.department) {
+        handleDepartmentChange(config.department);
       }
       
       // Update active chart
@@ -319,7 +291,7 @@ const ChartDataManager = ({ children, sampleData }: ChartDataManagerProps) => {
           xAxis: config.xAxis,
           yAxis: config.yAxis,
           zAxis: config.zAxis || "",
-          departmentId: config.departmentId || selectedDepartment
+          department: config.department || selectedDepartment
         });
       }
     }
@@ -340,11 +312,13 @@ const ChartDataManager = ({ children, sampleData }: ChartDataManagerProps) => {
           zAxis: chart.zAxis
         },
         position: chart.position,
-        departmentId: chart.departmentId,
+        department: chart.department,
         color: chart.color
       }))
     };
     
+    // In a real app, this would trigger a download
+    // For this demo, we'll just show the JSON in the console
     console.log("Export Configuration:", JSON.stringify(config, null, 2));
     toast.success("Configuração exportada para o console");
     setConfigSaved(true);

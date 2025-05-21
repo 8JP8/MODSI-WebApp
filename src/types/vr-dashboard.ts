@@ -22,7 +22,7 @@ export interface Chart {
   xAxis: string;
   yAxis: string;
   zAxis: string;
-  departmentId: number;
+  department: string;
   color: string;
 }
 
