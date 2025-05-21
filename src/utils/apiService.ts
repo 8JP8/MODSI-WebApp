@@ -21,9 +21,34 @@ export interface KPI {
   AvailableInDepartments: string[];
 }
 
+// Helper function to get auth token
+const getAuthToken = (): string | null => {
+  try {
+    const tokenData = localStorage.getItem("authToken");
+    if (!tokenData) return null;
+    
+    const parsedToken = JSON.parse(tokenData);
+    return parsedToken.token;
+  } catch (error) {
+    console.error("Error retrieving auth token:", error);
+    return null;
+  }
+};
+
 export const fetchDepartments = async (): Promise<Department[]> => {
   try {
-    const response = await fetch(`${BASE_API_URL}/departments?code=${API_CODE}`);
+    const authToken = getAuthToken();
+    const headers: HeadersInit = {};
+    
+    if (authToken) {
+      headers["Authorization"] = `Bearer ${authToken}`;
+    }
+    
+    const response = await fetch(
+      `${BASE_API_URL}/departments?code=${API_CODE}`, 
+      { headers }
+    );
+    
     if (!response.ok) {
       throw new Error(`Error fetching departments: ${response.status}`);
     }
@@ -36,7 +61,18 @@ export const fetchDepartments = async (): Promise<Department[]> => {
 
 export const fetchDepartmentKPIs = async (departmentId: number): Promise<KPI[]> => {
   try {
-    const response = await fetch(`${BASE_API_URL}/departments/${departmentId}/kpis?code=${API_CODE}`);
+    const authToken = getAuthToken();
+    const headers: HeadersInit = {};
+    
+    if (authToken) {
+      headers["Authorization"] = `Bearer ${authToken}`;
+    }
+    
+    const response = await fetch(
+      `${BASE_API_URL}/departments/${departmentId}/kpis?code=${API_CODE}`,
+      { headers }
+    );
+    
     if (!response.ok) {
       throw new Error(`Error fetching KPIs: ${response.status}`);
     }
