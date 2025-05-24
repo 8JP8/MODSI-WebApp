@@ -93,9 +93,9 @@ const VRDashboard = () => {
             <MainPreviewTabs 
               chartType={chartType}
               data={data}
-              xAxis={zAxis}
-              yAxis={secondaryAxis}
-              zAxis={yAxis}
+              xAxis={secondaryAxis}
+              yAxis={yAxis}
+              zAxis={zAxis}
               position={position}
               charts={charts}
               activeChartId={activeChartId}

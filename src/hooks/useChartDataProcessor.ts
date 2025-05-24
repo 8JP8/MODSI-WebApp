@@ -23,6 +23,7 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
   const loadChartData = async () => {
     try {
       setLoading(true);
+      console.log("Loading chart data for:", { zAxis, xAxis, yAxis });
       
       if (xAxis === "product") {
         await loadProductBasedData();
@@ -53,15 +54,23 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
     }
     
     // Combine the data
-    const processedData = Object.keys(groupedData).map(period => ({
-      name: period,
-      [getIndicatorName(zAxis)]: groupedData[period],
-      ...(yAxis && yAxis !== "none" ? { [getIndicatorName(yAxis)]: yAxisData[period] || 0 } : {})
-    })).sort((a, b) => {
+    const processedData = Object.keys(groupedData).map(period => {
+      const dataPoint: ProcessedChartData = {
+        name: period,
+        [zAxis]: groupedData[period]
+      };
+      
+      if (yAxis && yAxis !== "none") {
+        dataPoint[yAxis] = yAxisData[period] || 0;
+      }
+      
+      return dataPoint;
+    }).sort((a, b) => {
       // Sort chronologically
       return new Date(a.name).getTime() - new Date(b.name).getTime();
     });
     
+    console.log("Processed time-based data:", processedData);
     setChartData(processedData);
   };
 
@@ -81,6 +90,7 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
       };
     }).sort((a, b) => new Date(a.name).getTime() - new Date(b.name).getTime());
     
+    console.log("Processed product-based data:", processedData);
     setChartData(processedData);
   };
 
@@ -138,11 +148,6 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
     });
     
     return grouped;
-  };
-
-  const getIndicatorName = (axisId: string): string => {
-    // Remove the -1 or -2 suffix for display
-    return axisId.replace(/-[12]$/, '');
   };
 
   return {
