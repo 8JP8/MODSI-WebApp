@@ -1,5 +1,6 @@
 
 const API_BASE_URL = "https://modsi-api-ffhhfgecfdehhscv.spaincentral-01.azurewebsites.net/api";
+const API_CODE = "z4tKbNFdaaXzHZ4ayn9pRQokNWYgRkbVkCjOxTxP-8ChAzFuMigGCw==";
 
 interface KPI {
   Id: number;
@@ -29,7 +30,7 @@ export const fetchUserKPIs = async (): Promise<KPIOption[]> => {
     const token = parsedToken.token;
 
     const response = await fetch(
-      `${API_BASE_URL}/roles/1/kpis`,
+      `${API_BASE_URL}/roles/1/kpis?code=${API_CODE}`,
       {
         method: 'GET',
         headers: {

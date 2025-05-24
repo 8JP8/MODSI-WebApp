@@ -1,5 +1,5 @@
 
-import VRDashboard from "@/components/VRDashboard";
+import VRDashboard from "@/components/vr-dashboard/VRDashboard";
 
 const Index = () => {
   return (
