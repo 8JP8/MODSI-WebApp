@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   Select, 
@@ -68,6 +67,9 @@ const KPIAxisSelector = ({
     );
   }
 
+  // Check if product is selected for X axis
+  const isProductSelected = selectedSecondaryAxis === "product";
+
   return (
     <Card>
       <CardHeader>
@@ -84,7 +86,7 @@ const KPIAxisSelector = ({
             <SelectContent>
               {kpiOptions.map((option) => (
                 <SelectItem key={option.id} value={option.id}>
-                  {option.displayName}
+                  {isProductSelected ? option.name : option.displayName}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -110,14 +112,21 @@ const KPIAxisSelector = ({
 
         {/* Y Axis - Optional Related Indicator */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Eixo Y - Indicador Relacionado (Opcional)</label>
-          <Select value={selectedYAxis} onValueChange={onSelectYAxis}>
+          <label className="text-sm font-medium">
+            Eixo Y - Indicador Relacionado (Opcional)
+            {isProductSelected && <span className="text-muted-foreground ml-1">(Desabilitado para produtos)</span>}
+          </label>
+          <Select 
+            value={isProductSelected ? "none" : selectedYAxis} 
+            onValueChange={onSelectYAxis}
+            disabled={isProductSelected}
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Selecione indicador relacionado" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Nenhum</SelectItem>
-              {kpiOptions.map((option) => (
+              {!isProductSelected && kpiOptions.map((option) => (
                 <SelectItem key={option.id} value={option.id}>
                   {option.displayName}
                 </SelectItem>

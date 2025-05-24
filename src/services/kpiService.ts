@@ -18,6 +18,17 @@ export interface KPIOption {
   value: string;
 }
 
+export interface KPIValueHistory {
+  Id: number;
+  KpiId: number;
+  NewValue_1: string;
+  NewValue_2: string | null;
+  OldValue_1: string | null;
+  OldValue_2: string | null;
+  ChangedAt: string;
+  ChangedBy: string;
+}
+
 export const fetchUserKPIs = async (): Promise<KPIOption[]> => {
   try {
     // Get auth token from localStorage
@@ -72,6 +83,45 @@ export const fetchUserKPIs = async (): Promise<KPIOption[]> => {
     return options;
   } catch (error) {
     console.error("Error fetching KPIs:", error);
+    throw error;
+  }
+};
+
+export const fetchKPIValueHistory = async (kpiId: string): Promise<KPIValueHistory[]> => {
+  try {
+    // Get auth token from localStorage
+    const tokenData = localStorage.getItem("authToken");
+    if (!tokenData) {
+      throw new Error("No auth token found");
+    }
+
+    const parsedToken = JSON.parse(tokenData);
+    const token = parsedToken.token;
+
+    // Extract the numeric KPI ID from the formatted id (e.g., "3-1" -> "3")
+    const numericKpiId = kpiId.split('-')[0];
+
+    const response = await fetch(
+      `${API_BASE_URL}/kpis/valuehistory?kpiId=${numericKpiId}&code=${API_CODE}`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Error fetching KPI value history: ${response.statusText}`);
+    }
+
+    const history: KPIValueHistory[] = await response.json();
+    
+    // Sort by ChangedAt timestamp (newest first)
+    return history.sort((a, b) => new Date(b.ChangedAt).getTime() - new Date(a.ChangedAt).getTime());
+  } catch (error) {
+    console.error("Error fetching KPI value history:", error);
     throw error;
   }
 };

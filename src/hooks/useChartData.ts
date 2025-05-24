@@ -1,6 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { Chart, VRPosition, defaultPosition, CHART_COLORS } from "@/types/vr-dashboard";
+import { useChartDataProcessor } from "./useChartDataProcessor";
 import { toast } from "sonner";
 
 export const useChartData = (sampleData: any) => {
@@ -161,6 +161,13 @@ export const useChartData = (sampleData: any) => {
     setConfigSaved(true);
   };
 
+  const { chartData, loading: dataLoading } = useChartDataProcessor(zAxis, secondaryAxis, yAxis);
+
+  // Update the data when chartData changes
+  useEffect(() => {
+    setData(chartData);
+  }, [chartData]);
+
   return {
     charts,
     activeChartId,
@@ -169,8 +176,9 @@ export const useChartData = (sampleData: any) => {
     zAxis,
     secondaryAxis,
     yAxis,
-    data,
+    data: chartData, // Use processed chart data instead of empty array
     configSaved,
+    loading: dataLoading,
     setActiveChartId,
     updateActiveChart,
     handlePositionChange,

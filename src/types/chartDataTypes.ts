@@ -11,6 +11,7 @@ export interface ChartDataManagerChildProps {
   yAxis: string;
   data: any[];
   configSaved: boolean;
+  loading?: boolean;
   setActiveChartId: (id: string) => void;
   updateActiveChart: (updates: Partial<Chart>) => void;
   handlePositionChange: (newPosition: VRPosition) => void;
