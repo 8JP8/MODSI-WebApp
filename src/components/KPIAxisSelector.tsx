@@ -91,9 +91,9 @@ const KPIAxisSelector = ({
           </Select>
         </div>
 
-        {/* Secondary Axis - Time or Product */}
+        {/* X Axis - Time or Product */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Eixo Secundário - Tempo ou Produto</label>
+          <label className="text-sm font-medium">Eixo X - Tempo ou Produto</label>
           <Select value={selectedSecondaryAxis} onValueChange={onSelectSecondaryAxis}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Selecione tempo ou produto" />

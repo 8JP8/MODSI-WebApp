@@ -14,7 +14,7 @@ interface ChartPreviewProps {
 const COLORS = ['#1E90FF', '#00CED1', '#9370DB', '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
 
 const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProps) => {
-  if (!data || data.length === 0 || !xAxis || !yAxis) {
+  if (!data || data.length === 0 || !xAxis || !zAxis) {
     return (
       <Card className="h-full">
         <CardHeader>
@@ -38,8 +38,8 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
               <YAxis stroke="#ccc" />
               <Tooltip contentStyle={{ backgroundColor: "#2A2F3C", borderColor: "#444" }} />
               <Legend />
-              <Bar dataKey={yAxis} fill="#1E90FF" />
-              {zAxis && <Bar dataKey={zAxis} fill="#9370DB" />}
+              <Bar dataKey={zAxis} fill="#1E90FF" />
+              {yAxis && <Bar dataKey={yAxis} fill="#9370DB" />}
             </BarChart>
           </ResponsiveContainer>
         );
@@ -56,7 +56,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                 label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                 outerRadius={100}
                 fill="#8884d8"
-                dataKey={yAxis}
+                dataKey={zAxis}
                 nameKey={xAxis}
               >
                 {data.map((entry, index) => (
@@ -78,8 +78,8 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
               <YAxis stroke="#ccc" />
               <Tooltip contentStyle={{ backgroundColor: "#2A2F3C", borderColor: "#444" }} />
               <Legend />
-              <Line type="monotone" dataKey={yAxis} stroke="#1E90FF" activeDot={{ r: 8 }} />
-              {zAxis && <Line type="monotone" dataKey={zAxis} stroke="#9370DB" />}
+              <Line type="monotone" dataKey={zAxis} stroke="#1E90FF" activeDot={{ r: 8 }} />
+              {yAxis && <Line type="monotone" dataKey={yAxis} stroke="#9370DB" />}
             </LineChart>
           </ResponsiveContainer>
         );
@@ -90,11 +90,11 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
             <ScatterChart margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#444" />
               <XAxis dataKey={xAxis} type="number" name={xAxis} stroke="#ccc" />
-              <YAxis dataKey={yAxis} type="number" name={yAxis} stroke="#ccc" />
+              <YAxis dataKey={zAxis} type="number" name={zAxis} stroke="#ccc" />
               <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ backgroundColor: "#2A2F3C", borderColor: "#444" }} />
               <Legend />
-              <Scatter name={yAxis} data={data} fill="#1E90FF" />
-              {zAxis && <Scatter name={zAxis} data={data} fill="#9370DB" />}
+              <Scatter name={zAxis} data={data} fill="#1E90FF" />
+              {yAxis && <Scatter name={yAxis} data={data} fill="#9370DB" />}
             </ScatterChart>
           </ResponsiveContainer>
         );

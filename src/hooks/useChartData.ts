@@ -26,9 +26,9 @@ export const useChartData = (sampleData: any) => {
       if (activeChart) {
         setChartType(activeChart.chartType);
         setPosition(activeChart.position);
-        setZAxis(activeChart.xAxis); // Using xAxis for Z axis temporarily
-        setSecondaryAxis(activeChart.yAxis); // Using yAxis for secondary axis temporarily
-        setYAxis(activeChart.zAxis); // Using zAxis for Y axis temporarily
+        setZAxis(activeChart.zAxis); // Z axis for main indicator
+        setSecondaryAxis(activeChart.xAxis); // X axis for time/product
+        setYAxis(activeChart.yAxis); // Y axis for secondary indicator
       }
     }
   }, [activeChartId, charts]);
@@ -71,23 +71,23 @@ export const useChartData = (sampleData: any) => {
     updateActiveChart({ position: newPosition });
   };
   
-  // Handle Z axis change
+  // Handle Z axis change (main indicator)
   const handleZAxisChange = (value: string) => {
     setZAxis(value);
-    updateActiveChart({ xAxis: value }); // Temporarily using xAxis
+    updateActiveChart({ zAxis: value });
   };
   
-  // Handle secondary axis change
+  // Handle secondary axis change (X axis - time/product)
   const handleSecondaryAxisChange = (value: string) => {
     setSecondaryAxis(value);
-    updateActiveChart({ yAxis: value }); // Temporarily using yAxis
+    updateActiveChart({ xAxis: value });
   };
   
-  // Handle Y axis change
+  // Handle Y axis change (secondary indicator)
   const handleYAxisChange = (value: string) => {
     const yAxisValue = value === "none" ? "" : value;
     setYAxis(yAxisValue);
-    updateActiveChart({ zAxis: yAxisValue }); // Temporarily using zAxis
+    updateActiveChart({ yAxis: yAxisValue });
   };
 
   const resetConfiguration = () => {
@@ -131,9 +131,9 @@ export const useChartData = (sampleData: any) => {
         const firstChart = completeCharts[0];
         setChartType(firstChart.chartType);
         setPosition(firstChart.position);
-        setZAxis(firstChart.xAxis);
-        setSecondaryAxis(firstChart.yAxis);
-        setYAxis(firstChart.zAxis || "");
+        setZAxis(firstChart.zAxis);
+        setSecondaryAxis(firstChart.xAxis);
+        setYAxis(firstChart.yAxis || "");
       }
     }
     
@@ -147,9 +147,9 @@ export const useChartData = (sampleData: any) => {
         id: chart.id,
         chartType: chart.chartType,
         dataMapping: {
-          zAxis: chart.xAxis,
-          secondaryAxis: chart.yAxis,
-          yAxis: chart.zAxis
+          zAxis: chart.zAxis,
+          xAxis: chart.xAxis,
+          yAxis: chart.yAxis
         },
         position: chart.position,
         color: chart.color
