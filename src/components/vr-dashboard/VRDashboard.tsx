@@ -4,7 +4,7 @@ import sampleData from "../../data/sampleVisualization.json";
 import ChartDataManager from "./ChartDataManager";
 import DashboardHeader from "./DashboardHeader";
 import ChartSelector from "./ChartSelector";
-import DataIndicatorSelector from "@/components/DataIndicatorSelector";
+import KPIAxisSelector from "@/components/KPIAxisSelector";
 import MainPreviewTabs from "./MainPreviewTabs";
 import VRLaunchDialog from "@/components/VRLaunchDialog";
 import { toast } from "sonner";
@@ -21,26 +21,18 @@ const VRDashboard = () => {
       return;
     }
     
-    // Save the visualization code to history
     saveVisualizationToHistory(roomCode);
-    
-    // Redirect to the VR experience with room code
     window.location.href = `https://modsi-vr.pt/${roomCode}`;
   };
 
   const launchVR = () => {
-    // Generate a random room code
     const roomCode = generateRoomCode();
-    
-    // Save to history
     saveVisualizationToHistory(roomCode);
     
     toast.success("Configuração da cena VR guardada! Pronto para iniciar a experiência VR.");
     console.log("Launching VR with configuration, room code:", roomCode);
     
-    // Redirect to the VR experience with room code
     window.location.href = `https://modsi-vr.pt/${roomCode}`;
-    
     setLaunchDialogOpen(false);
   };
 
@@ -55,21 +47,17 @@ const VRDashboard = () => {
         activeChartId,
         chartType,
         position,
-        xAxis,
-        yAxis,
         zAxis,
+        secondaryAxis,
+        yAxis,
         data,
-        availableIndicators,
-        departments,
-        selectedDepartment,
         configSaved,
         setActiveChartId,
         updateActiveChart,
         handlePositionChange,
-        handleXAxisChange,
-        handleYAxisChange,
         handleZAxisChange,
-        handleDepartmentChange,
+        handleSecondaryAxisChange,
+        handleYAxisChange,
         addNewChart,
         resetConfiguration,
         handleLoadConfig,
@@ -92,28 +80,22 @@ const VRDashboard = () => {
                 onAddChart={addNewChart}
               />
               
-              <DataIndicatorSelector
-                availableIndicators={availableIndicators}
-                onSelectXAxis={handleXAxisChange}
-                onSelectYAxis={handleYAxisChange}
+              <KPIAxisSelector
+                selectedZAxis={zAxis}
+                selectedSecondaryAxis={secondaryAxis}
+                selectedYAxis={yAxis}
                 onSelectZAxis={handleZAxisChange}
-                selectedX={xAxis}
-                selectedY={yAxis}
-                selectedZ={zAxis}
-                chartType={chartType}
-                onSelectChartType={(type) => updateActiveChart({ chartType: type })}
-                departments={departments}
-                selectedDepartment={selectedDepartment}
-                onDepartmentChange={handleDepartmentChange}
+                onSelectSecondaryAxis={handleSecondaryAxisChange}
+                onSelectYAxis={handleYAxisChange}
               />
             </div>
             
             <MainPreviewTabs 
               chartType={chartType}
               data={data}
-              xAxis={xAxis}
-              yAxis={yAxis}
-              zAxis={zAxis}
+              xAxis={zAxis}
+              yAxis={secondaryAxis}
+              zAxis={yAxis}
               position={position}
               charts={charts}
               activeChartId={activeChartId}

@@ -1,0 +1,133 @@
+
+import { useState, useEffect } from "react";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { fetchUserKPIs, KPIOption } from "@/services/kpiService";
+import { toast } from "sonner";
+
+interface KPIAxisSelectorProps {
+  selectedZAxis: string;
+  selectedSecondaryAxis: string;
+  selectedYAxis: string;
+  onSelectZAxis: (value: string) => void;
+  onSelectSecondaryAxis: (value: string) => void;
+  onSelectYAxis: (value: string) => void;
+}
+
+const KPIAxisSelector = ({
+  selectedZAxis,
+  selectedSecondaryAxis,
+  selectedYAxis,
+  onSelectZAxis,
+  onSelectSecondaryAxis,
+  onSelectYAxis
+}: KPIAxisSelectorProps) => {
+  const [kpiOptions, setKpiOptions] = useState<KPIOption[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const timeOptions = [
+    { value: "days", label: "Dias" },
+    { value: "months", label: "Meses" },
+    { value: "years", label: "Anos" },
+    { value: "product", label: "Produto" }
+  ];
+
+  useEffect(() => {
+    const loadKPIs = async () => {
+      try {
+        setLoading(true);
+        const options = await fetchUserKPIs();
+        setKpiOptions(options);
+      } catch (error) {
+        toast.error("Erro ao carregar KPIs");
+        console.error("Error loading KPIs:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadKPIs();
+  }, []);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Configuração dos Eixos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-4">Carregando KPIs...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Configuração dos Eixos</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Z Axis - Main Indicator */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Eixo Z - Indicador Principal</label>
+          <Select value={selectedZAxis} onValueChange={onSelectZAxis}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecione o indicador principal" />
+            </SelectTrigger>
+            <SelectContent>
+              {kpiOptions.map((option) => (
+                <SelectItem key={option.id} value={option.id}>
+                  {option.displayName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Secondary Axis - Time or Product */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Eixo Secundário - Tempo ou Produto</label>
+          <Select value={selectedSecondaryAxis} onValueChange={onSelectSecondaryAxis}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecione tempo ou produto" />
+            </SelectTrigger>
+            <SelectContent>
+              {timeOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Y Axis - Optional Related Indicator */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Eixo Y - Indicador Relacionado (Opcional)</label>
+          <Select value={selectedYAxis} onValueChange={onSelectYAxis}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecione indicador relacionado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Nenhum</SelectItem>
+              {kpiOptions.map((option) => (
+                <SelectItem key={option.id} value={option.id}>
+                  {option.displayName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default KPIAxisSelector;
