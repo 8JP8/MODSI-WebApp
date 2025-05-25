@@ -37,7 +37,7 @@ const DashboardHeader = ({ onLaunch, configSaved, onSave }: DashboardHeaderProps
         </Link>
         <div className="max-w-full">
           <h1 className={`font-bold vr-gradient-text truncate ${isMobile ? 'text-lg' : 'text-xl md:text-3xl'}`}>
-            MODSIVR - Painel de Gestão
+            MODSIVR - Configurador da Cena VR
           </h1>
           {!isMobile && (
             <p className="text-muted-foreground mt-2 text-sm md:text-base">

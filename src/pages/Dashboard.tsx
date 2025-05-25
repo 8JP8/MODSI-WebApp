@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -49,7 +50,7 @@ const Dashboard = () => {
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold vr-gradient-text">MODSiVR Dashboard</h1>
+          <h1 className="text-2xl font-bold vr-gradient-text">MODSIVR - Painel de Gestão</h1>
         </div>
         
         <div className="flex items-center gap-3">
