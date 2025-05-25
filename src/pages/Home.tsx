@@ -197,7 +197,7 @@ const Home = () => {
               </Link>
               <Link to="/dashboard">
                 <Button size="lg" variant="outline" className="min-w-[200px]">
-                  Dashboard
+                  Painel de Gestão
                 </Button>
               </Link>
             </div>
