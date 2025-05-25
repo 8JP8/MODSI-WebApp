@@ -39,34 +39,37 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
   };
 
   const loadTimeBasedData = async () => {
-    const history = await fetchKPIValueHistory(zAxis);
-    const isValue1 = zAxis.endsWith('-1');
+    const zKpiId = zAxis.split('-')[0];
+    const history = await fetchKPIValueHistory(zKpiId);
     
     // Group data by time period based on xAxis selection
-    const groupedData = groupByTimePeriod(history, xAxis, isValue1);
+    const groupedData = groupByTimePeriod(history, xAxis);
     
     // If yAxis is selected, also load its data
-    let yAxisData: { [key: string]: number } = {};
+    let yAxisData: { [key: string]: { value1: number; value2: number } } = {};
     if (yAxis && yAxis !== "none") {
-      const yHistory = await fetchKPIValueHistory(yAxis);
-      const isYValue1 = yAxis.endsWith('-1');
-      yAxisData = groupByTimePeriod(yHistory, xAxis, isYValue1);
+      const yKpiId = yAxis.split('-')[0];
+      const yHistory = await fetchKPIValueHistory(yKpiId);
+      yAxisData = groupByTimePeriod(yHistory, xAxis);
     }
     
     // Combine the data
     const processedData = Object.keys(groupedData).map(period => {
+      const zData = groupedData[period];
       const dataPoint: ProcessedChartData = {
         name: period,
-        [zAxis]: groupedData[period]
+        [`${zAxis.split('-')[0]} (1)`]: zData.value1,
+        [`${zAxis.split('-')[0]} (2)`]: zData.value2
       };
       
-      if (yAxis && yAxis !== "none") {
-        dataPoint[yAxis] = yAxisData[period] || 0;
+      if (yAxis && yAxis !== "none" && yAxisData[period]) {
+        const yData = yAxisData[period];
+        dataPoint[`${yAxis.split('-')[0]} (1)`] = yData.value1;
+        dataPoint[`${yAxis.split('-')[0]} (2)`] = yData.value2;
       }
       
       return dataPoint;
     }).sort((a, b) => {
-      // Sort chronologically
       return new Date(a.name).getTime() - new Date(b.name).getTime();
     });
     
@@ -94,7 +97,7 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
     setChartData(processedData);
   };
 
-  const groupByTimePeriod = (history: KPIValueHistory[], period: string, isValue1: boolean): { [key: string]: number } => {
+  const groupByTimePeriod = (history: KPIValueHistory[], period: string): { [key: string]: { value1: number; value2: number } } => {
     const grouped: { [key: string]: KPIValueHistory[] } = {};
     
     history.forEach(entry => {
@@ -122,14 +125,16 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
     });
     
     // For each period, get the latest value
-    const result: { [key: string]: number } = {};
+    const result: { [key: string]: { value1: number; value2: number } } = {};
     Object.keys(grouped).forEach(key => {
       const sortedEntries = grouped[key].sort((a, b) => 
         new Date(b.ChangedAt).getTime() - new Date(a.ChangedAt).getTime()
       );
       const latestEntry = sortedEntries[0];
-      const value = isValue1 ? latestEntry.NewValue_1 : latestEntry.NewValue_2;
-      result[key] = parseFloat(value) || 0;
+      result[key] = {
+        value1: parseFloat(latestEntry.NewValue_1) || 0,
+        value2: parseFloat(latestEntry.NewValue_2) || 0
+      };
     });
     
     return result;

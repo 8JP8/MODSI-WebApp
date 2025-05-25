@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { 
   Select, 
@@ -76,9 +77,9 @@ const KPIAxisSelector = ({
         <CardTitle>Configuração dos Eixos</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Z Axis - Main Indicator */}
+        {/* Y Axis - Main Indicator */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Eixo Z - Indicador Principal</label>
+          <label className="text-sm font-medium">Eixo Y - Indicador Principal</label>
           <Select value={selectedZAxis} onValueChange={onSelectZAxis}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Selecione o indicador principal" />
@@ -110,10 +111,10 @@ const KPIAxisSelector = ({
           </Select>
         </div>
 
-        {/* Y Axis - Optional Related Indicator */}
+        {/* Z Axis - Optional Related Indicator */}
         <div className="space-y-2">
           <label className="text-sm font-medium">
-            Eixo Y - Indicador Relacionado (Opcional)
+            Eixo Z - Indicador Relacionado (Opcional)
             {isProductSelected && <span className="text-muted-foreground ml-1">(Desabilitado para produtos)</span>}
           </label>
           <Select 

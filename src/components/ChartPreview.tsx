@@ -26,7 +26,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
           <div className="text-center">
             <p className="text-muted-foreground mb-2">Carregando dados...</p>
             <p className="text-sm text-muted-foreground">
-              Z: {zAxis || "não selecionado"}, X: {xAxis || "não selecionado"}, Y: {yAxis || "nenhum"}
+              Y: {zAxis || "não selecionado"}, X: {xAxis || "não selecionado"}, Z: {yAxis || "nenhum"}
             </p>
           </div>
         </CardContent>
@@ -44,13 +44,17 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
           <div className="text-center">
             <p className="text-muted-foreground mb-2">Selecione indicadores de dados para pré-visualizar o gráfico</p>
             <p className="text-sm text-muted-foreground">
-              Z: {zAxis || "não selecionado"}, X: {xAxis || "não selecionado"}, Y: {yAxis || "nenhum"}
+              Y: {zAxis || "não selecionado"}, X: {xAxis || "não selecionado"}, Z: {yAxis || "nenhum"}
             </p>
           </div>
         </CardContent>
       </Card>
     );
   }
+
+  // Get all data keys except 'name'
+  const dataKeys = data.length > 0 ? Object.keys(data[0]).filter(key => key !== 'name') : [];
+  console.log("Available data keys:", dataKeys);
 
   const renderChart = () => {
     switch (chartType) {
@@ -63,13 +67,16 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
               <YAxis stroke="#ccc" />
               <Tooltip contentStyle={{ backgroundColor: "#2A2F3C", borderColor: "#444" }} />
               <Legend />
-              <Bar dataKey={zAxis} fill="#1E90FF" />
-              {yAxis && yAxis !== "none" && <Bar dataKey={yAxis} fill="#9370DB" />}
+              {dataKeys.map((key, index) => (
+                <Bar key={key} dataKey={key} fill={COLORS[index % COLORS.length]} />
+              ))}
             </BarChart>
           </ResponsiveContainer>
         );
         
       case "pie":
+        // For pie charts, use only the first data key
+        const pieDataKey = dataKeys[0];
         return (
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -81,7 +88,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                 label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                 outerRadius={100}
                 fill="#8884d8"
-                dataKey={zAxis}
+                dataKey={pieDataKey}
                 nameKey="name"
               >
                 {data.map((entry, index) => (
@@ -103,8 +110,15 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
               <YAxis stroke="#ccc" />
               <Tooltip contentStyle={{ backgroundColor: "#2A2F3C", borderColor: "#444" }} />
               <Legend />
-              <Line type="monotone" dataKey={zAxis} stroke="#1E90FF" activeDot={{ r: 8 }} />
-              {yAxis && yAxis !== "none" && <Line type="monotone" dataKey={yAxis} stroke="#9370DB" />}
+              {dataKeys.map((key, index) => (
+                <Line 
+                  key={key} 
+                  type="monotone" 
+                  dataKey={key} 
+                  stroke={COLORS[index % COLORS.length]} 
+                  activeDot={{ r: 8 }} 
+                />
+              ))}
             </LineChart>
           </ResponsiveContainer>
         );
@@ -115,11 +129,17 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
             <ScatterChart margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#444" />
               <XAxis dataKey="name" type="category" name="name" stroke="#ccc" />
-              <YAxis dataKey={zAxis} type="number" name={zAxis} stroke="#ccc" />
+              <YAxis type="number" stroke="#ccc" />
               <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ backgroundColor: "#2A2F3C", borderColor: "#444" }} />
               <Legend />
-              <Scatter name={zAxis} data={data} fill="#1E90FF" />
-              {yAxis && yAxis !== "none" && <Scatter name={yAxis} data={data} fill="#9370DB" />}
+              {dataKeys.map((key, index) => (
+                <Scatter 
+                  key={key} 
+                  name={key} 
+                  data={data.map(item => ({ x: item.name, y: item[key] }))} 
+                  fill={COLORS[index % COLORS.length]} 
+                />
+              ))}
             </ScatterChart>
           </ResponsiveContainer>
         );
