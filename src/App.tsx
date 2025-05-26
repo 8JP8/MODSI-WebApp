@@ -13,6 +13,7 @@ import VRConfiguratorPage from "./pages/VRConfiguratorPage";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import { AuthProvider } from "./hooks/useAuth";
+import RequireAuth from "./components/RequireAuth";
 
 const queryClient = new QueryClient();
 
@@ -28,7 +29,11 @@ const App = () => (
               <Route path="/" element={<Home />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/visualization-hub" element={<VisualizationHub />} />
-              <Route path="/configurator" element={<VRConfiguratorPage />} />
+              <Route path="/configurator" element={
+                <RequireAuth>
+                  <VRConfiguratorPage />
+                </RequireAuth>
+              } />
               <Route path="/login" element={<Login />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

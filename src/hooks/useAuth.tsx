@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -29,6 +28,7 @@ interface AuthContextType {
   logout: () => void;
   checkAuth: () => boolean;
   checkEmail: (email: string) => Promise<boolean>;
+  validateToken: () => Promise<boolean>;
 }
 
 const API_BASE_URL = "https://modsi-api-ffhhfgecfdehhscv.spaincentral-01.azurewebsites.net/api";
@@ -41,7 +41,8 @@ const AuthContext = createContext<AuthContextType>({
   login: () => Promise.resolve(false),
   logout: () => {},
   checkAuth: () => false,
-  checkEmail: () => Promise.resolve(false)
+  checkEmail: () => Promise.resolve(false),
+  validateToken: () => Promise.resolve(false)
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -52,6 +53,71 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     checkAuth();
   }, []);
+
+  // Validate token with server
+  const validateToken = async (): Promise<boolean> => {
+    const tokenData = localStorage.getItem("authToken");
+    
+    if (!tokenData) {
+      return false;
+    }
+    
+    try {
+      const parsedToken = JSON.parse(tokenData) as AuthTokenData;
+      
+      // Check if token is expired locally first
+      if (new Date().getTime() >= parsedToken.expiry) {
+        localStorage.removeItem("authToken");
+        setIsAuthenticated(false);
+        setUsername(null);
+        setUserData(null);
+        return false;
+      }
+      
+      // Validate token with server
+      const response = await fetch(
+        `${API_BASE_URL}/User/CheckToken?code=${API_CODE}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${parsedToken.token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        console.error("Token validation failed:", response.statusText);
+        localStorage.removeItem("authToken");
+        setIsAuthenticated(false);
+        setUsername(null);
+        setUserData(null);
+        return false;
+      }
+      
+      const data = await response.json();
+      
+      if (data && data.IsValid === true) {
+        setIsAuthenticated(true);
+        setUsername(parsedToken.username);
+        setUserData(parsedToken.userData);
+        return true;
+      } else {
+        localStorage.removeItem("authToken");
+        setIsAuthenticated(false);
+        setUsername(null);
+        setUserData(null);
+        return false;
+      }
+    } catch (error) {
+      console.error("Error validating token:", error);
+      localStorage.removeItem("authToken");
+      setIsAuthenticated(false);
+      setUsername(null);
+      setUserData(null);
+      return false;
+    }
+  };
 
   // Check if email exists in the system
   const checkEmail = async (email: string): Promise<boolean> => {
@@ -286,7 +352,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       login, 
       logout, 
       checkAuth,
-      checkEmail
+      checkEmail,
+      validateToken
     }}>
       {children}
     </AuthContext.Provider>
