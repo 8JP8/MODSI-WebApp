@@ -12,10 +12,7 @@ import VisualizationLanding from "./pages/VisualizationLanding";
 import VRConfiguratorPage from "./pages/VRConfiguratorPage";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
-import PasswordReset from "./pages/PasswordReset";
-import EmailVerification from "./pages/EmailVerification";
 import { AuthProvider } from "./hooks/useAuth";
-import RequireAuth from "./components/RequireAuth";
 
 const queryClient = new QueryClient();
 
@@ -31,16 +28,8 @@ const App = () => (
               <Route path="/" element={<Home />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/visualization-hub" element={<VisualizationHub />} />
-              <Route path="/configurator" element={
-                <RequireAuth>
-                  <VRConfiguratorPage />
-                </RequireAuth>
-              } />
+              <Route path="/configurator" element={<VRConfiguratorPage />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/passwordreset" element={<PasswordReset />} />
-              <Route path="/passwordreset/:code" element={<PasswordReset />} />
-              <Route path="/emailverification" element={<EmailVerification />} />
-              <Route path="/emailverification/:code" element={<EmailVerification />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
