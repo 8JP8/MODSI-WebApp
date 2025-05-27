@@ -149,17 +149,15 @@ const Login = () => {
                 />
                 {emailExists === false && email.length > 5 && (
                   <Alert variant="destructive" className="py-2">
-                    <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
-                      Email não registado no sistema
+                      ✖ Email não registado no sistema
                     </AlertDescription>
                   </Alert>
                 )}
                 {emailExists === true && (
                   <Alert className="py-2 border-green-500 text-green-500">
-                    <Check className="h-4 w-4" />
                     <AlertDescription>
-                      Email encontrado
+                      ✔ Email encontrado
                     </AlertDescription>
                   </Alert>
                 )}
