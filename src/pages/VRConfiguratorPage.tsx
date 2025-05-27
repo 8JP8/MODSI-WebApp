@@ -9,23 +9,43 @@ import { toast } from "sonner";
 const VRConfiguratorPage = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const { validateToken } = useAuth();
+  const { validateToken, checkAuth } = useAuth();
   const [isValidating, setIsValidating] = useState(true);
+  const [hasValidated, setHasValidated] = useState(false);
   
   useEffect(() => {
     const checkTokenValidity = async () => {
+      // Prevent multiple validation calls
+      if (hasValidated) {
+        return;
+      }
+      
       console.log("Validating token on configurator page load...");
       
       try {
+        // First check if there's a token in localStorage
+        const hasToken = checkAuth();
+        
+        if (!hasToken) {
+          console.log("No auth token found, redirecting to login");
+          toast.error("Por favor, faça login para aceder ao configurador.");
+          navigate("/login");
+          return;
+        }
+        
+        // If token exists, validate it with the server
         const isValid = await validateToken();
         console.log("Token validation result:", isValid);
         
         if (!isValid) {
+          console.log("Token is invalid, redirecting to login");
           toast.error("Sessão expirada. Por favor, faça login novamente.");
           navigate("/login");
           return;
         }
         
+        console.log("Token is valid, allowing access to configurator");
+        setHasValidated(true);
         setIsValidating(false);
       } catch (error) {
         console.error("Error during token validation:", error);
@@ -35,7 +55,7 @@ const VRConfiguratorPage = () => {
     };
 
     checkTokenValidity();
-  }, [validateToken, navigate]);
+  }, [validateToken, navigate, checkAuth, hasValidated]);
 
   if (isValidating) {
     return (

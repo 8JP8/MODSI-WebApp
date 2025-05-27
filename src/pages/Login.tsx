@@ -1,29 +1,20 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { AlertCircle, Lock, LogIn, Loader2, ArrowLeft, Check } from "lucide-react";
+import { LogIn, Loader2, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
   const [email, setEmail] = useState("");
-  const [emailExists, setEmailExists] = useState<boolean | null>(null);
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isRequestingReset, setIsRequestingReset] = useState(false);
   const navigate = useNavigate();
-  const { login, checkAuth, checkEmail, requestPasswordReset } = useAuth();
-
-  useEffect(() => {
-    // Check if token exists and is valid
-    if (checkAuth()) {
-      navigate("/configurator");
-    }
-  }, [navigate, checkAuth]);
+  const { login, requestPasswordReset } = useAuth();
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -34,20 +25,6 @@ const Login = () => {
     const passwordRegex = /^(?!.*(?:--|;|\/\*|\*\/|xp_|union|select|insert|update|delete|drop|alter|create|truncate|exec|declare)).{5,}$/;
     return passwordRegex.test(password);
   }
-
-  const handleEmailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newEmail = e.target.value;
-    setEmail(newEmail);
-    
-    // Reset email status when changed
-    setEmailExists(null);
-    
-    // If email is valid and has at least 5 characters, check if it exists
-    if (validateEmail(newEmail) && newEmail.length >= 5) {
-      const exists = await checkEmail(newEmail);
-      setEmailExists(exists);
-    }
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,11 +63,6 @@ const Login = () => {
 
     if (!validateEmail(email)) {
       toast.error("Por favor, introduza um email válido");
-      return;
-    }
-
-    if (emailExists === false) {
-      toast.error("Email não registado no sistema");
       return;
     }
 
@@ -140,27 +112,10 @@ const Login = () => {
                   placeholder="Email"
                   type="email"
                   value={email}
-                  onChange={handleEmailChange}
-                  className={`text-base p-4 ${
-                    emailExists === true ? "border-green-500" : 
-                    emailExists === false ? "border-red-500" : ""
-                  }`}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="text-base p-4"
                   disabled={isLoading}
                 />
-                {emailExists === false && email.length > 5 && (
-                  <Alert variant="destructive" className="py-2">
-                    <AlertDescription>
-                      ⨂ Email não registado no sistema
-                    </AlertDescription>
-                  </Alert>
-                )}
-                {emailExists === true && (
-                  <Alert className="py-2 border-green-500 text-green-500">
-                    <AlertDescription>
-                      ✓ Email encontrado
-                    </AlertDescription>
-                  </Alert>
-                )}
               </div>
               <div className="space-y-2">
                 <Input
@@ -170,13 +125,13 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="text-base p-4"
-                  disabled={isLoading || emailExists === false}
+                  disabled={isLoading}
                 />
               </div>
               <Button 
                 type="submit" 
                 className="w-full text-base py-5"
-                disabled={isLoading || emailExists === false}
+                disabled={isLoading || !email.trim() || !password.trim()}
               >
                 {isLoading ? (
                   <>
@@ -198,7 +153,7 @@ const Login = () => {
                 variant="ghost"
                 className="text-sm text-primary hover:text-primary/80 transition-colors p-0 h-auto font-normal"
                 onClick={handleForgotPassword}
-                disabled={!email.trim() || !validateEmail(email) || emailExists === false || isRequestingReset}
+                disabled={!email.trim() || !validateEmail(email) || isRequestingReset}
               >
                 {isRequestingReset ? (
                   <>
