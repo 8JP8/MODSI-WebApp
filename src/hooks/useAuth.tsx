@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -29,6 +30,8 @@ interface AuthContextType {
   checkAuth: () => boolean;
   checkEmail: (email: string) => Promise<boolean>;
   validateToken: () => Promise<boolean>;
+  requestPasswordReset: (email: string) => Promise<boolean>;
+  resetPassword: (code: string, password: string) => Promise<boolean>;
 }
 
 const API_BASE_URL = "https://modsi-api-ffhhfgecfdehhscv.spaincentral-01.azurewebsites.net/api";
@@ -42,7 +45,9 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
   checkAuth: () => false,
   checkEmail: () => Promise.resolve(false),
-  validateToken: () => Promise.resolve(false)
+  validateToken: () => Promise.resolve(false),
+  requestPasswordReset: () => Promise.resolve(false),
+  resetPassword: () => Promise.resolve(false)
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -220,7 +225,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     
     if (!validatePassword(password)) {
-      toast.error("A password deve ter pelo menos 5 caracteres e não pode conter comandos SQL");
+      toast.error("Deve inserir uma password válida com pelo menos 5 caracteres");
       return false;
     }
     
@@ -344,6 +349,92 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUserData(null);
   };
 
+  // Request password reset
+  const requestPasswordReset = async (email: string): Promise<boolean> => {
+    if (!validateEmail(email)) {
+      toast.error("Formato de email inválido");
+      return false;
+    }
+
+    try {
+      // First check if email exists
+      const emailExists = await checkEmail(email);
+      if (!emailExists) {
+        toast.error("Email não registado no sistema");
+        return false;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/User/RequestPasswordReset?code=${API_CODE}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          Email: email
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error requesting password reset: ${response.statusText}`);
+      }
+
+      toast.success("Email de recuperação de password enviado com sucesso");
+      return true;
+    } catch (error) {
+      console.error("Error requesting password reset:", error);
+      toast.error("Erro ao solicitar recuperação de password");
+      return false;
+    }
+  };
+
+  // Generate salt
+  const generateSalt = (): string => {
+    const randomBytes = forge.random.getBytesSync(16);
+    return forge.util.encode64(randomBytes);
+  };
+
+  // Reset password with code
+  const resetPassword = async (code: string, password: string): Promise<boolean> => {
+    if (!validatePassword(password)) {
+      toast.error("Deve inserir uma password válida com pelo menos 5 caracteres");
+      return false;
+    }
+
+    try {
+      // Generate new salt and hash password
+      const salt = generateSalt();
+      const hashedPassword = hashPassword(password, salt);
+
+      const response = await fetch(`${API_BASE_URL}/User/SetPasswordByResetCode?code=${API_CODE}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          code: code,
+          password: hashedPassword,
+          salt: salt
+        })
+      });
+
+      if (!response.ok) {
+        if (response.status === 400) {
+          toast.error("Código inválido ou expirado");
+        } else {
+          toast.error(`Erro ao alterar password: ${response.statusText}`);
+        }
+        return false;
+      }
+
+      toast.success("Password alterada com sucesso");
+      return true;
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      toast.error("Erro ao alterar password");
+      return false;
+    }
+  };
+
   return (
     <AuthContext.Provider value={{ 
       isAuthenticated, 
@@ -353,7 +444,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       logout, 
       checkAuth,
       checkEmail,
-      validateToken
+      validateToken,
+      requestPasswordReset,
+      resetPassword
     }}>
       {children}
     </AuthContext.Provider>

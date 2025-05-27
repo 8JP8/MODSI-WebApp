@@ -12,6 +12,7 @@ import VisualizationLanding from "./pages/VisualizationLanding";
 import VRConfiguratorPage from "./pages/VRConfiguratorPage";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import PasswordReset from "./pages/PasswordReset";
 import { AuthProvider } from "./hooks/useAuth";
 import RequireAuth from "./components/RequireAuth";
 
@@ -35,6 +36,7 @@ const App = () => (
                 </RequireAuth>
               } />
               <Route path="/login" element={<Login />} />
+              <Route path="/passwordreset/:code" element={<PasswordReset />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { AlertCircle, Lock, LogIn, Loader2 } from "lucide-react";
+import { AlertCircle, Lock, LogIn, Loader2, ArrowLeft, Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -14,8 +14,9 @@ const Login = () => {
   const [emailExists, setEmailExists] = useState<boolean | null>(null);
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isRequestingReset, setIsRequestingReset] = useState(false);
   const navigate = useNavigate();
-  const { login, checkAuth, checkEmail } = useAuth();
+  const { login, checkAuth, checkEmail, requestPasswordReset } = useAuth();
 
   useEffect(() => {
     // Check if token exists and is valid
@@ -57,7 +58,7 @@ const Login = () => {
     }
     
     if (!validatePassword(password)) {
-      toast.error("A password deve ter pelo menos 5 caracteres e não conter comandos SQL");
+      toast.error("Deve inserir uma password válida com pelo menos 5 caracteres");
       return;
     }
     
@@ -77,14 +78,56 @@ const Login = () => {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      toast.error("Por favor, introduza o seu email primeiro");
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      toast.error("Por favor, introduza um email válido");
+      return;
+    }
+
+    if (emailExists === false) {
+      toast.error("Email não registado no sistema");
+      return;
+    }
+
+    setIsRequestingReset(true);
+    
+    try {
+      await requestPasswordReset(email);
+    } catch (error) {
+      console.error("Password reset request error:", error);
+    } finally {
+      setIsRequestingReset(false);
+    }
+  };
+
+  const handleGoBack = () => {
+    navigate(-1);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-slate-900/50 flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md">
         <Card className="shadow-lg border border-slate-800">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center vr-gradient-text">
-              MODSI VR Visualização
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleGoBack}
+                className="p-2 h-auto"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <CardTitle className="text-2xl font-bold text-center vr-gradient-text flex-1">
+                MODSiVR - Autenticação
+              </CardTitle>
+              <div className="w-10"></div> {/* Spacer for centering */}
+            </div>
             <CardDescription className="text-center">
               Entre com as suas credenciais para aceder ao configurador
             </CardDescription>
@@ -114,6 +157,7 @@ const Login = () => {
                 )}
                 {emailExists === true && (
                   <Alert className="py-2 border-green-500 text-green-500">
+                    <Check className="h-4 w-4" />
                     <AlertDescription>
                       Email encontrado
                     </AlertDescription>
@@ -149,6 +193,25 @@ const Login = () => {
                 )}
               </Button>
             </form>
+            
+            {/* Forgot Password Button */}
+            <div className="mt-4 text-center">
+              <Button
+                variant="ghost"
+                className="text-sm text-primary hover:text-primary/80 transition-colors p-0 h-auto font-normal"
+                onClick={handleForgotPassword}
+                disabled={!email.trim() || !validateEmail(email) || emailExists === false || isRequestingReset}
+              >
+                {isRequestingReset ? (
+                  <>
+                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                    A enviar...
+                  </>
+                ) : (
+                  "Esqueci-me da password"
+                )}
+              </Button>
+            </div>
           </CardContent>
           <CardFooter>
             <p className="text-center text-sm text-muted-foreground w-full mt-2">
