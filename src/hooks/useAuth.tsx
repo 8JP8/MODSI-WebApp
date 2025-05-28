@@ -1,5 +1,4 @@
-
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import forge from "node-forge";
@@ -32,6 +31,7 @@ interface AuthContextType {
   validateToken: () => Promise<boolean>;
   requestPasswordReset: (email: string) => Promise<boolean>;
   resetPassword: (code: string, password: string) => Promise<boolean>;
+  isLoading: boolean; // Add loading state
 }
 
 const API_BASE_URL = "https://modsi-api-ffhhfgecfdehhscv.spaincentral-01.azurewebsites.net/api";
@@ -47,19 +47,107 @@ const AuthContext = createContext<AuthContextType>({
   checkEmail: () => Promise.resolve(false),
   validateToken: () => Promise.resolve(false),
   requestPasswordReset: () => Promise.resolve(false),
-  resetPassword: () => Promise.resolve(false)
+  resetPassword: () => Promise.resolve(false),
+  isLoading: true
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [username, setUsername] = useState<string | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true); // Add loading state
+  const [initialized, setInitialized] = useState<boolean>(false); // Prevent multiple initializations
   
+  // Initialize auth state only once
   useEffect(() => {
-    checkAuth();
+    if (!initialized) {
+      setInitialized(true);
+      const initAuth = async () => {
+        try {
+          await checkAuthAsync(); // Use async version
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      initAuth();
+    }
+  }, [initialized]);
+
+  // Async version of checkAuth to handle initial load properly
+  const checkAuthAsync = useCallback(async (): Promise<boolean> => {
+    const tokenData = localStorage.getItem("authToken");
+    
+    if (!tokenData) {
+      setIsAuthenticated(false);
+      setUsername(null);
+      setUserData(null);
+      return false;
+    }
+    
+    try {
+      const parsedToken = JSON.parse(tokenData) as AuthTokenData;
+      const isValid = new Date().getTime() < parsedToken.expiry;
+      
+      if (!isValid) {
+        localStorage.removeItem("authToken");
+        setIsAuthenticated(false);
+        setUsername(null);
+        setUserData(null);
+        return false;
+      }
+      
+      // Validate token with server if not expired locally
+      const isServerValid = await validateTokenSilently(parsedToken.token);
+      
+      if (isServerValid) {
+        setIsAuthenticated(true);
+        setUsername(parsedToken.username);
+        setUserData(parsedToken.userData);
+        return true;
+      } else {
+        localStorage.removeItem("authToken");
+        setIsAuthenticated(false);
+        setUsername(null);
+        setUserData(null);
+        return false;
+      }
+    } catch (error) {
+      console.error("Error parsing auth token:", error);
+      localStorage.removeItem("authToken");
+      setIsAuthenticated(false);
+      setUsername(null);
+      setUserData(null);
+      return false;
+    }
   }, []);
 
-  // Validate token with server
+  // Silent token validation (no state updates on failure)
+  const validateTokenSilently = async (token: string): Promise<boolean> => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/User/CheckToken?code=${API_CODE}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        return false;
+      }
+      
+      const data = await response.json();
+      return data && data.IsValid === true;
+    } catch (error) {
+      console.error("Silent token validation error:", error);
+      return false;
+    }
+  };
+
+  // Validate token with server (with state updates)
   const validateToken = async (): Promise<boolean> => {
     const tokenData = localStorage.getItem("authToken");
     
@@ -72,10 +160,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       // Check if token is expired locally first
       if (new Date().getTime() >= parsedToken.expiry) {
-        localStorage.removeItem("authToken");
-        setIsAuthenticated(false);
-        setUsername(null);
-        setUserData(null);
+        logout(); // Use logout method to clean up properly
         return false;
       }
       
@@ -93,10 +178,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (!response.ok) {
         console.error("Token validation failed:", response.statusText);
-        localStorage.removeItem("authToken");
-        setIsAuthenticated(false);
-        setUsername(null);
-        setUserData(null);
+        logout();
         return false;
       }
       
@@ -108,18 +190,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUserData(parsedToken.userData);
         return true;
       } else {
-        localStorage.removeItem("authToken");
-        setIsAuthenticated(false);
-        setUsername(null);
-        setUserData(null);
+        logout();
         return false;
       }
     } catch (error) {
       console.error("Error validating token:", error);
-      localStorage.removeItem("authToken");
-      setIsAuthenticated(false);
-      setUsername(null);
-      setUserData(null);
+      logout();
       return false;
     }
   };
@@ -213,10 +289,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Reset state
-    setIsAuthenticated(false);
-    setUsername(null);
-    setUserData(null);
+    // Don't reset auth state during login to prevent flicker
     
     // Validate input
     if (!validateEmail(email)) {
@@ -289,6 +362,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         localStorage.setItem("authToken", JSON.stringify(tokenData));
         
+        // Update state in one batch to prevent multiple re-renders
         setIsAuthenticated(true);
         setUsername(userDetails.username || email);
         setUserData(userDetails);
@@ -306,13 +380,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const checkAuth = (): boolean => {
+  // Synchronous checkAuth for immediate state checking
+  const checkAuth = useCallback((): boolean => {
     const tokenData = localStorage.getItem("authToken");
     
     if (!tokenData) {
-      setIsAuthenticated(false);
-      setUsername(null);
-      setUserData(null);
       return false;
     }
     
@@ -322,32 +394,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (!isValid) {
         localStorage.removeItem("authToken");
-        setIsAuthenticated(false);
-        setUsername(null);
-        setUserData(null);
         return false;
       }
       
-      setIsAuthenticated(true);
-      setUsername(parsedToken.username);
-      setUserData(parsedToken.userData);
       return true;
     } catch (error) {
       console.error("Error parsing auth token:", error);
       localStorage.removeItem("authToken");
-      setIsAuthenticated(false);
-      setUsername(null);
-      setUserData(null);
       return false;
     }
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem("authToken");
     setIsAuthenticated(false);
     setUsername(null);
     setUserData(null);
-  };
+  }, []);
 
   // Request password reset
   const requestPasswordReset = async (email: string): Promise<boolean> => {
@@ -446,7 +509,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       checkEmail,
       validateToken,
       requestPasswordReset,
-      resetPassword
+      resetPassword,
+      isLoading
     }}>
       {children}
     </AuthContext.Provider>
