@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -89,6 +90,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const isValid = new Date().getTime() < parsedToken.expiry;
       
       if (!isValid) {
+        console.log("Token expired locally");
         localStorage.removeItem("authToken");
         setIsAuthenticated(false);
         setUsername(null);
@@ -96,7 +98,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
       
-      // Validate token with server if not expired locally
+      // For fresh tokens (less than 5 minutes old), trust them without server validation
+      const tokenAge = new Date().getTime() - (parsedToken.expiry - 60 * 60 * 1000);
+      const isFreshToken = tokenAge < 5 * 60 * 1000; // 5 minutes
+      
+      if (isFreshToken) {
+        console.log("Using fresh token without server validation");
+        setIsAuthenticated(true);
+        setUsername(parsedToken.username);
+        setUserData(parsedToken.userData);
+        return true;
+      }
+      
+      // For older tokens, validate with server
+      console.log("Validating older token with server");
       const isServerValid = await validateTokenSilently(parsedToken.token);
       
       if (isServerValid) {
@@ -105,6 +120,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUserData(parsedToken.userData);
         return true;
       } else {
+        console.log("Server validation failed");
         localStorage.removeItem("authToken");
         setIsAuthenticated(false);
         setUsername(null);
@@ -136,11 +152,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       );
       
       if (!response.ok) {
+        console.log("Silent token validation failed with status:", response.status);
         return false;
       }
       
       const data = await response.json();
-      return data && data.IsValid === true;
+      const isValid = data && data.IsValid === true;
+      console.log("Silent token validation result:", isValid);
+      return isValid;
     } catch (error) {
       console.error("Silent token validation error:", error);
       return false;
@@ -367,9 +386,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUsername(userDetails.username || email);
         setUserData(userDetails);
         
+        console.log("Login successful, token stored and state updated");
         toast.success("Login efetuado com sucesso");
         return true;
       } else {
+        console.error("Invalid login response:", loginData);
         toast.error("Falha no login: Resposta da API inválida");
         return false;
       }
@@ -393,10 +414,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const isValid = new Date().getTime() < parsedToken.expiry;
       
       if (!isValid) {
+        console.log("Token expired in synchronous check");
         localStorage.removeItem("authToken");
         return false;
       }
       
+      // For synchronous checks, don't validate with server - trust local expiry
+      console.log("Token valid in synchronous check");
       return true;
     } catch (error) {
       console.error("Error parsing auth token:", error);
