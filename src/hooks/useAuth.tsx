@@ -14,12 +14,6 @@ interface UserData {
   photo: string | null;
 }
 
-interface AuthTokenData {
-  token: string;
-  username: string;
-  userData: UserData;
-}
-
 interface AuthContextType {
   isAuthenticated: boolean;
   username: string | null;
@@ -31,7 +25,7 @@ interface AuthContextType {
   validateToken: () => Promise<boolean>;
   requestPasswordReset: (email: string) => Promise<boolean>;
   resetPassword: (code: string, password: string) => Promise<boolean>;
-  isLoading: boolean; // Add loading state
+  isLoading: boolean;
 }
 
 const API_BASE_URL = "https://modsi-api-ffhhfgecfdehhscv.spaincentral-01.azurewebsites.net/api";
@@ -55,16 +49,62 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [username, setUsername] = useState<string | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true); // Add loading state
-  const [initialized, setInitialized] = useState<boolean>(false); // Prevent multiple initializations
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [initialized, setInitialized] = useState<boolean>(false);
   
+  // Decode JWT token to extract user information
+  const decodeToken = (token: string): any => {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      console.error("Error decoding token:", error);
+      return null;
+    }
+  };
+
+  // Extract user data from token payload
+  const extractUserDataFromToken = async (token: string): Promise<UserData | null> => {
+    const payload = decodeToken(token);
+    if (!payload) return null;
+
+    // Get additional user details from API if needed
+    try {
+      const userDetails = await getUserDetails(payload.email);
+      return userDetails || {
+        name: null,
+        email: payload.email || null,
+        username: payload.sub || null,
+        role: payload.role || null,
+        group: payload.group || null,
+        tel: null,
+        photo: null
+      };
+    } catch (error) {
+      // Fallback to token data if API call fails
+      return {
+        name: null,
+        email: payload.email || null,
+        username: payload.sub || null,
+        role: payload.role || null,
+        group: payload.group || null,
+        tel: null,
+        photo: null
+      };
+    }
+  };
+
   // Initialize auth state only once
   useEffect(() => {
     if (!initialized) {
       setInitialized(true);
       const initAuth = async () => {
         try {
-          await checkAuthAsync(); // Use async version
+          await checkAuthAsync();
         } finally {
           setIsLoading(false);
         }
@@ -75,9 +115,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Async version of checkAuth to handle initial load properly
   const checkAuthAsync = useCallback(async (): Promise<boolean> => {
-    const tokenData = localStorage.getItem("authToken");
+    const token = localStorage.getItem("authToken");
     
-    if (!tokenData) {
+    if (!token) {
       setIsAuthenticated(false);
       setUsername(null);
       setUserData(null);
@@ -85,17 +125,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     
     try {
-      const parsedToken = JSON.parse(tokenData) as AuthTokenData;
-      
       // Always validate token with server on page refresh/initialization
       console.log("Validating token with server...");
-      const isServerValid = await validateTokenSilently(parsedToken.token);
+      const isServerValid = await validateTokenSilently(token);
       
       if (isServerValid) {
         console.log("Token is valid");
+        
+        // Extract user data from token
+        const userDataFromToken = await extractUserDataFromToken(token);
+        const payload = decodeToken(token);
+        
         setIsAuthenticated(true);
-        setUsername(parsedToken.username);
-        setUserData(parsedToken.userData);
+        setUsername(payload?.sub || userDataFromToken?.username || null);
+        setUserData(userDataFromToken);
         return true;
       } else {
         console.log("Token is invalid or expired");
@@ -106,7 +149,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
     } catch (error) {
-      console.error("Error parsing auth token:", error);
+      console.error("Error validating auth token:", error);
       localStorage.removeItem("authToken");
       setIsAuthenticated(false);
       setUsername(null);
@@ -146,22 +189,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Validate token with server (with state updates)
   const validateToken = async (): Promise<boolean> => {
-    const tokenData = localStorage.getItem("authToken");
+    const token = localStorage.getItem("authToken");
     
-    if (!tokenData) {
+    if (!token) {
       return false;
     }
     
     try {
-      const parsedToken = JSON.parse(tokenData) as AuthTokenData;
-      
       // Validate token with server
       const response = await fetch(
         `${API_BASE_URL}/User/CheckToken?code=${API_CODE}`,
         {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${parsedToken.token}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         }
@@ -176,9 +217,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const data = await response.json();
       
       if (data && data.IsValid === true) {
+        // Extract user data from token
+        const userDataFromToken = await extractUserDataFromToken(token);
+        const payload = decodeToken(token);
+        
         setIsAuthenticated(true);
-        setUsername(parsedToken.username);
-        setUserData(parsedToken.userData);
+        setUsername(payload?.sub || userDataFromToken?.username || null);
+        setUserData(userDataFromToken);
         return true;
       } else {
         logout();
@@ -280,8 +325,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Don't reset auth state during login to prevent flicker
-    
     // Validate input
     if (!validateEmail(email)) {
       toast.error("Formato de email inválido");
@@ -298,13 +341,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const emailExists = await checkEmail(email);
       if (!emailExists) {
         toast.error("Email não registado no sistema");
-        return false;
-      }
-      
-      // Get user details first to store
-      const userDetails = await getUserDetails(email);
-      if (!userDetails) {
-        toast.error("Não foi possível obter os detalhes do utilizador");
         return false;
       }
       
@@ -343,26 +379,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const loginData = await loginResponse.json();
       
       if (loginData && loginData.Token) {
-        // Store token without expiry - let server decide validity
-        const tokenData: AuthTokenData = {
-          token: loginData.Token,
-          username: userDetails.username || email,
-          userData: userDetails
-        };
+        // Store only the token string
+        localStorage.setItem("authToken", loginData.Token);
         
-        localStorage.setItem("authToken", JSON.stringify(tokenData));
+        // Extract user data from token
+        const userDataFromToken = await extractUserDataFromToken(loginData.Token);
+        const payload = decodeToken(loginData.Token);
         
         // Update state in one batch to prevent multiple re-renders
         setIsAuthenticated(true);
-        setUsername(userDetails.username || email);
-        setUserData(userDetails);
+        setUsername(payload?.sub || userDataFromToken?.username || email);
+        setUserData(userDataFromToken);
         
         console.log("Login successful, token stored and state updated");
         toast.success("Login efetuado com sucesso");
         return true;
       } else {
         console.error("Invalid login response:", loginData);
-        toast.error("Falha no login: Resposta da API inválida");
+        toast.error("Falha no login: Token não recebido");
         return false;
       }
     } catch (error) {
@@ -374,17 +408,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Synchronous checkAuth for immediate state checking
   const checkAuth = useCallback((): boolean => {
-    const tokenData = localStorage.getItem("authToken");
+    const token = localStorage.getItem("authToken");
     
-    if (!tokenData) {
+    if (!token) {
       return false;
     }
     
     try {
-      const parsedToken = JSON.parse(tokenData) as AuthTokenData;
-      // Just check if token exists - let server validation handle expiry
-      console.log("Token exists in localStorage");
-      return true;
+      // Check if token is a valid JWT format
+      const payload = decodeToken(token);
+      if (payload) {
+        console.log("Token exists in localStorage");
+        return true;
+      } else {
+        localStorage.removeItem("authToken");
+        return false;
+      }
     } catch (error) {
       console.error("Error parsing auth token:", error);
       localStorage.removeItem("authToken");
