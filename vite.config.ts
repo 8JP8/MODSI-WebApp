@@ -6,8 +6,8 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  // Use custom domain for production, no path prefix needed with custom domain
-  base: mode === 'production' ? '/' : '/',
+  // Use root path for both development and production with custom domain
+  base: '/',
   server: {
     host: "::",
     port: 8080,

@@ -11,13 +11,14 @@
     // This script takes the current URL and converts the path and query
     // string into just a query string, and then redirects the browser
     // to the new URL with only a query string and hash fragment
-    var segmentCount = 0; // No segments with custom domain
+    var pathSegmentsToKeep = 0; // Set to 0 for custom domain, 1 for GitHub Pages subdirectory
+    
     var l = window.location;
     l.replace(
       l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-      l.pathname.split('/').slice(0, 1 + segmentCount).join('/') + '/?p=/' +
-      l.pathname.slice(1).split('/').slice(segmentCount).join('/').replace(/&/g, '~and~') +
-      (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+      l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+      l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+      (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
       l.hash
     );
   </script>
