@@ -40,7 +40,7 @@ const PasswordReset = () => {
     }
     
     if (!validatePassword(password)) {
-      toast.error("Deve inserir uma password válida com pelo menos 5 caracteres");
+      toast.error("A password deve ter pelo menos 5 caracteres");
       return;
     }
     

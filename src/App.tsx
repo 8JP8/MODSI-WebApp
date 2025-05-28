@@ -15,6 +15,7 @@ import Login from "./pages/Login";
 import PasswordReset from "./pages/PasswordReset";
 import { AuthProvider } from "./hooks/useAuth";
 import RequireAuth from "./components/RequireAuth";
+import EmailVerification from "./pages/EmailVerification";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,8 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/passwordreset" element={<PasswordReset />} />
               <Route path="/passwordreset/:code" element={<PasswordReset />} />
+              <Route path="/emailverification" element={<EmailVerification />} />
+              <Route path="/emailverification/:code" element={<EmailVerification />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
