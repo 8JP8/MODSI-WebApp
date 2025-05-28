@@ -386,13 +386,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const userDataFromToken = await extractUserDataFromToken(loginData.Token);
         const payload = decodeToken(loginData.Token);
         
-        // Update state in one batch to prevent multiple re-renders
+        // Update state synchronously to prevent race conditions
+        const finalUsername = payload?.sub || userDataFromToken?.username || email;
+        
+        // Use React's batching by wrapping in a single update
         setIsAuthenticated(true);
-        setUsername(payload?.sub || userDataFromToken?.username || email);
+        setUsername(finalUsername);
         setUserData(userDataFromToken);
         
         console.log("Login successful, token stored and state updated");
+        console.log("Auth state:", { isAuthenticated: true, username: finalUsername, userData: userDataFromToken });
+        
         toast.success("Login efetuado com sucesso");
+        
+        // Add a small delay to ensure state is updated before returning
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         return true;
       } else {
         console.error("Invalid login response:", loginData);
@@ -411,16 +420,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const token = localStorage.getItem("authToken");
     
     if (!token) {
+      console.log("No token found in localStorage");
       return false;
     }
     
     try {
       // Check if token is a valid JWT format
       const payload = decodeToken(token);
-      if (payload) {
-        console.log("Token exists in localStorage");
-        return true;
+      if (payload && payload.exp) {
+        // Check if token is not expired (basic client-side check)
+        const currentTime = Math.floor(Date.now() / 1000);
+        if (payload.exp > currentTime) {
+          console.log("Token exists and is not expired (client-side check)");
+          return true;
+        } else {
+          console.log("Token is expired (client-side check)");
+          localStorage.removeItem("authToken");
+          return false;
+        }
       } else {
+        console.log("Invalid token payload");
         localStorage.removeItem("authToken");
         return false;
       }
