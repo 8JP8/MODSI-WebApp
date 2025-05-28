@@ -16,7 +16,6 @@ interface UserData {
 
 interface AuthTokenData {
   token: string;
-  expiry: number;
   username: string;
   userData: UserData;
 }
@@ -87,40 +86,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     try {
       const parsedToken = JSON.parse(tokenData) as AuthTokenData;
-      const isValid = new Date().getTime() < parsedToken.expiry;
       
-      if (!isValid) {
-        console.log("Token expired locally");
-        localStorage.removeItem("authToken");
-        setIsAuthenticated(false);
-        setUsername(null);
-        setUserData(null);
-        return false;
-      }
-      
-      // For fresh tokens (less than 5 minutes old), trust them without server validation
-      const tokenAge = new Date().getTime() - (parsedToken.expiry - 60 * 60 * 1000);
-      const isFreshToken = tokenAge < 5 * 60 * 1000; // 5 minutes
-      
-      if (isFreshToken) {
-        console.log("Using fresh token without server validation");
-        setIsAuthenticated(true);
-        setUsername(parsedToken.username);
-        setUserData(parsedToken.userData);
-        return true;
-      }
-      
-      // For older tokens, validate with server
-      console.log("Validating older token with server");
+      // Always validate token with server on page refresh/initialization
+      console.log("Validating token with server...");
       const isServerValid = await validateTokenSilently(parsedToken.token);
       
       if (isServerValid) {
+        console.log("Token is valid");
         setIsAuthenticated(true);
         setUsername(parsedToken.username);
         setUserData(parsedToken.userData);
         return true;
       } else {
-        console.log("Server validation failed");
+        console.log("Token is invalid or expired");
         localStorage.removeItem("authToken");
         setIsAuthenticated(false);
         setUsername(null);
@@ -176,12 +154,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     try {
       const parsedToken = JSON.parse(tokenData) as AuthTokenData;
-      
-      // Check if token is expired locally first
-      if (new Date().getTime() >= parsedToken.expiry) {
-        logout(); // Use logout method to clean up properly
-        return false;
-      }
       
       // Validate token with server
       const response = await fetch(
@@ -371,10 +343,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const loginData = await loginResponse.json();
       
       if (loginData && loginData.Token) {
-        // Store token with expiry (1 hour)
+        // Store token without expiry - let server decide validity
         const tokenData: AuthTokenData = {
           token: loginData.Token,
-          expiry: new Date().getTime() + 60 * 60 * 1000, // 1 hour
           username: userDetails.username || email,
           userData: userDetails
         };
@@ -411,16 +382,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     try {
       const parsedToken = JSON.parse(tokenData) as AuthTokenData;
-      const isValid = new Date().getTime() < parsedToken.expiry;
-      
-      if (!isValid) {
-        console.log("Token expired in synchronous check");
-        localStorage.removeItem("authToken");
-        return false;
-      }
-      
-      // For synchronous checks, don't validate with server - trust local expiry
-      console.log("Token valid in synchronous check");
+      // Just check if token exists - let server validation handle expiry
+      console.log("Token exists in localStorage");
       return true;
     } catch (error) {
       console.error("Error parsing auth token:", error);
