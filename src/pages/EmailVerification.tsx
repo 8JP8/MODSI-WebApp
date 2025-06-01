@@ -35,6 +35,8 @@ const EmailVerification = () => {
     setIsLoading(true);
     
     try {
+      console.log("Verifying with code:", finalCode);
+      
       const response = await fetch(
         `https://modsi-api-ffhhfgecfdehhscv.spaincentral-01.azurewebsites.net/api/User/VerifyUser?code=z4tKbNFdaaXzHZ4ayn9pRQokNWYgRkbVkCjOxTxP-8ChAzFuMigGCw==`,
         {
@@ -47,6 +49,10 @@ const EmailVerification = () => {
           })
         }
       );
+      
+      console.log("Verification response status:", response.status);
+      const responseText = await response.text();
+      console.log("Verification response:", responseText);
       
       if (response.ok) {
         setVerificationStatus('success');
