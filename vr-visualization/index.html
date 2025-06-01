@@ -124,12 +124,12 @@
                 chartEntity.setAttribute('position', `${position.x + offsetX} ${position.y} ${position.z}`);
                 
                 // Create different visualizations based on chart type
-                if (chartConfig.chartType === 'barras' || chartConfig.chartType === 'bar') {
+                if (chartConfig.chartType === 'pizza' || chartConfig.chartType === 'pie') {
+                    createPieChart(chartEntity, chartConfig, index);
+                } else if (chartConfig.chartType === 'barras' || chartConfig.chartType === 'bar') {
                     createBarChart(chartEntity, chartConfig, index);
                 } else if (chartConfig.chartType === 'linha' || chartConfig.chartType === 'line') {
                     createLineChart(chartEntity, chartConfig, index);
-                } else if (chartConfig.chartType === 'pizza' || chartConfig.chartType === 'pie') {
-                    createPieChart(chartEntity, chartConfig, index);
                 } else {
                     // Default to bar chart
                     createBarChart(chartEntity, chartConfig, index);
@@ -210,62 +210,22 @@
                     throw new Error(`Erro na API: ${response.status} - ${response.statusText}`);
                 }
                 
-                const responseText = await response.text();
-                console.log('API Response text:', responseText);
+                const roomData = await response.json();
+                console.log('Room data loaded successfully:', roomData);
                 
-                if (!responseText || responseText.trim() === '') {
-                    throw new Error('Resposta vazia da API');
-                }
-                
-                let roomData;
-                try {
-                    roomData = JSON.parse(responseText);
-                } catch (parseError) {
-                    console.error('JSON Parse Error:', parseError);
-                    console.error('Response text that failed to parse:', responseText);
-                    throw new Error(`Erro ao fazer parse do JSON: ${parseError.message}`);
-                }
-                
-                console.log('Room data parsed successfully:', roomData);
-                
-                // Handle different possible response formats
-                let configData;
-                if (roomData.configurationData) {
-                    configData = roomData.configurationData;
-                } else if (roomData.configuration) {
-                    configData = roomData.configuration;
-                } else if (Array.isArray(roomData)) {
-                    configData = roomData;
-                } else {
-                    configData = roomData;
-                }
-                
-                console.log('Configuration data to process:', configData);
-                
-                // Process configuration
-                if (Array.isArray(configData)) {
-                    if (configData.length > 0 && configData[0].config) {
-                        // Format: [{ name: "...", config: { charts: [...], ... } }]
-                        const config = configData[0].config;
-                        if (config.charts && Array.isArray(config.charts)) {
-                            console.log('Processing charts:', config.charts);
-                            config.charts.forEach((chart, index) => {
-                                createChartVisualization(chart, index);
-                            });
-                        } else {
-                            throw new Error('Configuração não contém gráficos válidos');
-                        }
+                // Handle the new API format: array with config object
+                if (Array.isArray(roomData) && roomData.length > 0) {
+                    const configItem = roomData[0];
+                    if (configItem.config && configItem.config.charts) {
+                        console.log('Processing charts:', configItem.config.charts);
+                        configItem.config.charts.forEach((chart, index) => {
+                            createChartVisualization(chart, index);
+                        });
                     } else {
-                        throw new Error('Formato de configuração inválido');
+                        throw new Error('Configuração não contém gráficos válidos');
                     }
-                } else if (configData.charts && Array.isArray(configData.charts)) {
-                    // Direct format: { charts: [...], ... }
-                    console.log('Processing charts directly:', configData.charts);
-                    configData.charts.forEach((chart, index) => {
-                        createChartVisualization(chart, index);
-                    });
                 } else {
-                    throw new Error('Configuração não contém gráficos válidos');
+                    throw new Error('Formato de resposta inválido da API');
                 }
                 
                 // Hide loading message

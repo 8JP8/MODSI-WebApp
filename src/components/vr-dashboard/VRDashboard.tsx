@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import sampleData from "../../data/sampleVisualization.json";
 import ChartDataManager from "./ChartDataManager";
@@ -45,10 +44,9 @@ const VRDashboard = () => {
       // Save the room code to visualization history
       saveVisualizationToHistory(roomCode);
       
-      toast.success("Sala criada com sucesso! A abrir experiência VR...");
       console.log("Room created with code:", roomCode);
       
-      // Redirect to the VR room page
+      // Direct redirect without loading state
       window.location.href = `/room/${roomCode}`;
       setLaunchDialogOpen(false);
     } catch (error) {

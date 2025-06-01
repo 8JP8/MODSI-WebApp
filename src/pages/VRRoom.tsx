@@ -17,6 +17,9 @@ const VRRoom = () => {
 
     console.log("Loading VR room with code:", roomCode);
 
+    // For GitHub Pages, we need to handle the path differently
+    const isGitHubPages = window.location.hostname.includes('github.io') || window.location.hostname === 'modsivr.pt';
+    
     // First verify the room exists by calling the API
     fetch(`https://modsi-api-ffhhfgecfdehhscv.spaincentral-01.azurewebsites.net/api/Room/Get/${roomCode}?code=z4tKbNFdaaXzHZ4ayn9pRQokNWYgRkbVkCjOxTxP-8ChAzFuMigGCw==`)
       .then(response => {
@@ -33,8 +36,9 @@ const VRRoom = () => {
         setTimeout(() => {
           const iframe = document.getElementById('vr-iframe') as HTMLIFrameElement;
           if (iframe) {
-            // Pass the room code in the URL hash so the VR visualization can access it
-            iframe.src = `/vr-visualization/index.html#${roomCode}`;
+            // Use the correct path for GitHub Pages or local development
+            const vrPath = isGitHubPages ? `/vr-visualization/index.html#${roomCode}` : `/vr-visualization/index.html#${roomCode}`;
+            iframe.src = vrPath;
             console.log("VR iframe src set to:", iframe.src);
           }
         }, 100);
