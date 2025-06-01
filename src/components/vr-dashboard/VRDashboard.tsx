@@ -7,8 +7,11 @@ import ChartSelector from "./ChartSelector";
 import KPIAxisSelector from "@/components/KPIAxisSelector";
 import MainPreviewTabs from "./MainPreviewTabs";
 import VRLaunchDialog from "@/components/VRLaunchDialog";
+import ChartTypeSelector from "@/components/ChartTypeSelector";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { generateRoomCode, saveVisualizationToHistory } from "@/utils/visualizationUtils";
+import { createRoom } from "@/services/roomService";
+import { saveVisualizationToHistory } from "@/utils/visualizationUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const VRDashboard = () => {
@@ -22,18 +25,36 @@ const VRDashboard = () => {
     }
     
     saveVisualizationToHistory(roomCode);
-    window.location.href = `https://modsi-vr.pt/${roomCode}`;
+    window.location.href = `/room/${roomCode}`;
   };
 
-  const launchVR = () => {
-    const roomCode = generateRoomCode();
-    saveVisualizationToHistory(roomCode);
-    
-    toast.success("Configuração da cena VR guardada! Pronto para iniciar a experiência VR.");
-    console.log("Launching VR with configuration, room code:", roomCode);
-    
-    window.location.href = `https://modsi-vr.pt/${roomCode}`;
-    setLaunchDialogOpen(false);
+  const launchVR = async (getConfigurationForVR: () => Promise<any>) => {
+    try {
+      console.log("Creating room with VR configuration...");
+      
+      // Get unified configuration with auto-save
+      const configurationData = await getConfigurationForVR();
+      
+      // Send the full unified configuration
+      const roomCode = await createRoom(configurationData);
+      
+      if (!roomCode) {
+        throw new Error("Falha ao criar sala - código não recebido");
+      }
+      
+      // Save the room code to visualization history
+      saveVisualizationToHistory(roomCode);
+      
+      toast.success("Sala criada com sucesso! A abrir experiência VR...");
+      console.log("Room created with code:", roomCode);
+      
+      // Redirect to the VR room page
+      window.location.href = `/room/${roomCode}`;
+      setLaunchDialogOpen(false);
+    } catch (error) {
+      console.error("Error creating room:", error);
+      toast.error("Erro ao criar sala VR. Tente novamente.");
+    }
   };
 
   const handleLaunchButtonClick = () => {
@@ -62,13 +83,16 @@ const VRDashboard = () => {
         resetConfiguration,
         handleLoadConfig,
         handleExportJSON,
-        setConfigSaved
+        setConfigSaved,
+        getCurrentConfiguration,
+        getConfigurationForVR,
+        isConfigurationValid
       }) => (
         <div className="container mx-auto px-2 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
           <DashboardHeader 
             onSave={handleExportJSON}
             onLaunch={handleLaunchButtonClick}
-            configSaved={configSaved}
+            configSaved={isConfigurationValid()}
           />
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
@@ -79,6 +103,20 @@ const VRDashboard = () => {
                 onChartSelect={setActiveChartId}
                 onAddChart={addNewChart}
               />
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Tipo de Gráfico</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ChartTypeSelector 
+                    selectedType={chartType} 
+                    onSelect={(type) => {
+                      updateActiveChart({ chartType: type });
+                    }} 
+                  />
+                </CardContent>
+              </Card>
               
               <KPIAxisSelector
                 selectedZAxis={zAxis}
@@ -110,9 +148,9 @@ const VRDashboard = () => {
           <VRLaunchDialog
             open={launchDialogOpen}
             onOpenChange={setLaunchDialogOpen}
-            onLaunch={launchVR}
+            onLaunch={() => launchVR(getConfigurationForVR)}
             onJoin={joinVisualization}
-            hasUnsavedChanges={!configSaved}
+            hasUnsavedChanges={!isConfigurationValid()}
           />
         </div>
       )}

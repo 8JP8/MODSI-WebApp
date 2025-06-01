@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import VisualizationHub from "./pages/VisualizationHub";
 import VisualizationLanding from "./pages/VisualizationLanding";
 import VRConfiguratorPage from "./pages/VRConfiguratorPage";
+import VRRoom from "./pages/VRRoom";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import PasswordReset from "./pages/PasswordReset";
@@ -36,6 +37,7 @@ const App = () => (
                   <VRConfiguratorPage />
                 </RequireAuth>
               } />
+              <Route path="/room/:roomCode" element={<VRRoom />} />
               <Route path="/login" element={<Login />} />
               <Route path="/passwordreset" element={<PasswordReset />} />
               <Route path="/passwordreset/:code" element={<PasswordReset />} />

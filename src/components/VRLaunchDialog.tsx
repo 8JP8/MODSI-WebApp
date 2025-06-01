@@ -12,6 +12,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { saveVisualizationToHistory } from "@/utils/visualizationUtils";
 
 interface VRLaunchDialogProps {
   open: boolean;
@@ -20,16 +21,6 @@ interface VRLaunchDialogProps {
   onJoin: (roomCode: string) => void;
   hasUnsavedChanges?: boolean;
 }
-
-// Generate a random room code
-const generateRoomCode = () => {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
-  for (let i = 0; i < 6; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return result;
-};
 
 const VRLaunchDialog = ({
   open,
@@ -40,33 +31,14 @@ const VRLaunchDialog = ({
 }: VRLaunchDialogProps) => {
   const [roomCode, setRoomCode] = useState("");
   
-  // Handle room creation and add to history
-  const handleCreateRoom = () => {
-    const newRoomCode = generateRoomCode();
-    
-    // Save to history
-    try {
-      const historyStr = localStorage.getItem("visualizationHistory");
-      let history: string[] = [];
-      
-      if (historyStr) {
-        history = JSON.parse(historyStr);
-        if (!Array.isArray(history)) history = [];
-      }
-      
-      const updatedHistory = [newRoomCode, ...history.filter(c => c !== newRoomCode)].slice(0, 10);
-      localStorage.setItem("visualizationHistory", JSON.stringify(updatedHistory));
-    } catch (error) {
-      console.error("Error saving room code to history:", error);
+  const handleJoinRoom = () => {
+    if (roomCode.trim()) {
+      // Save to history before joining
+      saveVisualizationToHistory(roomCode.trim());
+      onJoin(roomCode.trim());
     }
-    
-    // Call the original onLaunch function
-    onLaunch();
-    
-    // Redirect to the VR experience
-    window.location.href = `https://modsi-vr.pt/${newRoomCode}`;
   };
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -101,7 +73,7 @@ const VRLaunchDialog = ({
             <DialogFooter>
               <Button 
                 className="w-full vr-button" 
-                onClick={handleCreateRoom}
+                onClick={onLaunch}
                 disabled={hasUnsavedChanges}
               >
                 Iniciar Experiência VR
@@ -125,7 +97,7 @@ const VRLaunchDialog = ({
             <DialogFooter>
               <Button 
                 className="w-full vr-button" 
-                onClick={() => onJoin(roomCode)}
+                onClick={handleJoinRoom}
                 disabled={!roomCode.trim()}
               >
                 Entrar na Sala

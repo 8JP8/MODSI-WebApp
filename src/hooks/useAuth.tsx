@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -173,11 +172,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return forge.util.encode64(hash);
   };
   
-  // Get user details from API
-  const getUserDetails = async (email: string): Promise<UserData | null> => {
+  // Get user details from API using token
+  const getUserDetails = async (email: string, token: string): Promise<UserData | null> => {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/User/GetByEmail?email=${encodeURIComponent(email)}&code=${API_CODE}`
+        `${API_BASE_URL}/User/GetByEmail?email=${encodeURIComponent(email)}&code=${API_CODE}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
       );
       
       if (!response.ok) {
@@ -237,13 +243,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
       
-      // Get user details first to store
-      const userDetails = await getUserDetails(email);
-      if (!userDetails) {
-        toast.error("Não foi possível obter os detalhes do utilizador");
-        return false;
-      }
-      
       // Get salt for hashing
       const salt = await getSaltForUser(email);
       if (!salt) {
@@ -279,6 +278,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const loginData = await loginResponse.json();
       
       if (loginData && loginData.Token) {
+        // Now get user details using the received token
+        const userDetails = await getUserDetails(email, loginData.Token);
+        if (!userDetails) {
+          toast.error("Não foi possível obter os detalhes do utilizador");
+          return false;
+        }
+        
         // Store token with expiry (1 hour)
         const tokenData: AuthTokenData = {
           token: loginData.Token,

@@ -14,10 +14,10 @@ interface ChartTypeSelectorProps {
 
 const ChartTypeSelector = ({ selectedType, onSelect }: ChartTypeSelectorProps) => {
   const chartTypes = [
-    { id: "bar", name: "Gráfico de Barras", icon: BarChart3 },
-    { id: "pie", name: "Gráfico Circular", icon: PieChart },
-    { id: "line", name: "Gráfico de Linhas", icon: LineChart },
-    { id: "scatter", name: "Gráfico de Dispersão", icon: ScatterChart },
+    { id: "bar", name: "Barras", icon: BarChart3 },
+    { id: "pie", name: "Circular", icon: PieChart },
+    { id: "line", name: "Linhas", icon: LineChart },
+    { id: "scatter", name: "Dispersão", icon: ScatterChart },
   ];
 
   return (

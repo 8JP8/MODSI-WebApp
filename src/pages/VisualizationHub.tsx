@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,8 +35,8 @@ const VisualizationHub = () => {
     // Save to history
     saveVisualizationToHistory(roomCode);
     
-    // Redirect to external URL with room code
-    window.location.href = `https://modsi-vr.pt/${roomCode}`;
+    // Navigate to the room page instead of external URL
+    navigate(`/room/${roomCode}`);
   };
 
   const saveVisualizationToHistory = (code: string) => {

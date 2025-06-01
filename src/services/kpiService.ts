@@ -21,12 +21,12 @@ export interface KPIOption {
 export interface KPIValueHistory {
   Id: number;
   KpiId: number;
+  ChangedByUserId: number;
   NewValue_1: string;
   NewValue_2: string | null;
   OldValue_1: string | null;
   OldValue_2: string | null;
   ChangedAt: string;
-  ChangedBy: string;
 }
 
 export const fetchUserKPIs = async (): Promise<KPIOption[]> => {
@@ -122,6 +122,54 @@ export const fetchKPIValueHistory = async (kpiId: string): Promise<KPIValueHisto
     return history.sort((a, b) => new Date(b.ChangedAt).getTime() - new Date(a.ChangedAt).getTime());
   } catch (error) {
     console.error("Error fetching KPI value history:", error);
+    throw error;
+  }
+};
+
+export const fetchMultipleKPIHistories = async (kpiIds: string[]): Promise<{ [kpiId: string]: KPIValueHistory[] }> => {
+  try {
+    const tokenData = localStorage.getItem("authToken");
+    if (!tokenData) {
+      throw new Error("No auth token found");
+    }
+
+    const parsedToken = JSON.parse(tokenData);
+    const token = parsedToken.token;
+
+    const histories: { [kpiId: string]: KPIValueHistory[] } = {};
+    
+    // Get unique numeric KPI IDs
+    const uniqueKpiIds = [...new Set(kpiIds.map(id => id.split('-')[0]))];
+    
+    // Fetch histories for all unique KPIs
+    await Promise.all(
+      uniqueKpiIds.map(async (numericKpiId) => {
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/kpis/valuehistory?kpiId=${numericKpiId}&code=${API_CODE}`,
+            {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+
+          if (response.ok) {
+            const history: KPIValueHistory[] = await response.json();
+            histories[numericKpiId] = history.sort((a, b) => new Date(b.ChangedAt).getTime() - new Date(a.ChangedAt).getTime());
+          }
+        } catch (error) {
+          console.error(`Error fetching history for KPI ${numericKpiId}:`, error);
+          histories[numericKpiId] = [];
+        }
+      })
+    );
+
+    return histories;
+  } catch (error) {
+    console.error("Error fetching multiple KPI histories:", error);
     throw error;
   }
 };

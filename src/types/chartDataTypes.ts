@@ -23,6 +23,9 @@ export interface ChartDataManagerChildProps {
   handleLoadConfig: (config: any) => void;
   handleExportJSON: () => void;
   setConfigSaved: (saved: boolean) => void;
+  getCurrentConfiguration: () => Promise<any>;
+  getConfigurationForVR: () => Promise<any>;
+  isConfigurationValid: () => boolean;
 }
 
 export interface ChartDataManagerProps {

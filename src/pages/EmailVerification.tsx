@@ -36,16 +36,17 @@ const EmailVerification = () => {
     
     try {
       const response = await fetch(
-        `https://modsi-api-ffhhfgecfdehhscv.spaincentral-01.azurewebsites.net/api/User/VerifyUser?verificationcode=${encodeURIComponent(finalCode)}`,
+        `https://modsi-api-ffhhfgecfdehhscv.spaincentral-01.azurewebsites.net/api/User/VerifyUser?code=z4tKbNFdaaXzHZ4ayn9pRQokNWYgRkbVkCjOxTxP-8ChAzFuMigGCw==`,
         {
-          method: 'GET',
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify({
+            verificationCode: finalCode
+          })
         }
       );
-      
-      const responseText = await response.text();
       
       if (response.ok) {
         setVerificationStatus('success');
@@ -69,6 +70,12 @@ const EmailVerification = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     handleVerification();
+  };
+
+  const handleRetry = () => {
+    setVerificationStatus('idle');
+    setMessage("");
+    setVerificationCode("");
   };
 
   const handleGoToMainPage = () => {
@@ -107,7 +114,7 @@ const EmailVerification = () => {
             {message}
           </p>
           <p className="text-muted-foreground mb-6">
-            O código inserido não é válido ou já expirou. Contacte o suporte se o problema persistir.
+            O código inserido não é válido ou já expirou. Tente inserir o código novamente.
           </p>
         </div>
       );
@@ -137,7 +144,7 @@ const EmailVerification = () => {
                   Verificação de Email
                 </p>
               </div>
-              <div className="w-10"></div> {/* Spacer for centering */}
+              <div className="w-10"></div>
             </div>
             <CardDescription className="text-center">
               Introduza o código de verificação enviado para o seu email
@@ -184,12 +191,30 @@ const EmailVerification = () => {
               </form>
             )}
 
-            {(verificationStatus === 'success' || verificationStatus === 'error') && (
+            {verificationStatus === 'success' && (
               <div className="space-y-4">
                 <Button 
                   onClick={handleGoToMainPage}
                   className="w-full text-base py-5"
-                  variant={verificationStatus === 'success' ? 'default' : 'outline'}
+                >
+                  Página Principal
+                </Button>
+              </div>
+            )}
+
+            {verificationStatus === 'error' && (
+              <div className="space-y-4">
+                <Button 
+                  onClick={handleRetry}
+                  className="w-full text-base py-5"
+                  variant="outline"
+                >
+                  Tentar Novamente
+                </Button>
+                <Button 
+                  onClick={handleGoToMainPage}
+                  className="w-full text-base py-5"
+                  variant="ghost"
                 >
                   Página Principal
                 </Button>

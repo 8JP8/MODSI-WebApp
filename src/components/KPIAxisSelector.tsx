@@ -87,7 +87,7 @@ const KPIAxisSelector = ({
             <SelectContent>
               {kpiOptions.map((option) => (
                 <SelectItem key={option.id} value={option.id}>
-                  {isProductSelected ? option.name : option.displayName}
+                  {option.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -129,7 +129,7 @@ const KPIAxisSelector = ({
               <SelectItem value="none">Nenhum</SelectItem>
               {!isProductSelected && kpiOptions.map((option) => (
                 <SelectItem key={option.id} value={option.id}>
-                  {option.displayName}
+                  {option.name}
                 </SelectItem>
               ))}
             </SelectContent>
