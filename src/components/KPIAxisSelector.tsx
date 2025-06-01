@@ -35,7 +35,7 @@ const KPIAxisSelector = ({
     { value: "days", label: "Dias" },
     { value: "months", label: "Meses" },
     { value: "years", label: "Anos" },
-    { value: "product", label: "Produto" }
+    { value: "change", label: "Alteração" }
   ];
 
   useEffect(() => {
@@ -62,7 +62,7 @@ const KPIAxisSelector = ({
           <CardTitle>Configuração dos Eixos</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-4">Carregando KPIs...</div>
+          <div className="text-center py-4">A carregar KPIs...</div>
         </CardContent>
       </Card>
     );
@@ -96,10 +96,10 @@ const KPIAxisSelector = ({
 
         {/* X Axis - Time or Product */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Eixo X - Tempo ou Produto</label>
+          <label className="text-sm font-medium">Eixo X - Por Tempo ou por Alteração</label>
           <Select value={selectedSecondaryAxis} onValueChange={onSelectSecondaryAxis}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Selecione tempo ou produto" />
+              <SelectValue placeholder="Selecione uma divisão de tempo ou alteração" />
             </SelectTrigger>
             <SelectContent>
               {timeOptions.map((option) => (
@@ -115,12 +115,10 @@ const KPIAxisSelector = ({
         <div className="space-y-2">
           <label className="text-sm font-medium">
             Eixo Z - Indicador Relacionado (Opcional)
-            {isProductSelected && <span className="text-muted-foreground ml-1">(Desabilitado para produtos)</span>}
           </label>
           <Select 
             value={isProductSelected ? "none" : selectedYAxis} 
             onValueChange={onSelectYAxis}
-            disabled={isProductSelected}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Selecione indicador relacionado" />

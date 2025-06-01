@@ -11,7 +11,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      // Se após 10 segundos ainda estiver carregando, consideramos um erro
+      // Timeout after 10s
       if (isLoading) {
         setHasError(true);
       }

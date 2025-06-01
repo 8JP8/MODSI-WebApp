@@ -24,7 +24,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
         </CardHeader>
         <CardContent className="flex items-center justify-center h-64">
           <div className="text-center">
-            <p className="text-muted-foreground mb-2">Carregando dados...</p>
+            <p className="text-muted-foreground mb-2">A carregar dados...</p>
             <p className="text-sm text-muted-foreground">
               Y: {zAxis || "não selecionado"}, X: {xAxis || "não selecionado"}, Z: {yAxis || "nenhum"}
             </p>
