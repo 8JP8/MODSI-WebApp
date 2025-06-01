@@ -1,11 +1,13 @@
 
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 
 const VRRoom = () => {
   const { roomCode } = useParams<{ roomCode: string }>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [roomVerified, setRoomVerified] = useState(false);
 
   useEffect(() => {
     if (!roomCode) {
@@ -15,12 +17,9 @@ const VRRoom = () => {
       return;
     }
 
-    console.log("Loading VR room with code:", roomCode);
+    console.log("Verifying VR room with code:", roomCode);
 
-    // For GitHub Pages, we need to handle the path differently
-    const isGitHubPages = window.location.hostname.includes('github.io') || window.location.hostname === 'modsivr.pt';
-    
-    // First verify the room exists by calling the API
+    // Verify the room exists by calling the API
     fetch(`https://modsi-api-ffhhfgecfdehhscv.spaincentral-01.azurewebsites.net/api/Room/Get/${roomCode}?code=z4tKbNFdaaXzHZ4ayn9pRQokNWYgRkbVkCjOxTxP-8ChAzFuMigGCw==`)
       .then(response => {
         if (!response.ok) {
@@ -29,33 +28,32 @@ const VRRoom = () => {
         return response.json();
       })
       .then(roomData => {
-        console.log("Room data loaded successfully:", roomData);
+        console.log("Room data verified successfully:", roomData);
+        setRoomVerified(true);
         setLoading(false);
-        
-        // Load the VR visualization after confirming room exists
-        setTimeout(() => {
-          const iframe = document.getElementById('vr-iframe') as HTMLIFrameElement;
-          if (iframe) {
-            // Use the correct path for GitHub Pages or local development
-            const vrPath = isGitHubPages ? `/vr-visualization/index.html#${roomCode}` : `/vr-visualization/index.html#${roomCode}`;
-            iframe.src = vrPath;
-            console.log("VR iframe src set to:", iframe.src);
-          }
-        }, 100);
       })
       .catch(error => {
-        console.error("Error loading room:", error);
+        console.error("Error verifying room:", error);
         setError("Sala não encontrada ou erro ao carregar dados");
         setLoading(false);
       });
   }, [roomCode]);
 
+  const handleIframeLoad = () => {
+    console.log("VR iframe loaded successfully");
+  };
+
+  const handleIframeError = () => {
+    console.error("Error loading VR iframe");
+    setError("Erro ao carregar visualização VR");
+  };
+
   if (!roomCode) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600">Erro</h1>
-          <p className="text-muted-foreground">Código da sala não encontrado</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-black">
+        <div className="text-center text-white">
+          <h1 className="text-2xl font-bold text-red-400">Erro</h1>
+          <p className="text-blue-200">Código da sala não encontrado</p>
         </div>
       </div>
     );
@@ -63,10 +61,13 @@ const VRRoom = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold">Carregando...</h1>
-          <p className="text-muted-foreground">A carregar visualização VR da sala {roomCode}</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-black">
+        <div className="text-center text-white">
+          <div className="flex items-center justify-center mb-4">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+          </div>
+          <h1 className="text-2xl font-bold mb-2">Verificando Sala VR</h1>
+          <p className="text-blue-200">A verificar sala {roomCode}...</p>
         </div>
       </div>
     );
@@ -74,27 +75,40 @@ const VRRoom = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600">Erro</h1>
-          <p className="text-muted-foreground">{error}</p>
-          <p className="text-sm text-muted-foreground mt-2">Sala: {roomCode}</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-black">
+        <div className="text-center text-white">
+          <h1 className="text-2xl font-bold text-red-400 mb-2">Erro</h1>
+          <p className="text-blue-200 mb-2">{error}</p>
+          <p className="text-sm text-gray-400">Sala: {roomCode}</p>
+          <button 
+            onClick={() => window.location.href = '/configurator'}
+            className="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+          >
+            Voltar ao Configurador
+          </button>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="h-screen w-screen">
-      <iframe
-        id="vr-iframe"
-        className="w-full h-full border-0"
-        title={`VR Visualization - Room ${roomCode}`}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowFullScreen
-      />
-    </div>
-  );
+  if (roomVerified) {
+    return (
+      <div className="h-screen w-screen bg-black relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-purple-900 to-black opacity-20 z-10 pointer-events-none"></div>
+        <iframe
+          src={`/vr-visualization/index.html#${roomCode}`}
+          className="w-full h-full border-0"
+          title={`VR Visualization - Room ${roomCode}`}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; xr-spatial-tracking"
+          allowFullScreen
+          onLoad={handleIframeLoad}
+          onError={handleIframeError}
+        />
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default VRRoom;
