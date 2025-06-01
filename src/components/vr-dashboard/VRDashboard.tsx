@@ -142,6 +142,7 @@ const VRDashboard = () => {
               onLoadConfig={handleLoadConfig}
               onResetConfig={resetConfiguration}
               onSaveConfig={handleExportJSON}
+              onExportCurrentConfig={handleExportJSON}
             />
           </div>
 

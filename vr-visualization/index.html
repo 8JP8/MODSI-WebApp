@@ -1,572 +1,288 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BabiaXR - Gráfico 3D</title>
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v7.2.0/dist/aframe-extras.min.js"></script>
-    <script src="https://unpkg.com/aframe-environment-component@1.3.3/dist/aframe-environment-component.min.js"></script>
-    <script src="https://unpkg.com/aframe-text-geometry-component@0.5.1/dist/aframe-text-geometry-component.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/babiaxr/aframe-babia-components@master/dist/aframe-babia-components.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/babiaxr/aframe-babia-components@master/dist/aframe-babia-ui.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VR Data Visualization</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #000;
+            overflow: hidden;
+        }
+        
         #loading {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
             color: white;
-            padding: 20px;
-            border-radius: 10px;
-            font-family: Arial, sans-serif;
             font-size: 18px;
             z-index: 1000;
         }
-        #loading.hidden {
+        
+        #error {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: red;
+            font-size: 16px;
+            z-index: 1000;
+            text-align: center;
             display: none;
         }
     </style>
 </head>
 <body>
-    <div id="loading">A obter dados da visualização...</div>
+    <div id="loading">A carregar configuração VR...</div>
+    <div id="error">
+        <p>Erro ao carregar configuração VR</p>
+        <p id="error-details"></p>
+    </div>
     
-    <a-scene background="color: #ECECEC">
-        <a-entity environment="preset: default; groundColor: #445; groundTexture: walk;"></a-entity>
+    <a-scene 
+        vr-mode-ui="enabled: true" 
+        embedded 
+        style="height: 100vh; width: 100vw;"
+        background="color: #001122">
         
+        <!-- Assets -->
         <a-assets>
-            <a-asset-item id="optimerBoldFont" src="https://rawgit.com/mrdoob/three.js/dev/examples/fonts/optimer_bold.typeface.json"></a-asset-item>
+            <!-- Define materials -->
         </a-assets>
-
-        <!-- Ponto de inserção de gráficos -->
-        <a-entity id="charts-root"></a-entity>
-
-        <!-- Câmera -->
-        <a-entity movement-controls="fly: true" position="-3 5 20">
-            <a-entity camera position="0 0 0" look-controls></a-entity>
-            <a-entity cursor="rayOrigin:mouse" raycaster></a-entity>
-            <a-entity laser-controls="hand: right"></a-entity>
+        
+        <!-- Lighting -->
+        <a-light type="ambient" color="#404040"></a-light>
+        <a-light type="directional" position="1 1 0" color="#ffffff" intensity="0.5"></a-light>
+        
+        <!-- Camera -->
+        <a-entity id="cameraRig" position="0 1.6 3">
+            <a-camera 
+                look-controls="enabled: true" 
+                wasd-controls="enabled: true"
+                cursor="rayOrigin: mouse">
+            </a-camera>
         </a-entity>
+        
+        <!-- Ground -->
+        <a-plane 
+            position="0 0 -4" 
+            rotation="-90 0 0" 
+            width="10" 
+            height="10" 
+            color="#333333">
+        </a-plane>
+        
+        <!-- Container for charts -->
+        <a-entity id="chartsContainer"></a-entity>
     </a-scene>
 
     <script>
-        const root = document.getElementById('charts-root');
-        const loadingDiv = document.getElementById('loading');
-
-        // Get room code from URL hash or URL path
-        function getRoomCode() {
-            // Try hash first (from iframe)
-            if (window.location.hash) {
-                const hashCode = window.location.hash.substring(1);
-                if (hashCode) {
-                    console.log('Room code from hash:', hashCode);
-                    return hashCode;
-                }
-            }
-            
-            // Fallback to URL path
-            const urlParts = window.location.pathname.split('/');
-            const roomCode = urlParts[urlParts.length - 1] || urlParts[urlParts.length - 2];
-            console.log('Room code from URL path:', roomCode);
-            return roomCode;
-        }
-
-        const roomCode = getRoomCode();
-        console.log('Final room code:', roomCode);
-
-        const POSITION_CONFIG = {
-            startX: -18,
-            baseY: 1.5,
-            baseZ: 12,
-            spacingX: 12,
-            pieOffsetY: 3
-        };
-
-        const TIME_TYPES = {
-            'years': { label: 'Anos', next: 'months' },
-            'months': { label: 'Meses', next: 'days' },
-            'days': { label: 'Dias', next: 'years' }
-        };
-
-        const JSON_TIME_MAPPING = {
-            'Year': 'years',
-            'Month': 'months',
-            'Day': 'days',
-            'year': 'years',
-            'month': 'months',
-            'day': 'days',
-            'years': 'years',
-            'months': 'months',
-            'days': 'days'
-        };
-
-        let chartsData = [];
-        let configurationsData = null;
-        let chartStates = {};
-
-        function processKPIData(kpihistory, targetKPIId, timeAxisType, valueType = 'NewValue_1') {
-            const kpiData = kpihistory.filter(item => item.KPIId == targetKPIId);
-            const dataByYear = {};
-            
-            kpiData.forEach(item => {
-                const date = new Date(item.ChangedAt);
-                let timeKey;
-                
-                if (timeAxisType === 'years') {
-                    timeKey = date.getFullYear().toString();
-                } else if (timeAxisType === 'months') {
-                    timeKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-                } else if (timeAxisType === 'days') {
-                    timeKey = date.toISOString().split('T')[0];
-                } else {
-                    timeKey = date.getFullYear().toString();
-                }
-                
-                if (!dataByYear[timeKey]) {
-                    dataByYear[timeKey] = [];
-                }
-                
-                dataByYear[timeKey].push({
-                    ...item,
-                    parsedDate: date
-                });
-            });
-            
-            const finalData = [];
-            Object.keys(dataByYear).sort().forEach(timeKey => {
-                const sortedItems = dataByYear[timeKey].sort((a, b) => b.parsedDate - a.parsedDate);
-                const mostRecent = sortedItems[0];
-                const value = valueType === 'NewValue_2' ? mostRecent.NewValue_2 : mostRecent.NewValue_1;
-                
-                finalData.push({
-                    key: timeKey,
-                    height: parseFloat(value) || 0
-                });
-            });
-            
-            return finalData;
-        }
-
-        function processPieData(kpihistory, targetKPIId, timeAxisType, valueType = 'NewValue_1') {
-            const baseData = processKPIData(kpihistory, targetKPIId, timeAxisType, valueType);
-            
-            return baseData.map(item => ({
-                key: item.key,
-                size: item.height
-            }));
-        }
-
-        function hasValidData(kpihistory, targetKPIId, valueType) {
-            const kpiData = kpihistory.filter(item => item.KPIId == targetKPIId);
-            return kpiData.some(item => {
-                const value = valueType === 'NewValue_2' ? item.NewValue_2 : item.NewValue_1;
-                return value != null && value !== undefined && parseFloat(value) !== 0;
-            });
-        }
-
-        function calculatePosition(chartIndex, isPieChart = false) {
-            const x = POSITION_CONFIG.startX + (chartIndex * POSITION_CONFIG.spacingX);
-            const y = POSITION_CONFIG.baseY + (isPieChart ? POSITION_CONFIG.pieOffsetY : 0);
-            const z = POSITION_CONFIG.baseZ;
-            return `${x} ${y} ${z}`;
-        }
-
-        function toggleChartValue(chartIndex) {
-            const state = chartStates[chartIndex];
-            state.valueType = state.valueType === 'NewValue_1' ? 'NewValue_2' : 'NewValue_1';
-            renderSingleChart(chartIndex);
-        }
-
-        function toggleChartTimeType(chartIndex) {
-            const state = chartStates[chartIndex];
-            state.timeType = TIME_TYPES[state.timeType].next;
-            renderSingleChart(chartIndex);
-        }
-
-        function renderSingleChart(chartIndex) {
-            const chartConfig = chartsData[chartIndex];
-            const state = chartStates[chartIndex];
-            
-            if (!chartConfig || !state) return;
-
-            const existingChart = root.querySelector(`[data-chart-index="${chartIndex}"]`);
-            const existingButtons = root.querySelector(`[data-buttons-index="${chartIndex}"]`);
-
-            if (existingChart) {
-                if (chartConfig.chart.chartType === "pizza") {
-                    if (existingChart.components && existingChart.components['babia-pie']) {
-                        existingChart.removeAttribute('babia-pie');
-                    }
-                    setTimeout(() => {
-                        if (existingChart.parentNode) {
-                            existingChart.parentNode.removeChild(existingChart);
-                        }
-                    }, 50);
-                } else {
-                    root.removeChild(existingChart);
-                }
-            }
-
-            if (existingButtons && existingButtons.parentNode) {
-                existingButtons.parentNode.removeChild(existingButtons);
-            }
-
-            setTimeout(() => {
-                const chartEl = createChart(chartConfig, chartIndex, state.valueType, state.timeType);
-                root.appendChild(chartEl);
-
-                const buttonsEl = createChartButtons(chartIndex, state);
-                root.appendChild(buttonsEl);
-            }, chartConfig.chart.chartType === "pizza" ? 100 : 50);
-        }
-
-        function createChartButtons(chartIndex, state) {
-            const chartConfig = chartsData[chartIndex];
-            const isPieChart = chartConfig.chart.chartType === "pizza";
-            const position = calculatePosition(chartIndex, false);
-            const [x, y, z] = position.split(' ').map(parseFloat);
-            
-            const kpiId = parseInt(chartConfig.chart.zAxis);
-            const hasValue1 = hasValidData(chartConfig.kpihistory, kpiId, 'NewValue_1');
-            const hasValue2 = hasValidData(chartConfig.kpihistory, kpiId, 'NewValue_2');
-            const hasBothValues = hasValue1 && hasValue2;
-            
-            const buttonsContainer = document.createElement('a-entity');
-            buttonsContainer.setAttribute('position', `${x + 6} ${y + 8} ${z}`);
-            buttonsContainer.setAttribute('data-buttons-index', chartIndex);
-
-            let buttonVerticalOffset = 0;
-
-            if (hasBothValues) {
-                const valueButton = document.createElement('a-entity');
-                const valueLabel = state.valueType === 'NewValue_1' ? 'Produto 1' : 'Produto 2';
-                const valueColor = state.valueType === 'NewValue_1' ? '#4CAF50' : '#FF9800';
-                
-                valueButton.setAttribute('geometry', 'primitive: box; width: 2.5; height: 0.8; depth: 0.1');
-                valueButton.setAttribute('material', `color: ${valueColor}`);
-                valueButton.setAttribute('position', `0 ${buttonVerticalOffset} 0`);
-                
-                const valueText = document.createElement('a-text');
-                valueText.setAttribute('value', valueLabel);
-                valueText.setAttribute('position', '0 0 0.06');
-                valueText.setAttribute('align', 'center');
-                valueText.setAttribute('color', 'white');
-                valueText.setAttribute('width', '4');
-                valueButton.appendChild(valueText);
-                
-                valueButton.setAttribute('class', 'clickable');
-                valueButton.setAttribute('data-chart-index', chartIndex);
-                valueButton.setAttribute('data-button-type', 'value');
-                
-                valueButton.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    setTimeout(() => {
-                        toggleChartValue(chartIndex);
-                    }, 100);
-                });
-
-                buttonsContainer.appendChild(valueButton);
-                buttonVerticalOffset -= 1.2;
-            }
-
-            const timeButton = document.createElement('a-entity');
-            const timeLabel = TIME_TYPES[state.timeType].label;
-            
-            timeButton.setAttribute('geometry', 'primitive: box; width: 2.5; height: 0.8; depth: 0.1');
-            timeButton.setAttribute('material', 'color: #2196F3');
-            timeButton.setAttribute('position', `0 ${buttonVerticalOffset} 0`);
-            
-            const timeText = document.createElement('a-text');
-            timeText.setAttribute('value', timeLabel);
-            timeText.setAttribute('position', '0 0 0.06');
-            timeText.setAttribute('align', 'center');
-            timeText.setAttribute('color', 'white');
-            timeText.setAttribute('width', '4');
-            timeButton.appendChild(timeText);
-            
-            timeButton.setAttribute('class', 'clickable');
-            timeButton.setAttribute('data-chart-index', chartIndex);
-            timeButton.setAttribute('data-button-type', 'time');
-            
-            timeButton.addEventListener('click', (event) => {
-                event.stopPropagation();
-                setTimeout(() => {
-                    toggleChartTimeType(chartIndex);
-                }, 100);
-            });
-
-            buttonsContainer.appendChild(timeButton);
-
-            return buttonsContainer;
-        }
-
-        function createChart(chartConfig, chartIndex, valueType, timeType = 'years') {
-            const { kpihistory, chart } = chartConfig;
-            const kpiId = parseInt(chart.zAxis);
-            
-            const chartContainer = document.createElement('a-entity');
-            const isPieChart = chart.chartType === "pizza";
-            const position = calculatePosition(chartIndex, isPieChart);
-            
-            chartContainer.setAttribute('position', position);
-            chartContainer.setAttribute('data-chart-index', chartIndex);
-            
-            const palette = valueType === 'NewValue_1' ? 'commerce' : 'ubuntu';
-            const productName = valueType === 'NewValue_1' ? 'Produto 1' : 'Produto 2';
-            const timeLabel = TIME_TYPES[timeType].label;
-            
-            if (chart.chartType === "barras") {
-                const chartData = processKPIData(kpihistory, kpiId, timeType, valueType);
-                
-                const babiaConfig = {
-                    legend: true,
-                    axis: true,
-                    palette: palette,
-                    tooltip: true,
-                    animation: true,
-                    title: `${chart.graphname} (${productName} - ${timeLabel})`,
-                    titleColor: '#FFFFFF',
-                    titleFont: '#optimerBoldFont',
-                    titlePosition: '2 12 0',
-                    heightMax: 800,
-                    x_axis: 'key',
-                    height: 'height',
-                    data: JSON.stringify(chartData),
-                    showInfo: true,
-                    showInfoColor: '#FFFFFF'
-                };
-                
-                const attrString = Object.entries(babiaConfig)
-                    .map(([key, value]) => `${key}: ${value}`)
-                    .join('; ');
-                
-                chartContainer.setAttribute('babia-bars', attrString);
-                
-            } else if (chart.chartType === "pizza") {
-                const pieData = processPieData(kpihistory, kpiId, timeType, valueType);
-                
-                if (pieData.length === 0 || pieData.every(item => item.size === 0)) {
-                    console.warn(`Não há dados válidos para o gráfico pie ${chart.graphname}`);
-                    pieData.push({ key: 'Sem Dados', size: 1 });
-                }
-                
-                const titleEl = document.createElement('a-text');
-                titleEl.setAttribute('value', `${chart.graphname} (${productName} - ${timeLabel})`);
-                titleEl.setAttribute('position', '1 6 0');
-                titleEl.setAttribute('align', 'center');
-                titleEl.setAttribute('color', '#FFFFFF');
-                titleEl.setAttribute('width', '8');
-                chartContainer.appendChild(titleEl);
-                
-                const pieEl = document.createElement('a-entity');
-                
-                const pieConfig = {
-                    legend: true,
-                    palette: palette,
-                    animation: false,
-                    key: 'key',
-                    size: 'size',
-                    data: JSON.stringify(pieData),
-                    showInfo: true,
-                    showInfoColor: '#FFFFFF'
-                };
-                
-                const pieAttrString = Object.entries(pieConfig)
-                    .map(([key, value]) => `${key}: ${value}`)
-                    .join('; ');
-                
-                pieEl.setAttribute('babia-pie', pieAttrString);
-                pieEl.setAttribute('rotation', '90 0 0');
-                pieEl.setAttribute('scale', '1.8 1.8 1.8');
-                
-                chartContainer.appendChild(pieEl);
-                
-                setTimeout(() => {
-                    if (pieEl.components && pieEl.components['babia-pie']) {
-                        console.log(`Gráfico pie ${chart.graphname} inicializado com sucesso`);
-                    }
-                }, 100);
-            }
-            
-            return chartContainer;
-        }
-
-        function clearCharts() {
-            while (root.firstChild) {
-                root.removeChild(root.firstChild);
-            }
-        }
-
-        function getDefaultTimeType(chart) {
-            if (chart.xAxis) {
-                const mappedType = JSON_TIME_MAPPING[chart.xAxis];
-                if (mappedType) {
-                    console.log(`Chart ${chart.graphname}: usando unidade temporal ${chart.xAxis} -> ${mappedType}`);
-                    return mappedType;
-                }
-            }
-            
-            if (chart.timeUnit) {
-                const mappedType = JSON_TIME_MAPPING[chart.timeUnit];
-                if (mappedType) {
-                    return mappedType;
-                }
-            }
-            
-            if (chart.xAxisUnit) {
-                const mappedType = JSON_TIME_MAPPING[chart.xAxisUnit];
-                if (mappedType) {
-                    return mappedType;
-                }
-            }
-            
-            if (chart.temporalUnit) {
-                const mappedType = JSON_TIME_MAPPING[chart.temporalUnit];
-                if (mappedType) {
-                    return mappedType;
-                }
-            }
-            
-            console.log(`Chart ${chart.graphname}: usando padrão 'years'`);
-            return 'years';
-        }
-
-        function initializeChartStates() {
-            chartStates = {};
-            chartsData.forEach((chartConfig, index) => {
-                const defaultTimeType = getDefaultTimeType(chartConfig.chart);
-                const kpiId = parseInt(chartConfig.chart.zAxis);
-                const hasValue1 = hasValidData(chartConfig.kpihistory, kpiId, 'NewValue_1');
-                const hasValue2 = hasValidData(chartConfig.kpihistory, kpiId, 'NewValue_2');
-                
-                let defaultValueType = 'NewValue_1';
-                if (!hasValue1 && hasValue2) {
-                    defaultValueType = 'NewValue_2';
-                } else if (hasValue1) {
-                    defaultValueType = 'NewValue_1';
-                }
-                
-                chartStates[index] = {
-                    valueType: defaultValueType,
-                    timeType: defaultTimeType
-                };
-                
-                console.log(`Chart ${index} (${chartConfig.chart.graphname}): valor=${defaultValueType}, tempo=${defaultTimeType}, hasValue1=${hasValue1}, hasValue2=${hasValue2}`);
-            });
-        }
-
-        function renderAllCharts() {
-            clearCharts();
-            
-            let chartIndex = 0;
-            
-            chartsData.forEach((chartConfig, originalIndex) => {
-                const { kpihistory, chart } = chartConfig;
-                const kpiId = parseInt(chart.zAxis);
-                
-                const hasValue1 = hasValidData(kpihistory, kpiId, 'NewValue_1');
-                const hasValue2 = hasValidData(kpihistory, kpiId, 'NewValue_2');
-                
-                if (hasValue1 || hasValue2) {
-                    const state = chartStates[originalIndex];
-                    
-                    if (state.valueType === 'NewValue_1' && !hasValue1 && hasValue2) {
-                        state.valueType = 'NewValue_2';
-                    } else if (state.valueType === 'NewValue_2' && !hasValue2 && hasValue1) {
-                        state.valueType = 'NewValue_1';
-                    }
-                    
-                    const el = createChart(chartConfig, chartIndex, state.valueType, state.timeType);
-                    root.appendChild(el);
-                    
-                    const buttonsEl = createChartButtons(chartIndex, state);
-                    root.appendChild(buttonsEl);
-                    
-                    chartIndex++;
-                }
-            });
-        }
-
-        // Load data from API
+        console.log('VR Visualization starting...');
+        
+        // Get room code from URL hash
+        const roomCode = window.location.hash.substring(1);
+        console.log('Room code from hash:', roomCode);
+        
         if (!roomCode) {
-            console.error('No room code found in URL');
-            loadingDiv.textContent = 'Erro: Código da sala não encontrado';
+            showError('Código da sala não encontrado na URL');
             return;
         }
-
-        console.log('Loading room data for:', roomCode);
-
-        fetch(`https://modsi-api-ffhhfgecfdehhscv.spaincentral-01.azurewebsites.net/api/Room/Get/${roomCode}?code=z4tKbNFdaaXzHZ4ayn9pRQokNWYgRkbVkCjOxTxP-8ChAzFuMigGCw==`)
-            .then(response => {
-                console.log('API response status:', response.status);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+        
+        // Show loading message
+        document.getElementById('loading').style.display = 'block';
+        
+        // Function to show error messages
+        function showError(message, details = '') {
+            console.error('VR Error:', message, details);
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error-details').textContent = details;
+        }
+        
+        // Function to create chart visualizations
+        function createChartVisualization(chartConfig, index) {
+            console.log('Creating chart visualization:', chartConfig);
+            
+            try {
+                const container = document.getElementById('chartsContainer');
+                if (!container) {
+                    console.error('Charts container not found');
+                    return;
                 }
-                return response.json();
-            })
-            .then(roomData => {
-                console.log('Room data loaded:', roomData);
                 
-                // Parse the JsonData field which contains the actual configuration
-                let configurations;
-                if (typeof roomData.JsonData === 'string') {
-                    configurations = JSON.parse(roomData.JsonData);
+                // Calculate position offset for multiple charts
+                const offsetX = index * 3;
+                const position = chartConfig.position || { x: offsetX, y: 1, z: -2 };
+                
+                // Create chart entity
+                const chartEntity = document.createElement('a-entity');
+                chartEntity.setAttribute('position', `${position.x + offsetX} ${position.y} ${position.z}`);
+                
+                // Create different visualizations based on chart type
+                if (chartConfig.chartType === 'barras' || chartConfig.chartType === 'bar') {
+                    createBarChart(chartEntity, chartConfig, index);
+                } else if (chartConfig.chartType === 'linha' || chartConfig.chartType === 'line') {
+                    createLineChart(chartEntity, chartConfig, index);
+                } else if (chartConfig.chartType === 'pizza' || chartConfig.chartType === 'pie') {
+                    createPieChart(chartEntity, chartConfig, index);
                 } else {
-                    configurations = roomData.JsonData;
+                    // Default to bar chart
+                    createBarChart(chartEntity, chartConfig, index);
                 }
                 
-                console.log('Configurations parsed:', configurations);
-                configurationsData = configurations;
+                // Add title
+                const title = document.createElement('a-text');
+                title.setAttribute('value', chartConfig.graphname || 'Gráfico');
+                title.setAttribute('position', '0 2 0');
+                title.setAttribute('align', 'center');
+                title.setAttribute('color', '#ffffff');
+                title.setAttribute('scale', '2 2 2');
+                chartEntity.appendChild(title);
+                
+                container.appendChild(chartEntity);
+                console.log('Chart visualization created successfully');
+                
+            } catch (error) {
+                console.error('Error creating chart visualization:', error);
+                showError('Erro ao criar visualização do gráfico', error.message);
+            }
+        }
+        
+        function createBarChart(parent, config, index) {
+            // Create sample bars for demonstration
+            for (let i = 0; i < 5; i++) {
+                const bar = document.createElement('a-box');
+                const height = Math.random() * 2 + 0.5;
+                bar.setAttribute('position', `${i * 0.5 - 1} ${height/2} 0`);
+                bar.setAttribute('height', height);
+                bar.setAttribute('width', '0.3');
+                bar.setAttribute('depth', '0.3');
+                bar.setAttribute('color', config.color || '#4CC3D9');
+                parent.appendChild(bar);
+            }
+        }
+        
+        function createLineChart(parent, config, index) {
+            // Create line visualization using connected boxes
+            for (let i = 0; i < 5; i++) {
+                const point = document.createElement('a-sphere');
+                const height = Math.sin(i) + 1;
+                point.setAttribute('position', `${i * 0.5 - 1} ${height} 0`);
+                point.setAttribute('radius', '0.1');
+                point.setAttribute('color', config.color || '#EF2D5E');
+                parent.appendChild(point);
+            }
+        }
+        
+        function createPieChart(parent, config, index) {
+            // Create pie chart using cylinders
+            const segments = 4;
+            for (let i = 0; i < segments; i++) {
+                const segment = document.createElement('a-cylinder');
+                const angle = (i / segments) * Math.PI * 2;
+                const x = Math.cos(angle) * 0.5;
+                const z = Math.sin(angle) * 0.5;
+                segment.setAttribute('position', `${x} 0.1 ${z}`);
+                segment.setAttribute('height', '0.2');
+                segment.setAttribute('radius', '0.3');
+                segment.setAttribute('color', `hsl(${i * 90}, 70%, 50%)`);
+                parent.appendChild(segment);
+            }
+        }
+        
+        // Fetch configuration from API
+        async function loadConfiguration() {
+            try {
+                console.log('Fetching configuration for room:', roomCode);
+                
+                const response = await fetch(
+                    `https://modsi-api-ffhhfgecfdehhscv.spaincentral-01.azurewebsites.net/api/Room/Get/${roomCode}?code=z4tKbNFdaaXzHZ4ayn9pRQokNWYgRkbVkCjOxTxP-8ChAzFuMigGCw==`
+                );
+                
+                console.log('API Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`Erro na API: ${response.status} - ${response.statusText}`);
+                }
+                
+                const responseText = await response.text();
+                console.log('API Response text:', responseText);
+                
+                if (!responseText || responseText.trim() === '') {
+                    throw new Error('Resposta vazia da API');
+                }
+                
+                let roomData;
+                try {
+                    roomData = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.error('JSON Parse Error:', parseError);
+                    console.error('Response text that failed to parse:', responseText);
+                    throw new Error(`Erro ao fazer parse do JSON: ${parseError.message}`);
+                }
+                
+                console.log('Room data parsed successfully:', roomData);
+                
+                // Handle different possible response formats
+                let configData;
+                if (roomData.configurationData) {
+                    configData = roomData.configurationData;
+                } else if (roomData.configuration) {
+                    configData = roomData.configuration;
+                } else if (Array.isArray(roomData)) {
+                    configData = roomData;
+                } else {
+                    configData = roomData;
+                }
+                
+                console.log('Configuration data to process:', configData);
+                
+                // Process configuration
+                if (Array.isArray(configData)) {
+                    if (configData.length > 0 && configData[0].config) {
+                        // Format: [{ name: "...", config: { charts: [...], ... } }]
+                        const config = configData[0].config;
+                        if (config.charts && Array.isArray(config.charts)) {
+                            console.log('Processing charts:', config.charts);
+                            config.charts.forEach((chart, index) => {
+                                createChartVisualization(chart, index);
+                            });
+                        } else {
+                            throw new Error('Configuração não contém gráficos válidos');
+                        }
+                    } else {
+                        throw new Error('Formato de configuração inválido');
+                    }
+                } else if (configData.charts && Array.isArray(configData.charts)) {
+                    // Direct format: { charts: [...], ... }
+                    console.log('Processing charts directly:', configData.charts);
+                    configData.charts.forEach((chart, index) => {
+                        createChartVisualization(chart, index);
+                    });
+                } else {
+                    throw new Error('Configuração não contém gráficos válidos');
+                }
                 
                 // Hide loading message
-                loadingDiv.classList.add('hidden');
+                document.getElementById('loading').style.display = 'none';
+                console.log('VR visualization loaded successfully');
                 
-                // Process and store chart data - handle the new array format
-                if (Array.isArray(configurations)) {
-                    configurations.forEach(configWrapper => {
-                        const { kpihistory, charts } = configWrapper.config;
-                        
-                        charts.forEach(chart => {
-                            chartsData.push({
-                                kpihistory: kpihistory,
-                                chart: chart
-                            });
-                        });
-                    });
-                } else if (configurations.config) {
-                    // Single configuration object
-                    const { kpihistory, charts } = configurations.config;
-                    
-                    charts.forEach(chart => {
-                        chartsData.push({
-                            kpihistory: kpihistory,
-                            chart: chart
-                        });
-                    });
-                } else if (configurations.kpihistory && configurations.charts) {
-                    // Direct format without wrapper
-                    configurations.charts.forEach(chart => {
-                        chartsData.push({
-                            kpihistory: configurations.kpihistory,
-                            chart: chart
-                        });
-                    });
-                }
-                
-                console.log('Charts data processed:', chartsData);
-                
-                // Initialize chart states
-                initializeChartStates();
-                
-                console.log('Chart states initialized:', chartStates);
-                
-                // Render all charts
-                renderAllCharts();
-            })
-            .catch(error => {
-                console.error('Error loading room data:', error);
-                loadingDiv.textContent = 'Erro ao carregar dados da visualização: ' + error.message;
-            });
+            } catch (error) {
+                console.error('Error loading configuration:', error);
+                showError('Erro ao carregar configuração', error.message);
+            }
+        }
+        
+        // Wait for A-Frame to be ready, then load configuration
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, starting configuration load...');
+            setTimeout(loadConfiguration, 500); // Small delay to ensure A-Frame is ready
+        });
     </script>
 </body>
 </html>

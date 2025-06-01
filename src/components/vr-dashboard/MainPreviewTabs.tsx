@@ -21,6 +21,7 @@ interface MainPreviewTabsProps {
   onLoadConfig: (config: any) => void;
   onResetConfig: () => void;
   onSaveConfig: () => void;
+  onExportCurrentConfig?: () => void;
 }
 
 const MainPreviewTabs = ({
@@ -36,7 +37,8 @@ const MainPreviewTabs = ({
   currentConfig,
   onLoadConfig,
   onResetConfig,
-  onSaveConfig
+  onSaveConfig,
+  onExportCurrentConfig
 }: MainPreviewTabsProps) => {
   const isMobile = useIsMobile();
   
@@ -79,7 +81,7 @@ const MainPreviewTabs = ({
         currentConfig={currentConfig}
         onLoadConfig={onLoadConfig}
         onResetConfig={onResetConfig}
-        onSaveConfig={onSaveConfig}
+        onExportCurrentConfig={onExportCurrentConfig}
       />
     </div>
   );
