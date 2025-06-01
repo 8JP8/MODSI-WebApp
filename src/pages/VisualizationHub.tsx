@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Settings, Layers, User, ArrowLeft, Clock } from "lucide-react";
+import { Settings, Layers, User, ArrowLeft, Clock, Zap, Play } from "lucide-react";
 
 const VisualizationHub = () => {
   const navigate = useNavigate();
@@ -78,7 +79,7 @@ const VisualizationHub = () => {
         </button>
 
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold tracking-tight mb-2 vr-gradient-text">
+          <h1 className="text-4xl font-bold tracking-tight mb-2 vr-gradient-text min-h-[3rem] flex items-center justify-center">
             Plataforma de Visualização de Dados VR
           </h1>
           <p className="text-xl text-muted-foreground">
@@ -91,7 +92,7 @@ const VisualizationHub = () => {
           <Card className="shadow-lg border border-slate-800">
             <CardHeader>
               <CardTitle className="text-xl flex items-center">
-                <Layers className="mr-2 h-5 w-5 text-primary" />
+                <Play className="mr-2 h-5 w-5 text-primary" />
                 Entrar na Visualização
               </CardTitle>
               <CardDescription>
@@ -110,6 +111,7 @@ const VisualizationHub = () => {
                   className="w-full text-base py-5" 
                   onClick={() => handleJoinVisualization()}
                 >
+                  <Zap className="mr-2 h-4 w-4" />
                   Entrar
                 </Button>
               </div>
@@ -138,6 +140,7 @@ const VisualizationHub = () => {
                   variant="outline"
                   onClick={navigateToConfigurator}
                 >
+                  <Layers className="mr-2 h-4 w-4" />
                   Abrir Configurador
                 </Button>
               </div>
@@ -170,6 +173,7 @@ const VisualizationHub = () => {
                           variant="ghost" 
                           onClick={() => handleJoinVisualization(code)}
                         >
+                          <Play className="h-3 w-3 mr-1" />
                           Entrar
                         </Button>
                       </div>

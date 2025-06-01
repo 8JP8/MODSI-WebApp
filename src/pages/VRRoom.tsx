@@ -96,7 +96,7 @@ const VRRoom = () => {
       <div className="h-screen w-screen bg-black relative">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-purple-900 to-black opacity-20 z-10 pointer-events-none"></div>
         <iframe
-          src={`/vr-visualization/index.html#${roomCode}`}
+          src={`https://modsi-vr.pt/${roomCode}`}
           className="w-full h-full border-0"
           title={`VR Visualization - Room ${roomCode}`}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; xr-spatial-tracking"

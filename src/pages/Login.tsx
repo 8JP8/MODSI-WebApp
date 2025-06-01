@@ -1,10 +1,11 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { AlertCircle, Lock, LogIn, Loader2, ArrowLeft, Check } from "lucide-react";
+import { AlertCircle, Lock, LogIn, Loader2, ArrowLeft, Check, User, Mail } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -74,9 +75,16 @@ const Login = () => {
         // Force replace navigation to prevent back button issues
         navigate("/configurator", { replace: true });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
-      toast.error("Erro no login. Por favor, tente novamente.");
+      
+      // Check if the error message contains the specific invalid credentials text
+      const errorMessage = error?.message || error?.toString() || "";
+      if (errorMessage.includes("Invalid username/email or password")) {
+        toast.error("Email ou password incorretos. Verifique as suas credenciais.");
+      } else {
+        toast.error("Erro no login. Por favor, tente novamente.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -139,18 +147,21 @@ const Login = () => {
           <CardContent>
              <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Input
-                  id="email"
-                  placeholder="Email"
-                  type="email"
-                  value={email}
-                  onChange={handleEmailChange}
-                  className={`text-base p-4 ${
-                    emailExists === true ? "border-green-500" : 
-                    emailExists === false ? "border-red-500" : ""
-                  }`}
-                  disabled={isLoading}
-                />
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    id="email"
+                    placeholder="Email"
+                    type="email"
+                    value={email}
+                    onChange={handleEmailChange}
+                    className={`text-base p-4 pl-10 ${
+                      emailExists === true ? "border-green-500" : 
+                      emailExists === false ? "border-red-500" : ""
+                    }`}
+                    disabled={isLoading}
+                  />
+                </div>
                 {emailExists === false && email.length > 5 && (
                   <Alert variant="destructive" className="py-2">
                     <AlertDescription>
@@ -167,15 +178,18 @@ const Login = () => {
                 )}
               </div>
               <div className="space-y-2">
-                <Input
-                  id="password"
-                  placeholder="Palavra-passe"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="text-base p-4"
-                  disabled={isLoading || emailExists === false}
-                />
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    id="password"
+                    placeholder="Palavra-passe"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="text-base p-4 pl-10"
+                    disabled={isLoading || emailExists === false}
+                  />
+                </div>
               </div>
               <Button 
                 type="submit" 
