@@ -107,7 +107,7 @@ const VRRoom = () => {
     return (
       <div className="h-screen w-screen bg-background relative">
         <iframe
-          src={`https://modsi-vr.pt?=${roomCode}`}
+          src={`https://modsi-vr.pt?room=${roomCode}`}
           className="w-full h-full border-0"
           title={`VR Visualization - Room ${roomCode}`}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; xr-spatial-tracking"
