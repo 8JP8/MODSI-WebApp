@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Settings, Layers, User, ArrowLeft, Clock, Zap, Play, Trash2 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+import { HelpButton } from "@/components/HelpButton";
 
 const VisualizationHub = () => {
   const navigate = useNavigate();
