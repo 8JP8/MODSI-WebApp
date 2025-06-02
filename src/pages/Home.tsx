@@ -1,3 +1,4 @@
+
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import * as THREE from 'three';
@@ -190,14 +191,14 @@ const Home = () => {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
               <Link to="/visualization-hub">
-                <Button size="lg" className="vr-button min-w-[200px]">
-                  <Box className="mr-2 h-5 w-5 transition-transform duration-200 hover:scale-110" />
+                <Button size="lg" className="vr-button min-w-[200px] group">
+                  <Box className="mr-2 h-5 w-5 transition-transform duration-200 group-hover:rotate-12" />
                   Visualizações VR
                 </Button>
               </Link>
               <Link to="/dashboard">
-                <Button size="lg" variant="outline" className="min-w-[200px]">
-                  <LayoutDashboard className="mr-2 h-5 w-5 transition-transform duration-200 hover:scale-110" />
+                <Button size="lg" variant="outline" className="min-w-[200px] group">
+                  <LayoutDashboard className="mr-2 h-5 w-5 transition-transform duration-200 group-hover:rotate-12" />
                   Painel de Gestão
                 </Button>
               </Link>
@@ -219,24 +220,24 @@ const Home = () => {
               <h4 className="text-sm font-semibold mb-2">Repositórios:</h4>
               <div className="flex flex-col sm:flex-row gap-3">
                 <a href="https://github.com/8JP8/MODSI-VRVisualization" 
-                   className="text-sm flex items-center gap-1 hover:text-primary transition-colors" 
+                   className="text-sm flex items-center gap-1 hover:text-primary transition-colors group" 
                    target="_blank" 
                    rel="noopener noreferrer">
-                  <Github className="h-4 w-4" />
+                  <Github className="h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
                   <span>MODSI-VRVisualization</span>
                 </a>
                 <a href="https://github.com/8JP8/MODSI-WebApp" 
-                   className="text-sm flex items-center gap-1 hover:text-primary transition-colors" 
+                   className="text-sm flex items-center gap-1 hover:text-primary transition-colors group" 
                    target="_blank" 
                    rel="noopener noreferrer">
-                  <Github className="h-4 w-4" />
+                  <Github className="h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
                   <span>MODSI-WebApp</span>
                 </a>
                 <a href="https://github.com/8JP8/MODSI-SQLRestAPI" 
-                   className="text-sm flex items-center gap-1 hover:text-primary transition-colors" 
+                   className="text-sm flex items-center gap-1 hover:text-primary transition-colors group" 
                    target="_blank" 
                    rel="noopener noreferrer">
-                  <Github className="h-4 w-4" />
+                  <Github className="h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
                   <span>MODSI-SQLRestAPI</span>
                 </a>
               </div>
@@ -248,7 +249,7 @@ const Home = () => {
                   src="https://www.isep.ipp.pt/images/ISEP_marca_cor.png" 
                   alt="ISEP Logo" 
                   className="h-10"
-                  style={{ transform: 'translateY(20px)' }}
+                  style={{ transform: 'translateY(10px)' }}
                 />
               </a>
             </div>

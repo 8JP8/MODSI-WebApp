@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,6 +56,7 @@ const VisualizationHub = () => {
   };
 
   const navigateToConfigurator = () => {
+    // Direct navigation without auth check
     navigate("/configurator");
   };
 
@@ -75,9 +77,9 @@ const VisualizationHub = () => {
         <div className="flex justify-between items-center mb-8">
           <button
             onClick={handleBack}
-            className="h-10 w-10 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+            className="h-10 w-10 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground group"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
           </button>
           
           <div className="flex items-center gap-3">
@@ -100,7 +102,7 @@ const VisualizationHub = () => {
           <Card className="shadow-lg border border-slate-800">
             <CardHeader>
               <CardTitle className="text-xl flex items-center">
-                <Play className="mr-2 h-5 w-5 text-primary" />
+                <Play className="mr-2 h-5 w-5 text-primary transition-transform duration-200 hover:rotate-12" />
                 Entrar na Visualização
               </CardTitle>
               <CardDescription>
@@ -116,10 +118,10 @@ const VisualizationHub = () => {
                   className="text-base p-4"
                 />
                 <Button 
-                  className="w-full text-base py-5" 
+                  className="w-full text-base py-5 group" 
                   onClick={() => handleJoinVisualization()}
                 >
-                  <Zap className="mr-2 h-4 w-4" />
+                  <Zap className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
                   Entrar
                 </Button>
               </div>
@@ -130,7 +132,7 @@ const VisualizationHub = () => {
           <Card className="shadow-lg border border-slate-800">
             <CardHeader>
               <CardTitle className="text-xl flex items-center">
-                <Settings className="mr-2 h-5 w-5 text-primary" />
+                <Settings className="mr-2 h-5 w-5 text-primary transition-transform duration-200 hover:rotate-12" />
                 Editor de Visualizações
               </CardTitle>
               <CardDescription>
@@ -144,11 +146,11 @@ const VisualizationHub = () => {
                   controlo de posições e definições avançadas.
                 </p>
                 <Button 
-                  className="w-full text-base py-5" 
+                  className="w-full text-base py-5 group" 
                   variant="outline"
                   onClick={navigateToConfigurator}
                 >
-                  <Layers className="mr-2 h-4 w-4" />
+                  <Layers className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
                   Abrir Configurador
                 </Button>
               </div>
@@ -159,7 +161,7 @@ const VisualizationHub = () => {
           <Card className="shadow-lg border border-slate-800">
             <CardHeader>
               <CardTitle className="text-xl flex items-center">
-                <User className="mr-2 h-5 w-5 text-primary" />
+                <User className="mr-2 h-5 w-5 text-primary transition-transform duration-200 hover:rotate-12" />
                 As Minhas Visualizações
               </CardTitle>
               <CardDescription>
@@ -179,9 +181,10 @@ const VisualizationHub = () => {
                         <Button 
                           size="sm" 
                           variant="ghost" 
+                          className="group"
                           onClick={() => handleJoinVisualization(code)}
                         >
-                          <Play className="h-3 w-3 mr-1" />
+                          <Play className="h-3 w-3 mr-1 transition-transform duration-200 group-hover:rotate-12" />
                           Entrar
                         </Button>
                       </div>
@@ -189,10 +192,10 @@ const VisualizationHub = () => {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="w-full mt-2" 
+                      className="w-full mt-2 group" 
                       onClick={clearVisualizationHistory}
                     >
-                      <Trash2 className="h-3 w-3 mr-2" />
+                      <Trash2 className="h-3 w-3 mr-2 transition-transform duration-200 group-hover:rotate-12" />
                       Limpar Histórico
                     </Button>
                   </div>

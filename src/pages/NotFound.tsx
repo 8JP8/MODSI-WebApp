@@ -22,11 +22,7 @@ const NotFound = () => {
   };
 
   return (
-    <div className={`min-h-screen relative overflow-hidden ${
-      theme === 'dark' 
-        ? 'bg-gradient-to-br from-slate-900 via-blue-900/50 to-slate-800' 
-        : 'bg-gradient-to-br from-blue-50 via-slate-100 to-blue-100'
-    }`}>
+    <div className="min-h-screen bg-gradient-to-b from-white via-blue-50 to-blue-100 dark:from-background dark:to-slate-900/50 relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0">
         <div className={`absolute top-1/4 left-1/4 w-64 h-64 rounded-full blur-3xl animate-pulse ${
@@ -131,25 +127,17 @@ const NotFound = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <button
               onClick={() => handleNavigate('/')}
-              className={`group flex items-center gap-2 px-6 py-3 text-white rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
-                theme === 'dark'
-                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:shadow-blue-500/25'
-                  : 'bg-gradient-to-r from-blue-700 to-purple-700 hover:from-blue-800 hover:to-purple-800 hover:shadow-blue-600/25'
-              }`}
+              className="group flex items-center gap-2 px-6 py-3 text-white rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 hover:from-blue-700 hover:via-purple-700 hover:to-cyan-700 hover:shadow-blue-500/25"
             >
-              <Home className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+              <Home className="w-5 h-5 group-hover:rotate-12 transition-transform duration-200" />
               Voltar ao Início
             </button>
             
             <button
               onClick={() => handleNavigate('/configurator')}
-              className={`group flex items-center gap-2 px-6 py-3 text-white rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
-                theme === 'dark'
-                  ? 'bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 hover:shadow-purple-500/25'
-                  : 'bg-gradient-to-r from-purple-700 to-cyan-700 hover:from-purple-800 hover:to-cyan-800 hover:shadow-purple-600/25'
-              }`}
+              className="group flex items-center gap-2 px-6 py-3 text-white rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 hover:from-blue-700 hover:via-purple-700 hover:to-cyan-700 hover:shadow-purple-500/25"
             >
-              <Zap className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+              <Zap className="w-5 h-5 group-hover:rotate-12 transition-transform duration-200" />
               Configurador VR
             </button>
           </div>
