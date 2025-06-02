@@ -1,11 +1,10 @@
-
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import * as THREE from 'three';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useTheme } from '@/hooks/use-theme';
-import { Github, Cube, LayoutDashboard } from 'lucide-react';
+import { Github, Box, LayoutDashboard } from 'lucide-react';
 import { HelpButton } from '@/components/HelpButton';
 
 const Home = () => {
@@ -192,7 +191,7 @@ const Home = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
               <Link to="/visualization-hub">
                 <Button size="lg" className="vr-button min-w-[200px]">
-                  <Cube className="mr-2 h-5 w-5" />
+                  <Box className="mr-2 h-5 w-5" />
                   Visualizações VR
                 </Button>
               </Link>
