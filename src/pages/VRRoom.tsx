@@ -1,13 +1,15 @@
 
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Settings, Home } from "lucide-react";
+import { useTheme } from "@/hooks/use-theme";
 
 const VRRoom = () => {
   const { roomCode } = useParams<{ roomCode: string }>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [roomVerified, setRoomVerified] = useState(false);
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (!roomCode) {
@@ -50,7 +52,7 @@ const VRRoom = () => {
 
   if (!roomCode) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-background' : 'bg-slate-50'}`}>
         <div className="text-center">
           <h1 className="text-2xl font-bold text-destructive">Erro</h1>
           <p className="text-muted-foreground">Código da sala não encontrado</p>
@@ -61,7 +63,7 @@ const VRRoom = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-background' : 'bg-slate-50'}`}>
         <div className="text-center">
           <div className="flex items-center justify-center mb-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -75,17 +77,27 @@ const VRRoom = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-background' : 'bg-slate-50'}`}>
         <div className="text-center">
           <h1 className="text-2xl font-bold text-destructive mb-2">Erro</h1>
           <p className="text-muted-foreground mb-2">{error}</p>
           <p className="text-sm text-muted-foreground">Sala: {roomCode}</p>
-          <button 
-            onClick={() => window.location.href = '/configurator'}
-            className="mt-4 px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors"
-          >
-            Voltar ao Configurador
-          </button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
+            <button 
+              onClick={() => window.location.href = '/configurator'}
+              className="flex items-center gap-2 px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors"
+            >
+              <Settings className="h-4 w-4" />
+              Voltar ao Configurador
+            </button>
+            <button 
+              onClick={() => window.location.href = '/'}
+              className="flex items-center gap-2 px-6 py-2 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-lg transition-colors"
+            >
+              <Home className="h-4 w-4" />
+              Voltar ao Início
+            </button>
+          </div>
         </div>
       </div>
     );

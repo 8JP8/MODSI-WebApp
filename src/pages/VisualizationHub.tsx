@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Settings, Layers, User, ArrowLeft, Clock, Zap, Play } from "lucide-react";
+import { Settings, Layers, User, ArrowLeft, Clock, Zap, Play, Trash2 } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const VisualizationHub = () => {
   const navigate = useNavigate();
@@ -70,16 +71,20 @@ const VisualizationHub = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-blue-50 to-blue-100 dark:from-background dark:to-slate-900/50 flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-5xl relative">
-        {/* Botão Voltar */}
-        <button
-          onClick={handleBack}
-          className="absolute top-0 left-0 h-10 w-10 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
+        {/* Header with back button and theme toggle */}
+        <div className="flex justify-between items-center mb-8">
+          <button
+            onClick={handleBack}
+            className="h-10 w-10 flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          
+          <ThemeToggle />
+        </div>
 
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold tracking-tight mb-2 vr-gradient-text min-h-[3.5rem] flex items-center justify-center">
+          <h1 className="text-4xl font-bold tracking-tight mb-2 vr-gradient-text min-h-[4rem] flex items-center justify-center">
             Plataforma de Visualização de Dados VR
           </h1>
           <p className="text-xl text-muted-foreground">
@@ -184,6 +189,7 @@ const VisualizationHub = () => {
                       className="w-full mt-2" 
                       onClick={clearVisualizationHistory}
                     >
+                      <Trash2 className="h-3 w-3 mr-2" />
                       Limpar Histórico
                     </Button>
                   </div>
