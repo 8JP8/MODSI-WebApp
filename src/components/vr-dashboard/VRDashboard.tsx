@@ -13,11 +13,6 @@ import { toast } from "sonner";
 import { createRoom } from "@/services/roomService";
 import { saveVisualizationToHistory } from "@/utils/visualizationUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import ThemeToggle from "@/components/ThemeToggle";
-import { HelpButton } from "@/components/HelpButton";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 
 const VRDashboard = () => {
   const [launchDialogOpen, setLaunchDialogOpen] = useState(false);
@@ -67,23 +62,6 @@ const VRDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="w-full py-4 px-6 flex justify-between items-center bg-background border-b border-border">
-        <div className="flex items-center gap-4">
-          <Link to="/">
-            <Button variant="outline" size="icon" className="h-10 w-10">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <h1 className="text-2xl font-bold vr-gradient-text">MODSiVR - Configurador VR</h1>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <HelpButton />
-          <ThemeToggle />
-        </div>
-      </header>
-
       <ChartDataManager sampleData={sampleData}>
         {({
           charts,

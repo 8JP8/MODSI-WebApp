@@ -52,7 +52,7 @@ const VRRoom = () => {
 
   if (!roomCode) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-background' : 'bg-slate-50'}`}>
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-destructive">Erro</h1>
           <p className="text-muted-foreground">Código da sala não encontrado</p>
@@ -63,7 +63,7 @@ const VRRoom = () => {
 
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-background' : 'bg-slate-50'}`}>
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="flex items-center justify-center mb-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -77,7 +77,7 @@ const VRRoom = () => {
 
   if (error) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-background' : 'bg-slate-50'}`}>
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-destructive mb-2">Erro</h1>
           <p className="text-muted-foreground mb-2">{error}</p>
@@ -85,16 +85,16 @@ const VRRoom = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
             <button 
               onClick={() => window.location.href = '/configurator'}
-              className="flex items-center gap-2 px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors"
+              className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all duration-200"
             >
-              <Settings className="h-4 w-4" />
+              <Settings className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
               Voltar ao Configurador
             </button>
             <button 
               onClick={() => window.location.href = '/'}
               className="flex items-center gap-2 px-6 py-2 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-lg transition-colors"
             >
-              <Home className="h-4 w-4" />
+              <Home className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
               Voltar ao Início
             </button>
           </div>

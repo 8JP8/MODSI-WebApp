@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -80,7 +79,10 @@ const VisualizationHub = () => {
             <ArrowLeft className="h-4 w-4" />
           </button>
           
-          <ThemeToggle />
+          <div className="flex items-center gap-3">
+            <HelpButton />
+            <ThemeToggle />
+          </div>
         </div>
 
         <div className="text-center mb-12">

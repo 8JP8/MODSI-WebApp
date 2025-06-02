@@ -191,13 +191,13 @@ const Home = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
               <Link to="/visualization-hub">
                 <Button size="lg" className="vr-button min-w-[200px]">
-                  <Box className="mr-2 h-5 w-5" />
+                  <Box className="mr-2 h-5 w-5 transition-transform duration-200 hover:scale-110" />
                   Visualizações VR
                 </Button>
               </Link>
               <Link to="/dashboard">
                 <Button size="lg" variant="outline" className="min-w-[200px]">
-                  <LayoutDashboard className="mr-2 h-5 w-5" />
+                  <LayoutDashboard className="mr-2 h-5 w-5 transition-transform duration-200 hover:scale-110" />
                   Painel de Gestão
                 </Button>
               </Link>

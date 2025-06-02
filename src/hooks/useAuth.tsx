@@ -285,10 +285,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return false;
         }
         
-        // Store token with expiry (1 hour)
+        // Store token with expiry (8 hours instead of 1)
         const tokenData: AuthTokenData = {
           token: loginData.Token,
-          expiry: new Date().getTime() + 60 * 60 * 1000, // 1 hour
+          expiry: new Date().getTime() + 8 * 60 * 60 * 1000, // 8 hours
           username: userDetails.username || email,
           userData: userDetails
         };
@@ -324,6 +324,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     try {
       const parsedToken = JSON.parse(tokenData) as AuthTokenData;
+      
+      // Only check local expiry - don't validate with server on every check
       const isValid = new Date().getTime() < parsedToken.expiry;
       
       if (!isValid) {
