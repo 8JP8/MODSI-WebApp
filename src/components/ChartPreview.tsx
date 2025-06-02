@@ -177,19 +177,33 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
         );
         
       case "scatter":
+        // Transform data for scatter plot - each data series becomes scatter points
+        const scatterData = dataKeys.map((key, index) => ({
+          data: data.map((item, itemIndex) => ({
+            x: itemIndex, // Use index as x value for scatter
+            y: item[key],
+            name: item.name
+          })),
+          name: key,
+          fill: COLORS[index % COLORS.length]
+        }));
+
         return (
           <ResponsiveContainer width="100%" height={300}>
             <ScatterChart margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis 
-                dataKey="name" 
-                type="category" 
-                name="name" 
+                type="number" 
+                dataKey="x"
+                name="Índice" 
                 className="fill-muted-foreground text-xs"
                 tick={{ fontSize: 12 }}
+                domain={[0, data.length - 1]}
               />
               <YAxis 
                 type="number" 
+                dataKey="y"
+                name="Valor"
                 className="fill-muted-foreground text-xs"
                 tick={{ fontSize: 12 }}
               />
@@ -199,15 +213,19 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                   backgroundColor: "hsl(var(--background))", 
                   border: "1px solid hsl(var(--border))",
                   borderRadius: "6px"
-                }} 
+                }}
+                formatter={(value, name, props) => [
+                  value,
+                  `${name} (${props.payload.name})`
+                ]}
               />
               <Legend />
-              {dataKeys.map((key, index) => (
+              {scatterData.map((series) => (
                 <Scatter 
-                  key={key} 
-                  name={key} 
-                  data={data.map(item => ({ x: item.name, y: item[key] }))} 
-                  fill={COLORS[index % COLORS.length]} 
+                  key={series.name} 
+                  name={series.name} 
+                  data={series.data} 
+                  fill={series.fill}
                 />
               ))}
             </ScatterChart>

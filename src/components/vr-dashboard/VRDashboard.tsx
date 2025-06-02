@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import sampleData from "../../data/sampleVisualization.json";
 import ChartDataManager from "./ChartDataManager";
@@ -12,6 +13,11 @@ import { toast } from "sonner";
 import { createRoom } from "@/services/roomService";
 import { saveVisualizationToHistory } from "@/utils/visualizationUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import ThemeToggle from "@/components/ThemeToggle";
+import { HelpButton } from "@/components/HelpButton";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 const VRDashboard = () => {
   const [launchDialogOpen, setLaunchDialogOpen] = useState(false);
@@ -60,100 +66,119 @@ const VRDashboard = () => {
   };
 
   return (
-    <ChartDataManager sampleData={sampleData}>
-      {({
-        charts,
-        activeChartId,
-        chartType,
-        position,
-        zAxis,
-        secondaryAxis,
-        yAxis,
-        data,
-        configSaved,
-        setActiveChartId,
-        updateActiveChart,
-        handlePositionChange,
-        handleZAxisChange,
-        handleSecondaryAxisChange,
-        handleYAxisChange,
-        addNewChart,
-        resetConfiguration,
-        handleLoadConfig,
-        handleExportJSON,
-        setConfigSaved,
-        getCurrentConfiguration,
-        getConfigurationForVR,
-        isConfigurationValid
-      }) => (
-        <div className="container mx-auto px-2 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
-          <DashboardHeader 
-            onSave={handleExportJSON}
-            onLaunch={handleLaunchButtonClick}
-            configSaved={isConfigurationValid()}
-          />
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="w-full py-4 px-6 flex justify-between items-center bg-background border-b border-border">
+        <div className="flex items-center gap-4">
+          <Link to="/">
+            <Button variant="outline" size="icon" className="h-10 w-10">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <h1 className="text-2xl font-bold vr-gradient-text">MODSiVR - Configurador VR</h1>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <HelpButton />
+          <ThemeToggle />
+        </div>
+      </header>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-            <div className="space-y-4 md:space-y-6">
-              <ChartSelector 
+      <ChartDataManager sampleData={sampleData}>
+        {({
+          charts,
+          activeChartId,
+          chartType,
+          position,
+          zAxis,
+          secondaryAxis,
+          yAxis,
+          data,
+          configSaved,
+          setActiveChartId,
+          updateActiveChart,
+          handlePositionChange,
+          handleZAxisChange,
+          handleSecondaryAxisChange,
+          handleYAxisChange,
+          addNewChart,
+          resetConfiguration,
+          handleLoadConfig,
+          handleExportJSON,
+          setConfigSaved,
+          getCurrentConfiguration,
+          getConfigurationForVR,
+          isConfigurationValid
+        }) => (
+          <div className="container mx-auto px-2 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
+            <DashboardHeader 
+              onSave={handleExportJSON}
+              onLaunch={handleLaunchButtonClick}
+              configSaved={isConfigurationValid()}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+              <div className="space-y-4 md:space-y-6">
+                <ChartSelector 
+                  charts={charts}
+                  activeChartId={activeChartId}
+                  onChartSelect={setActiveChartId}
+                  onAddChart={addNewChart}
+                />
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Tipo de Gráfico</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ChartTypeSelector 
+                      selectedType={chartType} 
+                      onSelect={(type) => {
+                        updateActiveChart({ chartType: type });
+                      }} 
+                    />
+                  </CardContent>
+                </Card>
+                
+                <KPIAxisSelector
+                  selectedZAxis={zAxis}
+                  selectedSecondaryAxis={secondaryAxis}
+                  selectedYAxis={yAxis}
+                  onSelectZAxis={handleZAxisChange}
+                  onSelectSecondaryAxis={handleSecondaryAxisChange}
+                  onSelectYAxis={handleYAxisChange}
+                />
+              </div>
+              
+              <MainPreviewTabs 
+                chartType={chartType}
+                data={data}
+                xAxis={secondaryAxis}
+                yAxis={yAxis}
+                zAxis={zAxis}
+                position={position}
                 charts={charts}
                 activeChartId={activeChartId}
-                onChartSelect={setActiveChartId}
-                onAddChart={addNewChart}
-              />
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Tipo de Gráfico</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ChartTypeSelector 
-                    selectedType={chartType} 
-                    onSelect={(type) => {
-                      updateActiveChart({ chartType: type });
-                    }} 
-                  />
-                </CardContent>
-              </Card>
-              
-              <KPIAxisSelector
-                selectedZAxis={zAxis}
-                selectedSecondaryAxis={secondaryAxis}
-                selectedYAxis={yAxis}
-                onSelectZAxis={handleZAxisChange}
-                onSelectSecondaryAxis={handleSecondaryAxisChange}
-                onSelectYAxis={handleYAxisChange}
+                onPositionChange={handlePositionChange}
+                currentConfig={{ charts, activeChartId }}
+                onLoadConfig={handleLoadConfig}
+                onResetConfig={resetConfiguration}
+                onSaveConfig={handleExportJSON}
+                onExportCurrentConfig={handleExportJSON}
               />
             </div>
-            
-            <MainPreviewTabs 
-              chartType={chartType}
-              data={data}
-              xAxis={secondaryAxis}
-              yAxis={yAxis}
-              zAxis={zAxis}
-              position={position}
-              charts={charts}
-              activeChartId={activeChartId}
-              onPositionChange={handlePositionChange}
-              currentConfig={{ charts, activeChartId }}
-              onLoadConfig={handleLoadConfig}
-              onResetConfig={resetConfiguration}
-              onSaveConfig={handleExportJSON}
-              onExportCurrentConfig={handleExportJSON}
+
+            <VRLaunchDialog
+              open={launchDialogOpen}
+              onOpenChange={setLaunchDialogOpen}
+              onLaunch={() => launchVR(getConfigurationForVR)}
+              onJoin={joinVisualization}
+              hasUnsavedChanges={!isConfigurationValid()}
             />
           </div>
-
-          <VRLaunchDialog
-            open={launchDialogOpen}
-            onOpenChange={setLaunchDialogOpen}
-            onLaunch={() => launchVR(getConfigurationForVR)}
-            onJoin={joinVisualization}
-            hasUnsavedChanges={!isConfigurationValid()}
-          />
-        </div>
-      )}
-    </ChartDataManager>
+        )}
+      </ChartDataManager>
+    </div>
   );
 };
 

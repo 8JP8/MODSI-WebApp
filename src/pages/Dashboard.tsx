@@ -82,15 +82,18 @@ const Dashboard = () => {
           </div>
         )}
         
-        <iframe
-          id="dashboard-iframe"
-          src="https://app.appsmith.com/app/modsi-webapp/main-page-6807db039a00354830a6b72c?embed=true"
-          className={`w-full h-full border-0 ${isLoading || hasError ? 'invisible' : 'visible'}`}
-          onLoad={handleIframeLoad}
-          onError={handleIframeError}
-          allowFullScreen
-          title="MODSiVR Dashboard"
-        />
+        <div className="w-full h-full" style={{ paddingTop: '60px' }}>
+          <iframe
+            id="dashboard-iframe"
+            src="https://app.appsmith.com/app/modsi-webapp/main-page-6807db039a00354830a6b72c?embed=true"
+            className={`w-full border-0 ${isLoading || hasError ? 'invisible' : 'visible'}`}
+            style={{ height: 'calc(100vh - 140px)' }}
+            onLoad={handleIframeLoad}
+            onError={handleIframeError}
+            allowFullScreen
+            title="MODSiVR Dashboard"
+          />
+        </div>
       </main>
     </div>
   );
