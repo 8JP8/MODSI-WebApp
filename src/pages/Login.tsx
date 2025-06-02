@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -122,7 +121,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-slate-900/50 flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-b from-white via-blue-50 to-blue-100 dark:from-background dark:to-slate-900/50 flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md">
         <Card className="shadow-lg border border-slate-800">
           <CardHeader className="space-y-1">

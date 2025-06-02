@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useTheme } from '@/hooks/use-theme';
-import { Github } from 'lucide-react';
+import { Github, VrIcon, LayoutDashboard } from 'lucide-react';
 import { HelpButton } from '@/components/HelpButton';
 
 const Home = () => {
@@ -192,20 +192,22 @@ const Home = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
               <Link to="/visualization-hub">
                 <Button size="lg" className="vr-button min-w-[200px]">
+                  <VrIcon className="mr-2 h-5 w-5" />
                   Visualizações VR
                 </Button>
               </Link>
               <Link to="/dashboard">
                 <Button size="lg" variant="outline" className="min-w-[200px]">
+                  <LayoutDashboard className="mr-2 h-5 w-5" />
                   Painel de Gestão
                 </Button>
               </Link>
             </div>
 
-            {/* NOVO BLOCO AUTORES - depois dos botões, horizontal, espaçado */}
+            {/* Authors block with updated name */}
             <div className="mt-8 grid grid-cols-3 gap-x-16 text-white font-semibold text-lg select-none">
               <span className="text-center">João Oliveira 1240369</span>
-              <span className="text-center">Rui Jorge Sousa Costa 1210971</span>
+              <span className="text-center">Rui Costa 1210971</span>
               <span className="text-center">Simão Soares 1211630</span>
             </div>
           </div>
@@ -247,6 +249,7 @@ const Home = () => {
                   src="https://www.isep.ipp.pt/images/ISEP_marca_cor.png" 
                   alt="ISEP Logo" 
                   className="h-10"
+                  style={{ transform: 'translateY(10px)' }}
                 />
               </a>
             </div>

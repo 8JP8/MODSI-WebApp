@@ -68,7 +68,7 @@ const VisualizationHub = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-slate-900/50 flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-b from-white via-blue-50 to-blue-100 dark:from-background dark:to-slate-900/50 flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-5xl relative">
         {/* Botão Voltar */}
         <button
@@ -79,7 +79,7 @@ const VisualizationHub = () => {
         </button>
 
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold tracking-tight mb-2 vr-gradient-text min-h-[3rem] flex items-center justify-center">
+          <h1 className="text-4xl font-bold tracking-tight mb-2 vr-gradient-text min-h-[3.5rem] flex items-center justify-center">
             Plataforma de Visualização de Dados VR
           </h1>
           <p className="text-xl text-muted-foreground">

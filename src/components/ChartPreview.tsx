@@ -1,7 +1,22 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, PieChart, LineChart, ScatterChart } from "recharts";
-import { Bar, Pie, Line, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, ResponsiveContainer } from "recharts";
+import { 
+  BarChart, 
+  PieChart, 
+  LineChart, 
+  ScatterChart,
+  Bar, 
+  Pie, 
+  Line, 
+  Scatter, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  Cell, 
+  ResponsiveContainer 
+} from "recharts";
 
 interface ChartPreviewProps {
   chartType: string;
@@ -62,20 +77,37 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
         return (
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-              <XAxis dataKey="name" stroke="#ccc" />
-              <YAxis stroke="#ccc" />
-              <Tooltip contentStyle={{ backgroundColor: "#2A2F3C", borderColor: "#444" }} />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis 
+                dataKey="name" 
+                className="fill-muted-foreground text-xs" 
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis 
+                className="fill-muted-foreground text-xs" 
+                tick={{ fontSize: 12 }}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: "hsl(var(--background))", 
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "6px"
+                }} 
+              />
               <Legend />
               {dataKeys.map((key, index) => (
-                <Bar key={key} dataKey={key} fill={COLORS[index % COLORS.length]} />
+                <Bar 
+                  key={key} 
+                  dataKey={key} 
+                  fill={COLORS[index % COLORS.length]}
+                  radius={[2, 2, 0, 0]}
+                />
               ))}
             </BarChart>
           </ResponsiveContainer>
         );
         
       case "pie":
-        // For pie charts, use only the first data key
         const pieDataKey = dataKeys[0];
         return (
           <ResponsiveContainer width="100%" height={300}>
@@ -95,7 +127,13 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip contentStyle={{ backgroundColor: "#2A2F3C", borderColor: "#444" }} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: "hsl(var(--background))", 
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "6px"
+                }} 
+              />
               <Legend />
             </PieChart>
           </ResponsiveContainer>
@@ -105,10 +143,23 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
         return (
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-              <XAxis dataKey="name" stroke="#ccc" />
-              <YAxis stroke="#ccc" />
-              <Tooltip contentStyle={{ backgroundColor: "#2A2F3C", borderColor: "#444" }} />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis 
+                dataKey="name" 
+                className="fill-muted-foreground text-xs" 
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis 
+                className="fill-muted-foreground text-xs" 
+                tick={{ fontSize: 12 }}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: "hsl(var(--background))", 
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "6px"
+                }} 
+              />
               <Legend />
               {dataKeys.map((key, index) => (
                 <Line 
@@ -116,7 +167,9 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                   type="monotone" 
                   dataKey={key} 
                   stroke={COLORS[index % COLORS.length]} 
-                  activeDot={{ r: 8 }} 
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }} 
                 />
               ))}
             </LineChart>
@@ -127,10 +180,27 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
         return (
           <ResponsiveContainer width="100%" height={300}>
             <ScatterChart margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-              <XAxis dataKey="name" type="category" name="name" stroke="#ccc" />
-              <YAxis type="number" stroke="#ccc" />
-              <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ backgroundColor: "#2A2F3C", borderColor: "#444" }} />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis 
+                dataKey="name" 
+                type="category" 
+                name="name" 
+                className="fill-muted-foreground text-xs"
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis 
+                type="number" 
+                className="fill-muted-foreground text-xs"
+                tick={{ fontSize: 12 }}
+              />
+              <Tooltip 
+                cursor={{ strokeDasharray: '3 3' }} 
+                contentStyle={{ 
+                  backgroundColor: "hsl(var(--background))", 
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "6px"
+                }} 
+              />
               <Legend />
               {dataKeys.map((key, index) => (
                 <Scatter 

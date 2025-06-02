@@ -58,9 +58,9 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Main content with iframe */}
+      {/* Main content with iframe - now takes full remaining height */}
       <main className="flex-1 relative">
-        <div className="iframe-container w-full h-[calc(100vh-80px)] overflow-hidden">
+        <div className="iframe-container w-full h-full overflow-hidden">
           {isLoading && (
             <div 
               className="absolute inset-0 bg-background z-10 flex flex-col items-center justify-center"
@@ -99,10 +99,8 @@ const Dashboard = () => {
             <iframe
               id="dashboard-iframe"
               src="https://app.appsmith.com/app/modsi-webapp/main-page-6807db039a00354830a6b72c?embed=true"
-              className={`absolute top-0 left-0 w-full border-0 ${isLoading || hasError ? 'invisible' : 'visible'}`}
+              className={`absolute top-0 left-0 w-full h-full border-0 ${isLoading || hasError ? 'invisible' : 'visible'}`}
               style={{ 
-                height: "calc(100% + 80px)",  // 80px taller than container
-                clipPath: "inset(0px 0px 80px 0px)", // cutting off bottom 80px
                 pointerEvents: "auto",
                 userSelect: "none"
               }}
