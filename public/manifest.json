@@ -11,6 +11,7 @@
   "scope": "/",
   "categories": ["education", "productivity", "utilities"],
   "lang": "pt-PT",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/favicon.ico",
