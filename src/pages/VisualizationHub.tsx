@@ -56,8 +56,7 @@ const VisualizationHub = () => {
   };
 
   const navigateToConfigurator = () => {
-    // Direct navigation without auth check
-    navigate("/configurator");
+    navigate("/login");
   };
 
   const handleBack = () => {
