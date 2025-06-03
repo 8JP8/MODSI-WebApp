@@ -21,6 +21,9 @@ const NotFound = () => {
     window.location.href = path;
   };
 
+  // Check if we're in light mode (either explicitly or system preference)
+  const isLightMode = theme === 'light' || (theme === 'system' && !window.matchMedia('(prefers-color-scheme: dark)').matches);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-blue-50 to-blue-100 dark:from-background dark:to-slate-900/50 relative overflow-hidden">
       {/* Animated background elements */}
@@ -105,20 +108,20 @@ const NotFound = () => {
           {/* Error message */}
           <div className="space-y-4">
             <h1 className={`text-3xl md:text-4xl font-bold ${
-              theme === 'dark' ? 'text-white' : 'text-slate-800'
+              isLightMode ? 'text-slate-800' : 'text-white'
             }`}>
               Página Não Encontrada
             </h1>
             <p className={`text-lg md:text-xl max-w-md mx-auto ${
-              theme === 'dark' ? 'text-blue-200' : 'text-slate-600'
+              isLightMode ? 'text-slate-600' : 'text-blue-200'
             }`}>
               Parece que esta página não existe no sistema
             </p>
             <p className={`text-sm ${
-              theme === 'dark' ? 'text-gray-400' : 'text-slate-500'
+              isLightMode ? 'text-slate-500' : 'text-gray-400'
             }`}>
               Rota: <code className={`px-2 py-1 rounded ${
-                theme === 'dark' ? 'bg-white/10' : 'bg-slate-800/10'
+                isLightMode ? 'bg-slate-800/10' : 'bg-white/10'
               }`}>{location.pathname}</code>
             </p>
           </div>
