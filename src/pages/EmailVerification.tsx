@@ -135,7 +135,7 @@ const EmailVerification = () => {
           <CardHeader className="space-y-1">
             <div className="flex items-center justify-between">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={handleGoBack}
                 className="p-2 h-auto group"
