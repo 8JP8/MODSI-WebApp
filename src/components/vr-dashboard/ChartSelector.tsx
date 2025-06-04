@@ -14,14 +14,14 @@ interface ChartSelectorProps {
 
 const ChartSelector = ({ charts, activeChartId, onChartSelect, onAddChart }: ChartSelectorProps) => {
   return (
-    <Card className="overflow-hidden">
+    <Card>
       <CardHeader className="p-4">
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg">Gráficos ({charts.length})</CardTitle>
           <Button 
             variant="ghost" 
             size="sm" 
-            className="h-8 px-2 transition-transform duration-200 hover:scale-110"
+            className="h-8 px-2"
             onClick={onAddChart}
           >
             <PlusCircle className="mr-1 h-4 w-4 transition-transform duration-200 hover:rotate-90" />
@@ -31,14 +31,14 @@ const ChartSelector = ({ charts, activeChartId, onChartSelect, onAddChart }: Cha
       </CardHeader>
       <CardContent className="p-0">
         <div className="max-h-[300px] overflow-y-auto">
-          <div className="flex flex-col p-2">
+          <div className="flex flex-col p-2 space-y-1">
             {charts.length > 0 ? (
               charts.map((chart) => (
                 <Button
                   key={chart.id}
                   variant="ghost"
                   className={`
-                    flex items-center justify-start p-3 rounded-md mb-1 h-auto transition-all duration-200 hover:scale-105
+                    flex items-center justify-start p-3 rounded-md h-auto mx-2 transition-all duration-200 hover:scale-105
                     ${activeChartId === chart.id ? "bg-accent text-accent-foreground" : "hover:bg-accent/50"}
                   `}
                   onClick={() => onChartSelect(chart.id)}
