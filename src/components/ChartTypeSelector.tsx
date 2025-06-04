@@ -22,7 +22,6 @@ const ChartTypeSelector = ({ selectedType, onSelect }: ChartTypeSelectorProps) =
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Tipo de Gráfico</h3>
       <div className="grid grid-cols-2 gap-3">
         {chartTypes.map((chart) => {
           const isSelected = selectedType === chart.id;

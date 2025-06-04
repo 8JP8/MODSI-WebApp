@@ -182,7 +182,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                 onClick={() => setShowZAxis(true)}
                 className="transition-transform duration-200 hover:scale-105"
               >
-                Z (KPI {zAxis})
+                Y (KPI {zAxis})
               </Button>
               <Button
                 variant={!showZAxis ? "default" : "outline"}
@@ -190,7 +190,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                 onClick={() => setShowZAxis(false)}
                 className="transition-transform duration-200 hover:scale-105"
               >
-                Y (KPI {yAxis})
+                Z (KPI {yAxis})
               </Button>
             </div>
           )}
