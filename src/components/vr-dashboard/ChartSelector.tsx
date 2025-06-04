@@ -15,9 +15,9 @@ interface ChartSelectorProps {
 const ChartSelector = ({ charts, activeChartId, onChartSelect, onAddChart }: ChartSelectorProps) => {
   return (
     <Card>
+      <CardTitle> Gráficos ({charts.length})</CardTitle>
       <CardHeader className="p-4">
         <div className="flex justify-between items-center">
-          <CardTitle>Gráficos ({charts.length})</CardTitle>
           <Button 
             variant="ghost" 
             size="sm" 
