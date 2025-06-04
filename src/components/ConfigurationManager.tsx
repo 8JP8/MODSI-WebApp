@@ -203,30 +203,28 @@ const ConfigurationManager = ({
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
             <Button variant="outline" onClick={onResetConfig} className="w-full sm:w-auto">
-              <RefreshCw className="w-4 h-4 mr-2 text-primary transition-transform duration-200 hover:rotate-12" />
+              <RefreshCw className="w-4 h-4 mr-2 transition-transform duration-200 hover:rotate-12" />
               Repor
             </Button>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <Button variant="outline" onClick={handleExportCurrent} className="w-full sm:w-auto">
-                <Download className="w-4 h-4 mr-2 text-primary transition-transform duration-200 hover:rotate-12" />
+                <Download className="w-4 h-4 mr-2 transition-transform duration-200 hover:rotate-12" />
                 Exportar Configuração Atual
               </Button>
-              <Button variant="outline" onClick={exportAllConfigs} className="w-full sm:w-auto">
-                <FileDown className="w-4 h-4 mr-2 text-primary transition-transform duration-200 hover:rotate-12" />
+              <Button onClick={exportAllConfigs} className="w-full sm:w-auto">
+                <FileDown className="w-4 h-4 mr-2 transition-transform duration-200 hover:rotate-12" />
                 Exportar Todas
               </Button>
-              <div className="relative w-full sm:w-auto">
-                <Button variant="outline" className="relative w-full sm:w-auto">
-                  <FileUp className="w-4 h-4 mr-2 text-primary transition-transform duration-200 hover:rotate-12" />
-                  Importar
-                  <input
-                    type="file"
-                    onChange={importConfigs}
-                    accept=".json"
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                  />
-                </Button>
-              </div>
+              <Button variant="outline" className="relative w-full sm:w-auto">
+                <FileUp className="w-4 h-4 mr-2 transition-transform duration-200 hover:rotate-12" />
+                Importar
+                <input
+                  type="file"
+                  onChange={importConfigs}
+                  accept=".json"
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                />
+              </Button>
             </div>
           </div>
 
