@@ -196,7 +196,7 @@ const ConfigurationManager = ({
               className="flex-1"
             />
             <Button onClick={saveCurrentConfig} size="sm">
-              <Save className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
+              <Save className="mr-2 h-4 w-4 transition-transform duration-200 hover:!rotate-12 !pointer-events-auto" />
               Guardar
             </Button>
           </div>
@@ -208,15 +208,15 @@ const ConfigurationManager = ({
             </Button>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <Button variant="outline" onClick={handleExportCurrent} className="w-full sm:w-auto">
-                <Download className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
+                <Download className="mr-2 h-4 w-4 transition-transform duration-200 hover:!rotate-12 !pointer-events-auto" />
                 Exportar Configuração Atual
               </Button>
               <Button variant="outline" onClick={exportAllConfigs} className="w-full sm:w-auto">
-                <FileDown className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
+                <FileDown className="mr-2 h-4 w-4 transition-transform duration-200 hover:!rotate-12 !pointer-events-auto" />
                 Exportar Todas
               </Button>
               <Button variant="outline" className="relative w-full sm:w-auto" cursor="hand">
-                <FileUp className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
+                <FileUp className="mr-2 h-4 w-4 transition-transform duration-200 hover:!rotate-12 !pointer-events-auto" />
                 Importar
                 <input
                   type="file"
