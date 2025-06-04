@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Chart, VRPosition, defaultPosition, CHART_COLORS } from "@/types/vr-dashboard";
 import { useChartDataProcessor } from "./useChartDataProcessor";
@@ -100,7 +99,7 @@ export const useChartData = () => {
     updateActiveChart({ position: newPosition });
   };
   
-  // Handle Z axis change (main indicator)
+  // Handle Z axis change (main indicator) - use KPI ID directly
   const handleZAxisChange = (value: string) => {
     setZAxis(value);
     updateActiveChart({ zAxis: value });
@@ -112,7 +111,7 @@ export const useChartData = () => {
     updateActiveChart({ xAxis: value });
   };
   
-  // Handle Y axis change (secondary indicator)
+  // Handle Y axis change (secondary indicator) - use KPI ID directly
   const handleYAxisChange = (value: string) => {
     const yAxisValue = value === "none" ? "" : value;
     setYAxis(yAxisValue);
@@ -217,7 +216,7 @@ export const useChartData = () => {
           
           // Get the KPI name from zAxis (main KPI)
           if (chart.zAxis) {
-            const kpi = kpiOptions.find(option => option.id.toString() === chart.zAxis);
+            const kpi = kpiOptions.find(option => option.id === chart.zAxis);
             if (kpi) {
               graphname = kpi.name;
             }
@@ -225,7 +224,7 @@ export const useChartData = () => {
 
           // If both Y and Z axis are defined, combine their names
           if (chart.yAxis) {
-            const yAxisKpi = kpiOptions.find(option => option.id.toString() === chart.yAxis);
+            const yAxisKpi = kpiOptions.find(option => option.id === chart.yAxis);
             if (yAxisKpi) {
               graphname = `${graphname} / ${yAxisKpi.name}`;
             }

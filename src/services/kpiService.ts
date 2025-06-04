@@ -1,4 +1,3 @@
-
 const API_BASE_URL = "https://modsi-api-ffhhfgecfdehhscv.spaincentral-01.azurewebsites.net/api";
 const API_CODE = "z4tKbNFdaaXzHZ4ayn9pRQokNWYgRkbVkCjOxTxP-8ChAzFuMigGCw==";
 
@@ -57,25 +56,19 @@ export const fetchUserKPIs = async (): Promise<KPIOption[]> => {
 
     const kpis: KPI[] = await response.json();
     
-    // Process KPIs into options
+    // Process KPIs into unique options (no more -1/-2 suffix)
     const options: KPIOption[] = [];
+    const uniqueKpiIds = new Set<number>();
     
     kpis.forEach(kpi => {
-      // Add Value_1 option
-      options.push({
-        id: `${kpi.Id}-1`,
-        name: kpi.Name,
-        displayName: `${kpi.Name} (1)`,
-        value: kpi.Value_1
-      });
-      
-      // Add Value_2 option if it exists
-      if (kpi.Value_2 !== null) {
+      // Only add each KPI once, regardless of having Value_1 and Value_2
+      if (!uniqueKpiIds.has(kpi.Id)) {
+        uniqueKpiIds.add(kpi.Id);
         options.push({
-          id: `${kpi.Id}-2`,
+          id: kpi.Id.toString(),
           name: kpi.Name,
-          displayName: `${kpi.Name} (2)`,
-          value: kpi.Value_2
+          displayName: kpi.Name,
+          value: kpi.Value_1
         });
       }
     });
@@ -98,8 +91,8 @@ export const fetchKPIValueHistory = async (kpiId: string): Promise<KPIValueHisto
     const parsedToken = JSON.parse(tokenData);
     const token = parsedToken.token;
 
-    // Extract the numeric KPI ID from the formatted id (e.g., "3-1" -> "3")
-    const numericKpiId = kpiId.split('-')[0];
+    // Use the KPI ID directly (no more splitting by -)
+    const numericKpiId = kpiId;
 
     const response = await fetch(
       `${API_BASE_URL}/kpis/valuehistory?kpiId=${numericKpiId}&code=${API_CODE}`,

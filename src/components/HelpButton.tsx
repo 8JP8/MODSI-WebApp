@@ -7,8 +7,8 @@ export function HelpButton() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon" className="h-10 w-10">
-          <HelpCircle className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
+        <Button variant="outline" size="icon" className="h-10 w-10 transition-transform duration-200 hover:scale-110">
+          <HelpCircle className="h-4 w-4 transition-transform duration-200 hover:rotate-12" />
           <span className="sr-only">Ajuda</span>
         </Button>
       </DialogTrigger>

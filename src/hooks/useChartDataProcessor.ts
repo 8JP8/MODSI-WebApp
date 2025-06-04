@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { fetchKPIValueHistory, KPIValueHistory } from "@/services/kpiService";
 import { toast } from "sonner";
@@ -37,7 +36,8 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
   };
 
   const loadTimeBasedData = async () => {
-    const zKpiId = zAxis.split('-')[0];
+    // Use the KPI ID directly (no more splitting by -)
+    const zKpiId = zAxis;
     console.log("ChartDataProcessor: Fetching history for KPI:", zKpiId);
     
     const history = await fetchKPIValueHistory(zKpiId);
@@ -50,7 +50,7 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
     // If yAxis is selected, also load its data
     let yAxisData: ProcessedChartData[] = [];
     if (yAxis && yAxis !== "none") {
-      const yKpiId = yAxis.split('-')[0];
+      const yKpiId = yAxis;
       console.log("ChartDataProcessor: Fetching Y-axis history for KPI:", yKpiId);
       const yHistory = await fetchKPIValueHistory(yKpiId);
       yAxisData = formatGraphData(yHistory, xAxis);
@@ -81,10 +81,30 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
       if (groupBy === "days") return d.toISOString().slice(0, 10); // yyyy-mm-dd
       if (groupBy === "months") return d.toISOString().slice(0, 7); // yyyy-mm
       if (groupBy === "years") return d.getFullYear().toString(); // yyyy
+      if (groupBy === "change") return dateStr; // Use full timestamp for changes
       return d.toISOString().slice(0, 10); // default to day format
     }
 
-    const grouped: { [key: string]: { time: string; NewValue_1: number; NewValue_2: number; ChangedAt: string | null } } = {};
+    // For "change" groupBy, keep all individual changes
+    if (groupBy === "change") {
+      const result = rawData.map((item, index) => {
+        const val1 = parseFloat(item.NewValue_1);
+        const val2 = parseFloat(item.NewValue_2);
+        
+        return {
+          name: `Alteração ${rawData.length - index}`,
+          "Produto 1": isNaN(val1) ? 0 : val1,
+          "Produto 2": isNaN(val2) ? 0 : val2,
+          originalKey: item.ChangedAt
+        };
+      }).reverse(); // Show oldest first
+      
+      console.log("ChartDataProcessor: Change-based result:", result);
+      return result;
+    }
+
+    // For time-based grouping, aggregate by time period
+    const grouped: { [key: string]: { time: string; NewValue_1: number; NewValue_2: number; ChangedAt: string | null; count: number } } = {};
     
     rawData.forEach(item => {
       if (!item.ChangedAt) {
@@ -96,26 +116,23 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
         console.warn("ChartDataProcessor: Skipping item with invalid date after formatDateKey:", item.ChangedAt);
         return;
       }
+      
       if (!grouped[key]) {
-        grouped[key] = { time: key, NewValue_1: 0, NewValue_2: 0, ChangedAt: null };
+        grouped[key] = { time: key, NewValue_1: 0, NewValue_2: 0, ChangedAt: null, count: 0 };
       }
+      
+      // Use the most recent values for each time period
       const currentDate = new Date(item.ChangedAt);
       const storedDate = grouped[key].ChangedAt ? new Date(grouped[key].ChangedAt) : null;
 
       if (!storedDate || currentDate >= storedDate) {
-        // Ensure NewValue_1 and NewValue_2 become numbers, defaulting to 0 if parsing fails or NaN
         let val1 = parseFloat(item.NewValue_1);
         let val2 = parseFloat(item.NewValue_2);
         grouped[key].NewValue_1 = isNaN(val1) ? 0 : val1;
         grouped[key].NewValue_2 = isNaN(val2) ? 0 : val2;
         grouped[key].ChangedAt = item.ChangedAt;
-        
-        console.log(`ChartDataProcessor: Processed values for ${key}:`, {
-          original: { val1: item.NewValue_1, val2: item.NewValue_2 },
-          parsed: { val1, val2 },
-          final: { NewValue_1: grouped[key].NewValue_1, NewValue_2: grouped[key].NewValue_2 }
-        });
       }
+      grouped[key].count++;
     });
 
     if (Object.keys(grouped).length === 0) {
@@ -158,12 +175,11 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
     console.log("ChartDataProcessor: combineSeriesData input:", { primaryData, secondaryData, zAxisName, yAxisName });
     
     if (!secondaryData.length) {
-      // Only primary data - rename series to include KPI name
-      const primaryKpiName = zAxisName.split('-')[0];
+      // Only primary data - rename series to include KPI ID
       const result = primaryData.map(item => ({
         name: item.name,
-        [`${primaryKpiName} (1)`]: item["Produto 1"],
-        [`${primaryKpiName} (2)`]: item["Produto 2"]
+        [`KPI ${zAxisName} (Produto 1)`]: item["Produto 1"],
+        [`KPI ${zAxisName} (Produto 2)`]: item["Produto 2"]
       }));
       
       console.log("ChartDataProcessor: Primary only result:", result);
@@ -171,9 +187,6 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
     }
 
     // Combine both series
-    const primaryKpiName = zAxisName.split('-')[0];
-    const secondaryKpiName = yAxisName.split('-')[0];
-    
     // Create a map of secondary data by time key
     const secondaryMap = new Map();
     secondaryData.forEach(item => {
@@ -184,13 +197,13 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
       const secondaryItem = secondaryMap.get(item.name);
       const resultItem: ProcessedChartData = {
         name: item.name,
-        [`${primaryKpiName} (1)`]: item["Produto 1"],
-        [`${primaryKpiName} (2)`]: item["Produto 2"]
+        [`KPI ${zAxisName} (Produto 1)`]: item["Produto 1"],
+        [`KPI ${zAxisName} (Produto 2)`]: item["Produto 2"]
       };
 
       if (secondaryItem) {
-        resultItem[`${secondaryKpiName} (1)`] = secondaryItem["Produto 1"];
-        resultItem[`${secondaryKpiName} (2)`] = secondaryItem["Produto 2"];
+        resultItem[`KPI ${yAxisName} (Produto 1)`] = secondaryItem["Produto 1"];
+        resultItem[`KPI ${yAxisName} (Produto 2)`] = secondaryItem["Produto 2"];
       }
 
       return resultItem;

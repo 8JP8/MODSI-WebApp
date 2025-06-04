@@ -1,248 +1,202 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
 import { 
   BarChart, 
-  PieChart, 
-  LineChart, 
-  ScatterChart,
   Bar, 
-  Pie, 
-  Line, 
-  Scatter, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
   Tooltip, 
   Legend, 
-  Cell, 
-  ResponsiveContainer 
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+  ScatterChart,
+  Scatter
 } from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface ChartPreviewProps {
   chartType: string;
-  data: Array<any>;
+  data: any[];
   xAxis: string;
   yAxis: string;
-  zAxis?: string;
+  zAxis: string;
 }
 
-const COLORS = ['#1E90FF', '#00CED1', '#9370DB', '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
-
 const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProps) => {
-  console.log("ChartPreview data:", { chartType, data, xAxis, yAxis, zAxis });
-  
+  const [showZAxis, setShowZAxis] = useState(true); // Toggle between Y and Z axis data
+
+  console.log("ChartPreview: Received props:", { chartType, data, xAxis, yAxis, zAxis });
+
   if (!data || data.length === 0) {
     return (
-      <Card className="h-full">
-        <CardHeader>
-          <CardTitle>Pré-visualização do Gráfico</CardTitle>
-        </CardHeader>
-        <CardContent className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <p className="text-muted-foreground mb-2">A carregar dados...</p>
-            <p className="text-sm text-muted-foreground">
-              Y: {zAxis || "não selecionado"}, X: {xAxis || "não selecionado"}, Z: {yAxis || "nenhum"}
-            </p>
-          </div>
+      <Card className="h-[400px] flex items-center justify-center">
+        <CardContent>
+          <p className="text-muted-foreground">
+            Nenhum dado disponível. Configure os eixos para visualizar o gráfico.
+          </p>
         </CardContent>
       </Card>
     );
   }
 
-  if (!xAxis || !zAxis) {
-    return (
-      <Card className="h-full">
-        <CardHeader>
-          <CardTitle>Pré-visualização do Gráfico</CardTitle>
-        </CardHeader>
-        <CardContent className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <p className="text-muted-foreground mb-2">Selecione indicadores de dados para pré-visualizar o gráfico</p>
-            <p className="text-sm text-muted-foreground">
-              Y: {zAxis || "não selecionado"}, X: {xAxis || "não selecionado"}, Z: {yAxis || "nenhum"}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+  // Determine which axis data to show
+  const activeAxisId = showZAxis ? zAxis : yAxis;
+  const activeAxisName = showZAxis ? "Z" : "Y";
+  
+  // Filter data keys based on the active axis
+  const getFilteredDataKeys = () => {
+    if (!activeAxisId) return [];
+    
+    const allKeys = Object.keys(data[0] || {});
+    return allKeys.filter(key => 
+      key.includes(`KPI ${activeAxisId}`) && key !== "name"
     );
-  }
+  };
 
-  // Get all data keys except 'name'
-  const dataKeys = data.length > 0 ? Object.keys(data[0]).filter(key => key !== 'name') : [];
-  console.log("Available data keys:", dataKeys);
+  const dataKeys = getFilteredDataKeys();
+  
+  // Colors for different series
+  const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff7300", "#8dd1e1"];
 
   const renderChart = () => {
     switch (chartType) {
       case "bar":
         return (
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis 
-                dataKey="name" 
-                className="fill-muted-foreground text-xs" 
-                tick={{ fontSize: 12 }}
-              />
-              <YAxis 
-                className="fill-muted-foreground text-xs" 
-                tick={{ fontSize: 12 }}
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: "hsl(var(--background))", 
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "6px"
-                }} 
-              />
+          <ResponsiveContainer width="100%" height={350}>
+            <BarChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
               <Legend />
               {dataKeys.map((key, index) => (
                 <Bar 
                   key={key} 
                   dataKey={key} 
-                  fill={COLORS[index % COLORS.length]}
-                  radius={[2, 2, 0, 0]}
+                  fill={colors[index % colors.length]} 
+                  name={key}
                 />
               ))}
             </BarChart>
           </ResponsiveContainer>
         );
-        
-      case "pie":
-        const pieDataKey = dataKeys[0];
-        return (
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey={pieDataKey}
-                nameKey="name"
-              >
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: "hsl(var(--background))", 
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "6px"
-                }} 
-              />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        );
-        
+
       case "line":
         return (
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis 
-                dataKey="name" 
-                className="fill-muted-foreground text-xs" 
-                tick={{ fontSize: 12 }}
-              />
-              <YAxis 
-                className="fill-muted-foreground text-xs" 
-                tick={{ fontSize: 12 }}
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: "hsl(var(--background))", 
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "6px"
-                }} 
-              />
+          <ResponsiveContainer width="100%" height={350}>
+            <LineChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
               <Legend />
               {dataKeys.map((key, index) => (
                 <Line 
                   key={key} 
                   type="monotone" 
                   dataKey={key} 
-                  stroke={COLORS[index % COLORS.length]} 
+                  stroke={colors[index % colors.length]}
                   strokeWidth={2}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 6 }} 
+                  name={key}
                 />
               ))}
             </LineChart>
           </ResponsiveContainer>
         );
-        
-      case "scatter":
-        // Transform data for scatter plot - each data series becomes scatter points
-        const scatterData = dataKeys.map((key, index) => ({
-          data: data.map((item, itemIndex) => ({
-            x: itemIndex, // Use index as x value for scatter
-            y: item[key],
-            name: item.name
-          })),
-          name: key,
-          fill: COLORS[index % COLORS.length]
-        }));
+
+      case "pie":
+        // For pie charts, aggregate the data
+        const pieData = dataKeys.flatMap((key, keyIndex) => 
+          data.map((item, itemIndex) => ({
+            name: `${item.name} - ${key}`,
+            value: item[key] || 0,
+            fill: colors[(keyIndex * data.length + itemIndex) % colors.length]
+          }))
+        ).filter(item => item.value > 0);
 
         return (
-          <ResponsiveContainer width="100%" height={300}>
-            <ScatterChart margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis 
-                type="number" 
-                dataKey="x"
-                name="Índice" 
-                className="fill-muted-foreground text-xs"
-                tick={{ fontSize: 12 }}
-                domain={[0, data.length - 1]}
-              />
-              <YAxis 
-                type="number" 
-                dataKey="y"
-                name="Valor"
-                className="fill-muted-foreground text-xs"
-                tick={{ fontSize: 12 }}
-              />
-              <Tooltip 
-                cursor={{ strokeDasharray: '3 3' }} 
-                contentStyle={{ 
-                  backgroundColor: "hsl(var(--background))", 
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "6px"
-                }}
-                formatter={(value, name, props) => [
-                  value,
-                  `${name} (${props.payload.name})`
-                ]}
-              />
+          <ResponsiveContainer width="100%" height={350}>
+            <PieChart>
+              <Pie
+                data={pieData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                label
+              >
+                {pieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                ))}
+              </Pie>
+              <Tooltip />
               <Legend />
-              {scatterData.map((series) => (
+            </PieChart>
+          </ResponsiveContainer>
+        );
+
+      case "scatter":
+        return (
+          <ResponsiveContainer width="100%" height={350}>
+            <ScatterChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              {dataKeys.map((key, index) => (
                 <Scatter 
-                  key={series.name} 
-                  name={series.name} 
-                  data={series.data} 
-                  fill={series.fill}
+                  key={key} 
+                  dataKey={key} 
+                  fill={colors[index % colors.length]}
+                  name={key}
                 />
               ))}
             </ScatterChart>
           </ResponsiveContainer>
         );
-        
+
       default:
-        return <p>Selecione um tipo de gráfico</p>;
+        return <div className="text-center">Tipo de gráfico não suportado</div>;
     }
   };
 
   return (
-    <Card className="h-full">
+    <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
       <CardHeader>
-        <CardTitle>Pré-visualização do Gráfico</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle>Pré-visualização do Gráfico</CardTitle>
+          {yAxis && zAxis && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Mostrar eixo:</span>
+              <Button
+                variant={showZAxis ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowZAxis(true)}
+                className="transition-transform duration-200 hover:scale-105"
+              >
+                Z (KPI {zAxis})
+              </Button>
+              <Button
+                variant={!showZAxis ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowZAxis(false)}
+                className="transition-transform duration-200 hover:scale-105"
+              >
+                Y (KPI {yAxis})
+              </Button>
+            </div>
+          )}
+        </div>
       </CardHeader>
-      <CardContent className="flex items-center justify-center overflow-auto">
+      <CardContent>
         {renderChart()}
       </CardContent>
     </Card>

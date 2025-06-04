@@ -14,10 +14,10 @@ interface ChartTypeSelectorProps {
 
 const ChartTypeSelector = ({ selectedType, onSelect }: ChartTypeSelectorProps) => {
   const chartTypes = [
-    { id: "bar", name: "Barras", icon: BarChart3 },
-    { id: "pie", name: "Circular", icon: PieChart },
-    { id: "line", name: "Linhas", icon: LineChart },
-    { id: "scatter", name: "Dispersão", icon: ScatterChart },
+    { id: "bar", name: "babia-bars", icon: BarChart3, disabled: false },
+    { id: "pie", name: "babia-pie", icon: PieChart, disabled: false },
+    // { id: "line", name: "linha", icon: LineChart, disabled: true }, // Commented out as requested
+    { id: "scatter", name: "babia-bubbles", icon: ScatterChart, disabled: false },
   ];
 
   return (
@@ -32,12 +32,13 @@ const ChartTypeSelector = ({ selectedType, onSelect }: ChartTypeSelectorProps) =
             <Button
               key={chart.id}
               variant={isSelected ? "default" : "outline"}
-              className={`flex flex-col items-center justify-center p-4 h-auto ${
+              className={`flex flex-col items-center justify-center p-4 h-auto transition-all duration-200 hover:scale-105 ${
                 isSelected ? "ring-2 ring-vr-blue" : ""
-              }`}
-              onClick={() => onSelect(chart.id)}
+              } ${chart.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+              onClick={() => !chart.disabled && onSelect(chart.id)}
+              disabled={chart.disabled}
             >
-              <Icon className={`h-12 w-12 ${isSelected ? "text-white" : "text-vr-blue"}`} />
+              <Icon className={`h-12 w-12 transition-transform duration-200 hover:rotate-12 ${isSelected ? "text-white" : "text-vr-blue"}`} />
               <span className="mt-2">{chart.name}</span>
             </Button>
           );
