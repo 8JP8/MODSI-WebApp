@@ -215,14 +215,14 @@ const ConfigurationManager = ({
                 <FileDown className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
                 Exportar Todas
               </Button>
-              <Button variant="outline" className="w-full text-base py-5 group relative overflow-hidden">
+              <Button variant="outline" className="relative w-full sm:w-auto" cursor="hand">
                 <FileUp className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
                 Importar
                 <input
                   type="file"
                   onChange={importConfigs}
                   accept=".json"
-                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  className="absolute inset-0 opacity-0 cursor-hand"
                 />
               </Button>
             </div>
