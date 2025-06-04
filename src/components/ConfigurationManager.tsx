@@ -202,7 +202,7 @@ const ConfigurationManager = ({
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
-            <Button variant="outline" onClick={onResetConfig} className="w-full sm:w-auto">
+            <Button variant="outline" onClick={onResetConfig} className="w-full sm:w-auto group">
               <RefreshCw className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
               Repor
             </Button>
