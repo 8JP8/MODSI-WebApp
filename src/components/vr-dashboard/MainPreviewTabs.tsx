@@ -44,14 +44,14 @@ const MainPreviewTabs = ({
   
   return (
     <div className="space-y-4 md:space-y-6 md:col-span-2">
-      <Tabs defaultValue="preview" className="w-full">
+      <Tabs defaultValue="preview" className="w-full group">
         <TabsList className="grid grid-cols-2 w-full">
           <TabsTrigger value="preview" className="text-xs md:text-sm">
-            <Eye className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+            <Eye className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4 group-hover:rotate-12" />
             {isMobile ? "Gráfico" : "Pré-visualização do Gráfico"}
           </TabsTrigger>
           <TabsTrigger value="vr" className="text-xs md:text-sm">
-            <Settings2 className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+            <Settings2 className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4 group-hover:rotate-12" />
             Cena VR
           </TabsTrigger>
         </TabsList>

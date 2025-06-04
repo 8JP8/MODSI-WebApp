@@ -54,19 +54,19 @@ const DashboardHeader = ({ onLaunch, configSaved, onSave }: DashboardHeaderProps
         </div>
         
         {!isMobile && (
-          <Button variant="secondary" size={isMobile ? "sm" : "default"} onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" />
+          <Button variant="secondary" size={isMobile ? "sm" : "default"} onClick={handleLogout} className="ml-2 group">
+            <LogOut className="mr-2 h-4 w-4 group-hover:rotate-12" />
             Terminar Sessão
           </Button>
         )}
         
         <Button 
-          className="vr-button" 
+          className="vr-button group" 
           size={isMobile ? "sm" : "default"}
           onClick={onLaunch} 
           disabled={!configSaved}
         >
-          <Play className="mr-2 h-4 w-4" />
+          <Play className="mr-2 h-4 w-4 group-hover:rotate-180" />
           {isMobile ? "Iniciar VR" : "Iniciar Experiência VR"}
         </Button>
         

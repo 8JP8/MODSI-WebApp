@@ -7,7 +7,7 @@ export function HelpButton() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon" className="w-full text-base py-5 group">
+        <Button variant="outline" size="icon" className="h-10 w-10 group">
           <HelpCircle className="h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
           <span className="sr-only">Ajuda</span>
         </Button>

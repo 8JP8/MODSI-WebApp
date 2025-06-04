@@ -103,7 +103,7 @@ const VRDashboard = () => {
                   onAddChart={addNewChart}
                 />
                 
-                <Card className="hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
+                <Card>
                   <CardHeader>
                     <CardTitle>Tipo de Gráfico</CardTitle>
                   </CardHeader>
