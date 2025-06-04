@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -189,12 +188,12 @@ const ConfigurationManager = ({
       <CardContent>
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-            <Input>
+            <Input
               value={configName}
               onChange={(e) => setConfigName(e.target.value)}
               placeholder="Nome da configuração"
               className="flex-1"
-            </Input>
+            />
             <Button onClick={saveCurrentConfig} size="sm" className="w-full text-base py-5 group">
               <Save className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
               Guardar
