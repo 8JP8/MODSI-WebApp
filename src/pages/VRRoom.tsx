@@ -1,6 +1,7 @@
+
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Loader2, Settings, Home, ExternalLink } from "lucide-react";
+import { Loader2, Settings, Home } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 
 const VRRoom = () => {
@@ -47,10 +48,6 @@ const VRRoom = () => {
   const handleIframeError = () => {
     console.error("Error loading VR iframe");
     setError("Erro ao carregar visualização VR");
-  };
-
-  const handleRedirectToVR = () => {
-    window.open(`https://modsi-vr.pt?room=${roomCode}`, '_blank');
   };
 
   if (!roomCode) {
@@ -118,16 +115,6 @@ const VRRoom = () => {
           onLoad={handleIframeLoad}
           onError={handleIframeError}
         />
-        
-        {/* Mobile redirect button */}
-        <button
-          onClick={handleRedirectToVR}
-          className="fixed bottom-4 right-4 md:hidden flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full shadow-lg transition-all duration-200 z-50"
-          title="Abrir VR em nova janela"
-        >
-          <ExternalLink className="h-5 w-5 transition-transform duration-200 group-hover:rotate-12" />
-          <span className="text-sm font-medium">Abrir VR</span>
-        </button>
       </div>
     );
   }

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +7,7 @@ import { toast } from "sonner";
 import { Settings, Layers, User, ArrowLeft, Clock, Zap, Play, Trash2 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { HelpButton } from "@/components/HelpButton";
+import { persistentStorage } from "@/utils/persistentStorage";
 
 const VisualizationHub = () => {
   const navigate = useNavigate();
@@ -15,16 +15,9 @@ const VisualizationHub = () => {
   const [visualizationHistory, setVisualizationHistory] = useState<string[]>([]);
 
   useEffect(() => {
-    // Load visualization history from localStorage
-    try {
-      const historyStr = localStorage.getItem("visualizationHistory");
-      if (historyStr) {
-        const history = JSON.parse(historyStr);
-        setVisualizationHistory(Array.isArray(history) ? history : []);
-      }
-    } catch (error) {
-      console.error("Error loading visualization history:", error);
-    }
+    // Load visualization history using persistent storage
+    const history = persistentStorage.getItem("visualizationHistory", []);
+    setVisualizationHistory(Array.isArray(history) ? history : []);
   }, []);
 
   const handleJoinVisualization = (code?: string) => {
@@ -35,7 +28,7 @@ const VisualizationHub = () => {
       return;
     }
 
-    // Save to history
+    // Save to history using persistent storage
     saveVisualizationToHistory(roomCode);
     
     // Navigate to the room page instead of external URL
@@ -43,16 +36,12 @@ const VisualizationHub = () => {
   };
 
   const saveVisualizationToHistory = (code: string) => {
-    try {
-      // Add to local state
-      const updatedHistory = [code, ...visualizationHistory.filter(c => c !== code)].slice(0, 10);
-      setVisualizationHistory(updatedHistory);
-      
-      // Save to localStorage
-      localStorage.setItem("visualizationHistory", JSON.stringify(updatedHistory));
-    } catch (error) {
-      console.error("Error saving visualization to history:", error);
-    }
+    // Add to local state
+    const updatedHistory = [code, ...visualizationHistory.filter(c => c !== code)].slice(0, 10);
+    setVisualizationHistory(updatedHistory);
+    
+    // Save using persistent storage
+    persistentStorage.setItem("visualizationHistory", updatedHistory);
   };
 
   const navigateToConfigurator = () => {
@@ -64,7 +53,7 @@ const VisualizationHub = () => {
   };
 
   const clearVisualizationHistory = () => {
-    localStorage.removeItem("visualizationHistory");
+    persistentStorage.removeItem("visualizationHistory");
     setVisualizationHistory([]);
     toast.success("Histórico de visualizações limpo");
   };

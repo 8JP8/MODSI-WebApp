@@ -240,6 +240,13 @@ const Home = () => {
                   <Github className="h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
                   <span>MODSI-SQLRestAPI</span>
                 </a>
+                <a href="https://github.com/8JP8/MODSI-Dashboard" 
+                   className="text-sm flex items-center gap-1 hover:text-primary transition-colors group" 
+                   target="_blank" 
+                   rel="noopener noreferrer">
+                  <Github className="h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
+                  <span>MODSI-Dashboard</span>
+                </a>
               </div>
             </div>
             
