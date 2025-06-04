@@ -181,7 +181,7 @@ const ConfigurationManager = ({
     }
   };
 
-   return (
+  return (
     <Card>
       <CardHeader>
         <CardTitle>Gestão de Configurações</CardTitle>
@@ -195,38 +195,36 @@ const ConfigurationManager = ({
               placeholder="Nome da configuração"
               className="flex-1"
             />
-            <Button variant="outline" onClick={saveCurrentConfig} size="sm">
-              <Save className="mr-2 h-4 w-4 text-primary transition-transform duration-200 hover:rotate-12" />
+            <Button onClick={saveCurrentConfig} size="sm">
+              <Save className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
               Guardar
             </Button>
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
-            <Button variant="outline" onClick={onResetConfig} className="w-full text-base py-5 group">
-              <RefreshCw className="w-4 h-4 mr-2 text-primary transition-transform duration-200 hover:rotate-12" />
+            <Button variant="outline" onClick={onResetConfig} className="w-full sm:w-auto">
+              <RefreshCw className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
               Repor
             </Button>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <Button variant="outline" onClick={handleExportCurrent} className="w-full text-base py-5 group">
-                <Download className="w-4 h-4 mr-2 text-primary transition-transform duration-200 hover:rotate-12" />
+              <Button variant="outline" onClick={handleExportCurrent} className="w-full sm:w-auto">
+                <Download className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
                 Exportar Configuração Atual
               </Button>
-              <Button variant="outline" onClick={exportAllConfigs} className="flex-1 sm:flex-initial group">
-                <FileDown className="w-4 h-4 mr-2 text-primary transition-transform duration-200 hover:rotate-12" />
+              <Button variant="outline" onClick={exportAllConfigs} className="w-full sm:w-auto">
+                <FileDown className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
                 Exportar Todas
               </Button>
-              <div className="relative w-full sm:w-auto">
-                <Button variant="outline" className="flex-1 sm:flex-initial group">
-                  <FileUp className="w-4 h-4 mr-2 text-primary transition-transform duration-200 hover:rotate-12" />
-                  Importar
-                  <input
-                    type="file"
-                    onChange={importConfigs}
-                    accept=".json"
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                  />
-                </Button>
-              </div>
+              <Button variant="outline" className="relative w-full sm:w-auto" cursor="hand">
+                <FileUp className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
+                Importar
+                <input
+                  type="file"
+                  onChange={importConfigs}
+                  accept=".json"
+                  className="absolute inset-0 opacity-0 cursor-hand"
+                />
+              </Button>
             </div>
           </div>
 
@@ -245,7 +243,7 @@ const ConfigurationManager = ({
                         size="sm"
                         variant="ghost"
                         onClick={() => loadConfig(saved.config)}
-                        className="flex-1 sm:flex-initial group"
+                        className="flex-1 sm:flex-initial"
                       >
                         Carregar
                       </Button>
@@ -253,14 +251,14 @@ const ConfigurationManager = ({
                         size="sm"
                         variant="ghost"
                         onClick={() => downloadConfig(saved)}
-                        className="flex-1 sm:flex-initial group"
+                        className="flex-1 sm:flex-initial"
                       >
                         <Download className="w-4 h-4" />
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-red-500 hover:text-red-600 flex-1 sm:flex-initial group"
+                        className="text-red-500 hover:text-red-600 flex-1 sm:flex-initial"
                         onClick={() => deleteConfig(saved.name)}
                       >
                         <Trash2 className="w-4 h-4" />
