@@ -66,8 +66,6 @@ The visualization configurations created with this tool can be used with BabiaXR
 
 ## Example Data Structure
 
-The project includes a sample visualization data structure in `src/data/sampleVisualization.json` that follows this format:
-
 ```json
 [
   {
