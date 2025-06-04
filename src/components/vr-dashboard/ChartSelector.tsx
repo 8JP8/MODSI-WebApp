@@ -17,14 +17,14 @@ const ChartSelector = ({ charts, activeChartId, onChartSelect, onAddChart }: Cha
     <Card>
       <CardHeader className="p-4">
         <div className="flex justify-between items-center">
-          <CardTitle> Gráficos ({charts.length})</CardTitle>
+          <CardTitle>&nbsp;Gráficos ({charts.length})</CardTitle>
           <Button 
             variant="ghost" 
             size="sm" 
             className="h-8 px-2 group"
             onClick={onAddChart}
           >
-            <PlusCircle className="mr-1 h-4 w-4 transition-transform duration-200 hover:rotate-12" />
+            <PlusCircle className="mr-1 h-4 w-4 transition-transform duration-200 group-hover:rotate-90" />
             Adicionar
           </Button>
         </div>
