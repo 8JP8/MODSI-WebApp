@@ -14,6 +14,12 @@ interface VRSceneTabProps {
 }
 
 const VRSceneTab = ({ chartType, position, charts, activeChartId, onPositionChange }: VRSceneTabProps) => {
+  // Convert our Chart type to whatever VRScenePreview expects
+  const vrCharts = charts.map(chart => ({
+    ...chart,
+    department: "default" // Add default department if VRScenePreview requires it
+  }));
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <div className="lg:col-span-2">
@@ -21,7 +27,7 @@ const VRSceneTab = ({ chartType, position, charts, activeChartId, onPositionChan
           <VRScenePreview 
             chartType={chartType} 
             position={position} 
-            charts={charts}
+            charts={vrCharts}
             activeChartId={activeChartId}
           />
         </div>
