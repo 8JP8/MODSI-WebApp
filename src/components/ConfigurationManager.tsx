@@ -195,7 +195,7 @@ const ConfigurationManager = ({
               placeholder="Nome da configuração"
               className="flex-1"
             />
-            <Button variant="outline" onClick={SaveCurrentconfig} size="sm">
+            <Button variant="outline" onClick={saveCurrentConfig} size="sm">
               <Save className="mr-2 h-4 w-4 text-primary transition-transform duration-200 hover:rotate-12" />
               Guardar
             </Button>
