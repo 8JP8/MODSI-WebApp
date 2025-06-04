@@ -9,7 +9,7 @@ This application is a VR data visualization platform that allows users to create
 
 - **Home Page**: Entry point to join existing visualizations by their code or create new ones or access the dashboard to manage the data
 - **Visualization Configurator**: Design dashboard to customize charts, positions, and settings
-- **Multiple Chart Types**: Support for bar charts (babia-bars on VR), line charts (babia-bubbles on VR), pie charts (babia-pie on VR), and scatter plots
+- **Multiple Chart Types**: Support for bar charts (babia-bars on VR), pie charts (babia-pie on VR), scatter plots (babia-bubbles on VR) and line charts (not used on VR),
 - **KPI Selector**: Aquire company indicators data and their old value history
 - **Multi-Chart Support**: Create and manage multiple charts in a single VR scene
 - **3D Preview**: Interactive 3D scene to position the charts in the VR scene
@@ -96,7 +96,7 @@ The visualization configurations created with this tool can be used with BabiaXR
       "charts": [
         {
           "id": "chart-1749056730258",
-          "chartType": "barras",
+          "chartType": "babia-bars",
           "graphname": "KPIName",
           "position": {
             "x": 0,
@@ -115,7 +115,6 @@ The visualization configurations created with this tool can be used with BabiaXR
           "xAxis": "years",
           "yAxis": "3",
           "zAxis": "0",
-          "department": "",
           "color": "#1E90FF"
         }
       ],
