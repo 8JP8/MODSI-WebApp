@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import sampleData from "../../data/sampleVisualization.json";
 import ChartDataManager from "./ChartDataManager";
 import DashboardHeader from "./DashboardHeader";
 import ChartSelector from "./ChartSelector";
@@ -62,7 +61,7 @@ const VRDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <ChartDataManager sampleData={sampleData}>
+      <ChartDataManager>
         {({
           charts,
           activeChartId,
@@ -104,7 +103,7 @@ const VRDashboard = () => {
                   onAddChart={addNewChart}
                 />
                 
-                <Card>
+                <Card className="hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
                   <CardHeader>
                     <CardTitle>Tipo de Gráfico</CardTitle>
                   </CardHeader>

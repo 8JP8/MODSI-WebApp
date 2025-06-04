@@ -9,21 +9,21 @@ import { toast } from "sonner";
 const translateChartType = (chartType: string): string => {
   switch (chartType) {
     case "bar":
-      return "barras";
+      return "babia-bars";
     case "line":
       return "linha";
     case "pie":
-      return "pizza";
+      return "babia-pie";
     case "area":
       return "área";
     case "scatter":
-      return "dispersão";
+      return "babia-bubbles";
     default:
-      return "barras";
+      return "babia-bars";
   }
 };
 
-export const useChartData = (sampleData: any) => {
+export const useChartData = () => {
   const [charts, setCharts] = useState<Chart[]>([]);
   const [activeChartId, setActiveChartId] = useState<string>("");
   const [chartType, setChartType] = useState("bar");
@@ -70,7 +70,6 @@ export const useChartData = (sampleData: any) => {
       xAxis: "",
       yAxis: "",
       zAxis: "",
-      department: "",
       color: CHART_COLORS[colorIndex]
     };
     
@@ -159,11 +158,11 @@ export const useChartData = (sampleData: any) => {
           depth: chart.position.depth || 1
         },
         // Convert back from VR format to configurator format
-        chartType: chart.chartType === 'barras' ? 'bar' : 
+        chartType: chart.chartType === 'babia-bars' ? 'bar' : 
                   chart.chartType === 'linha' ? 'line' :
-                  chart.chartType === 'pizza' ? 'pie' :
+                  chart.chartType === 'babia-pie' ? 'pie' :
                   chart.chartType === 'área' ? 'area' :
-                  chart.chartType === 'dispersão' ? 'scatter' : 'bar'
+                  chart.chartType === 'babia-bubbles' ? 'scatter' : 'bar'
       }));
       
       setCharts(completeCharts);
@@ -188,17 +187,11 @@ export const useChartData = (sampleData: any) => {
       // Get all unique KPI IDs used in charts
       const allKpiIds: string[] = [];
       charts.forEach(chart => {
-        if (chart.zAxis) {
-          const baseId = chart.zAxis.split('-')[0];
-          if (!allKpiIds.includes(baseId)) {
-            allKpiIds.push(baseId);
-          }
+        if (chart.zAxis && !allKpiIds.includes(chart.zAxis)) {
+          allKpiIds.push(chart.zAxis);
         }
-        if (chart.yAxis) {
-          const baseId = chart.yAxis.split('-')[0];
-          if (!allKpiIds.includes(baseId)) {
-            allKpiIds.push(baseId);
-          }
+        if (chart.yAxis && !allKpiIds.includes(chart.yAxis)) {
+          allKpiIds.push(chart.yAxis);
         }
       });
 
@@ -224,10 +217,17 @@ export const useChartData = (sampleData: any) => {
           
           // Get the KPI name from zAxis (main KPI)
           if (chart.zAxis) {
-            const baseId = chart.zAxis.split('-')[0];
-            const kpi = kpiOptions.find(option => option.id.toString() === baseId);
+            const kpi = kpiOptions.find(option => option.id.toString() === chart.zAxis);
             if (kpi) {
               graphname = kpi.name;
+            }
+          }
+
+          // If both Y and Z axis are defined, combine their names
+          if (chart.yAxis) {
+            const yAxisKpi = kpiOptions.find(option => option.id.toString() === chart.yAxis);
+            if (yAxisKpi) {
+              graphname = `${graphname} / ${yAxisKpi.name}`;
             }
           }
           
@@ -238,8 +238,7 @@ export const useChartData = (sampleData: any) => {
             position: chart.position,
             xAxis: chart.xAxis,
             yAxis: chart.yAxis || "",
-            zAxis: chart.zAxis ? chart.zAxis.split('-')[0] : "",
-            department: chart.department || "",
+            zAxis: chart.zAxis || "",
             color: chart.color
           };
         })
