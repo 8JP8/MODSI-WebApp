@@ -203,7 +203,7 @@ const ConfigurationManager = ({
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
             <Button variant="outline" onClick={onResetConfig} className="relative w-full sm:w-auto group">
-              <RefreshCw className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
+              <RefreshCw className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-90" />
               Repor
             </Button>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -215,14 +215,14 @@ const ConfigurationManager = ({
                 <FileDown className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
                 Exportar Todas
               </Button>
-              <Button variant="outline" className="relative w-full sm:w-auto group" cursor="hand">
-                <FileUp className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
+              <Button variant="outline" className="relative w-full sm:w-auto group">
+                <FileUp className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" cursor="hand"/>
                 Importar
                 <input
                   type="file"
                   onChange={importConfigs}
                   accept=".json"
-                  className="absolute inset-0 opacity-0"
+                  className="absolute inset-0 opacity-0 cursor-hand"
                 />
               </Button>
             </div>
