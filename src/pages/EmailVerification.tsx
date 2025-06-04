@@ -135,12 +135,12 @@ const EmailVerification = () => {
           <CardHeader className="space-y-1">
             <div className="flex items-center justify-between">
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={handleGoBack}
-                className="p-2 h-auto"
+                className="p-2 h-auto group"
               >
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="h-4 w-4 group-hover:rotate-12" />
               </Button>
               <div className="flex-1 text-center">
                 <CardTitle className="text-xl font-bold vr-gradient-text">

@@ -61,8 +61,8 @@ const VisualizationLanding = () => {
       <header className="w-full py-4 px-6 flex justify-between items-center border-b border-border">
         <div className="flex items-center gap-4">
           <Link to="/">
-            <Button variant="outline" size="icon" className="h-10 w-10">
-              <ArrowLeft className="h-4 w-4" />
+            <Button variant="outline" size="icon" className="h-10 w-10 group">
+              <ArrowLeft className="h-4 w-4 group-hover:rotate-12" />
             </Button>
           </Link>
           <h1 className="text-2xl font-bold vr-gradient-text">Visualizações de Dados VR</h1>

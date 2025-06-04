@@ -31,8 +31,8 @@ const DashboardHeader = ({ onLaunch, configSaved, onSave }: DashboardHeaderProps
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div className="flex items-center gap-3 w-full md:w-auto">
         <Link to="/visualization-hub">
-          <Button variant="outline" size="icon" className="h-9 w-9 md:h-10 md:w-10">
-            <ArrowLeft className="h-4 w-4" />
+          <Button variant="outline" size="icon" className="h-9 w-9 md:h-10 md:w-10 group">
+            <ArrowLeft className="h-4 w-4 group-hover:rotate-12" />
           </Button>
         </Link>
         <div className="max-w-full">
