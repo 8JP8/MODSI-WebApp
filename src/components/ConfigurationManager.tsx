@@ -195,23 +195,23 @@ const ConfigurationManager = ({
               placeholder="Nome da configuração"
               className="flex-1"
             />
-            <Button onClick={saveCurrentConfig} size="sm" className="w-full sm:w-auto group">
+            <Button onClick={saveCurrentConfig} size="sm" className="relative w-full sm:w-auto group">
               <Save className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
               Guardar
             </Button>
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
-            <Button variant="outline" onClick={onResetConfig} className="w-full sm:w-auto group">
+            <Button variant="outline" onClick={onResetConfig} className="relative w-full sm:w-auto group">
               <RefreshCw className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
               Repor
             </Button>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <Button variant="outline" onClick={handleExportCurrent} className="w-full sm:w-auto group">
+              <Button variant="outline" onClick={handleExportCurrent} className="relative w-full sm:w-auto group">
                 <Download className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
                 Exportar Configuração Atual
               </Button>
-              <Button variant="outline" onClick={exportAllConfigs} className="w-full sm:w-auto group">
+              <Button variant="outline" onClick={exportAllConfigs} className="relative w-full sm:w-auto group">
                 <FileDown className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
                 Exportar Todas
               </Button>
