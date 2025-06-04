@@ -1,23 +1,48 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { 
-  RefreshCw, 
-  Download, 
-  FileDown, 
-  Upload, 
-  Save,
-  Trash2
-} from "lucide-react";
+import { Save, Trash2, RefreshCw, FileDown, FileUp, Download } from "lucide-react";
+
+interface Chart {
+  id: string;
+  chartType: string;
+  position: any;
+  xAxis: string;
+  yAxis: string;
+  zAxis: string;
+  department: string;
+  color: string;
+}
+
+interface ConfigurationSettings {
+  charts?: Chart[];
+  activeChartId?: string;
+  chartType?: string;
+  xAxis?: string;
+  yAxis?: string;
+  zAxis?: string;
+  position?: {
+    x: number;
+    y: number;
+    z: number;
+    scale: number;
+    width?: number;
+    height?: number;
+    depth?: number;
+    rotation: {
+      x: number;
+      y: number;
+      z: number;
+    };
+  };
+}
 
 interface ConfigurationManagerProps {
-  currentConfig: any;
-  onLoadConfig: (config: any) => void;
+  currentConfig: ConfigurationSettings;
+  onLoadConfig: (config: ConfigurationSettings) => void;
   onResetConfig: () => void;
   onExportCurrentConfig?: () => void;
 }
@@ -26,122 +51,226 @@ const ConfigurationManager = ({
   currentConfig,
   onLoadConfig,
   onResetConfig,
-  onExportCurrentConfig
+  onExportCurrentConfig,
 }: ConfigurationManagerProps) => {
+  const [savedConfigs, setSavedConfigs] = useState<{ name: string; config: ConfigurationSettings }[]>([]);
   const [configName, setConfigName] = useState("");
 
-  const handleSaveConfig = () => {
+  useEffect(() => {
+    // Load saved configurations from localStorage
+    const savedConfigsStr = localStorage.getItem("vrDataConfigs");
+    if (savedConfigsStr) {
+      try {
+        const parsed = JSON.parse(savedConfigsStr);
+        setSavedConfigs(parsed);
+      } catch (e) {
+        console.error("Erro ao carregar configurações guardadas", e);
+      }
+    }
+  }, []);
+
+  const saveCurrentConfig = () => {
     if (!configName.trim()) {
       toast.error("Por favor, introduza um nome para a configuração");
       return;
     }
 
+    const newConfig = {
+      name: configName,
+      config: { ...currentConfig },
+    };
+
+    const newConfigs = [...savedConfigs.filter(c => c.name !== configName), newConfig];
+    setSavedConfigs(newConfigs);
+    
     try {
-      const savedConfigs = JSON.parse(localStorage.getItem('vr-configurations') || '{}');
-      savedConfigs[configName] = currentConfig;
-      localStorage.setItem('vr-configurations', JSON.stringify(savedConfigs));
-      
-      toast.success(`Configuração "${configName}" guardada com sucesso`);
+      localStorage.setItem("vrDataConfigs", JSON.stringify(newConfigs));
+      toast.success(`Configuração "${configName}" guardada`);
       setConfigName("");
-    } catch (error) {
+    } catch (e) {
       toast.error("Erro ao guardar configuração");
-      console.error("Error saving configuration:", error);
+      console.error("Erro ao guardar configuração", e);
     }
   };
 
-  const handleExportAll = () => {
+  const loadConfig = (config: ConfigurationSettings) => {
+    onLoadConfig(config);
+    toast.success("Configuração carregada");
+  };
+
+  const deleteConfig = (name: string) => {
+    const newConfigs = savedConfigs.filter((c) => c.name !== name);
+    setSavedConfigs(newConfigs);
+    
     try {
-      const savedConfigs = JSON.parse(localStorage.getItem('vr-configurations') || '{}');
-      const dataStr = JSON.stringify(savedConfigs, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      
-      const url = URL.createObjectURL(dataBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'vr-configurations-all.json';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      toast.success("Todas as configurações exportadas com sucesso");
-    } catch (error) {
-      toast.error("Erro ao exportar configurações");
-      console.error("Error exporting configurations:", error);
+      localStorage.setItem("vrDataConfigs", JSON.stringify(newConfigs));
+      toast.success(`Configuração "${name}" eliminada`);
+    } catch (e) {
+      toast.error("Erro ao eliminar configuração");
     }
   };
 
-  const handleImportConfig = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const downloadConfig = (config: { name: string; config: ConfigurationSettings }) => {
+    const dataStr = JSON.stringify([{
+      name: config.name,
+      config: config.config
+    }], null, 2);
+    const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
+    
+    const sanitizedName = config.name.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    const exportFileDefaultName = `configuracao-${sanitizedName}.json`;
+    
+    const linkElement = document.createElement("a");
+    linkElement.setAttribute("href", dataUri);
+    linkElement.setAttribute("download", exportFileDefaultName);
+    linkElement.click();
+    
+    toast.success(`Configuração "${config.name}" exportada`);
+  };
+
+  const exportAllConfigs = () => {
+    if (savedConfigs.length === 0) {
+      toast.error("Não há configurações para exportar");
+      return;
+    }
+
+    const dataStr = JSON.stringify(savedConfigs, null, 2);
+    const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
+    
+    const exportFileDefaultName = `todas-configuracoes-${new Date().toISOString().slice(0, 10)}.json`;
+    
+    const linkElement = document.createElement("a");
+    linkElement.setAttribute("href", dataUri);
+    linkElement.setAttribute("download", exportFileDefaultName);
+    linkElement.click();
+    
+    toast.success("Exportadas todas as configurações");
+  };
+
+  const importConfigs = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const configData = JSON.parse(e.target?.result as string);
-        onLoadConfig(configData);
-        toast.success("Configuração importada com sucesso");
-      } catch (error) {
-        toast.error("Erro ao importar configuração - ficheiro inválido");
-        console.error("Error importing configuration:", error);
+        const imported = JSON.parse(e.target?.result as string);
+        if (Array.isArray(imported)) {
+          setSavedConfigs([...savedConfigs, ...imported]);
+          localStorage.setItem(
+            "vrDataConfigs",
+            JSON.stringify([...savedConfigs, ...imported])
+          );
+          toast.success(`Importadas ${imported.length} configurações`);
+        } else {
+          toast.error("Formato de ficheiro inválido");
+        }
+      } catch (e) {
+        toast.error("Erro ao importar configurações");
       }
     };
     reader.readAsText(file);
     
-    // Reset input
-    event.target.value = '';
+    // Reset the input
+    event.target.value = "";
+  };
+
+  const handleExportCurrent = () => {
+    if (onExportCurrentConfig) {
+      onExportCurrentConfig();
+    }
   };
 
   return (
-    <Card className="hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
+    <Card>
       <CardHeader>
         <CardTitle>Gestão de Configurações</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid gap-2">
-          <Label htmlFor="config-name">Nome da configuração</Label>
-          <div className="flex gap-2">
+      <CardContent>
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <Input
-              id="config-name"
-              placeholder="Nome da configuração"
               value={configName}
               onChange={(e) => setConfigName(e.target.value)}
+              placeholder="Nome da configuração"
+              className="flex-1"
             />
-            <Button onClick={handleSaveConfig} size="sm">
-              <Save className="mr-2 h-4 w-4 transition-transform duration-200 hover:rotate-12" />
+            <Button variant="outline" onClick={saveCurrentConfig} className="w-full sm:w-auto">
+              <Save className="w-4 h-4 mr-2" />
               Guardar
             </Button>
           </div>
-        </div>
-        
-        <Separator />
-        
-        <div className="grid grid-cols-2 gap-2">
-          <Button variant="outline" onClick={onResetConfig} size="sm">
-            <RefreshCw className="mr-2 h-4 w-4 transition-transform duration-200 hover:rotate-180" />
-            Repor
-          </Button>
-          
-          <Button variant="outline" onClick={onExportCurrentConfig} size="sm">
-            <Download className="mr-2 h-4 w-4 transition-transform duration-200 hover:rotate-12" />
-            Exportar Configuração Atual
-          </Button>
-          
-          <Button variant="outline" onClick={handleExportAll} size="sm">
-            <FileDown className="mr-2 h-4 w-4 transition-transform duration-200 hover:rotate-12" />
-            Exportar Todas
-          </Button>
-          
-          <Button variant="outline" size="sm" className="relative overflow-hidden">
-            <Upload className="mr-2 h-4 w-4 transition-transform duration-200 hover:rotate-12" />
-            Importar
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleImportConfig}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            />
-          </Button>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+            <Button variant="outline" onClick={onResetConfig} className="w-full sm:w-auto">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Repor
+            </Button>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <Button variant="outline" onClick={handleExportCurrent} className="w-full sm:w-auto">
+                <Download className="w-4 h-4 mr-2" />
+                Exportar Configuração Atual
+              </Button>
+              <Button variant="outline" onClick={exportAllConfigs} className="w-full sm:w-auto">
+                <FileDown className="w-4 h-4 mr-2" />
+                Exportar Todas
+              </Button>
+              <div className="relative w-full sm:w-auto">
+                <Button variant="outline" className="relative w-full sm:w-auto">
+                  <FileUp className="w-4 h-4 mr-2" />
+                  Importar
+                  <input
+                    type="file"
+                    onChange={importConfigs}
+                    accept=".json"
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                  />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {savedConfigs.length > 0 && (
+            <div className="mt-4">
+              <h4 className="text-sm font-medium mb-2">Configurações Guardadas</h4>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {savedConfigs.map((saved, index) => (
+                  <div
+                    key={index}
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-md bg-secondary p-3 gap-2"
+                  >
+                    <span className="truncate flex-1 text-sm">{saved.name}</span>
+                    <div className="flex flex-row gap-2 w-full sm:w-auto">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => loadConfig(saved.config)}
+                        className="flex-1 sm:flex-initial"
+                      >
+                        Carregar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => downloadConfig(saved)}
+                        className="flex-1 sm:flex-initial"
+                      >
+                        <Download className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-red-500 hover:text-red-600 flex-1 sm:flex-initial"
+                        onClick={() => deleteConfig(saved.name)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
