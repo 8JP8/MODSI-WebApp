@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -202,7 +203,7 @@ const ConfigurationManager = ({
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
             <Button variant="outline" onClick={onResetConfig} className="w-full text-base py-5 group">
-              <RefreshCw className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
+              <RefreshCw className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-180" />
               Repor
             </Button>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -214,14 +215,14 @@ const ConfigurationManager = ({
                 <FileDown className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
                 Exportar Todas
               </Button>
-              <Button variant="outline" className="w-full text-base py-5 group" cursor="hand">
+              <Button variant="outline" className="w-full text-base py-5 group relative overflow-hidden">
                 <FileUp className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
                 Importar
                 <input
                   type="file"
                   onChange={importConfigs}
                   accept=".json"
-                  className="absolute inset-0 opacity-0 cursor-hand"
+                  className="absolute inset-0 opacity-0 cursor-pointer"
                 />
               </Button>
             </div>
@@ -242,7 +243,7 @@ const ConfigurationManager = ({
                         size="sm"
                         variant="ghost"
                         onClick={() => loadConfig(saved.config)}
-                        className="flex-1 sm:flex-initial"
+                        className="flex-1 sm:flex-initial group"
                       >
                         Carregar
                       </Button>
@@ -250,17 +251,17 @@ const ConfigurationManager = ({
                         size="sm"
                         variant="ghost"
                         onClick={() => downloadConfig(saved)}
-                        className="flex-1 sm:flex-initial"
+                        className="flex-1 sm:flex-initial group"
                       >
-                        <Download className="w-4 h-4" />
+                        <Download className="w-4 h-4 transition-transform duration-200 group-hover:rotate-12" />
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-red-500 hover:text-red-600 flex-1 sm:flex-initial"
+                        className="text-red-500 hover:text-red-600 flex-1 sm:flex-initial group"
                         onClick={() => deleteConfig(saved.name)}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4 transition-transform duration-200 group-hover:rotate-12" />
                       </Button>
                     </div>
                   </div>
