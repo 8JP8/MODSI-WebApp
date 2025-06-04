@@ -189,33 +189,33 @@ const ConfigurationManager = ({
       <CardContent>
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-            <Input
+            <Input>
               value={configName}
               onChange={(e) => setConfigName(e.target.value)}
               placeholder="Nome da configuração"
               className="flex-1"
-            />
-            <Button onClick={saveCurrentConfig} size="sm">
+            </Input>
+            <Button onClick={saveCurrentConfig} size="sm" className="w-full text-base py-5 group">
               <Save className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
               Guardar
             </Button>
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
-            <Button variant="outline" onClick={onResetConfig} className="w-full sm:w-auto">
+            <Button variant="outline" onClick={onResetConfig} className="w-full text-base py-5 group">
               <RefreshCw className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
               Repor
             </Button>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <Button variant="outline" onClick={handleExportCurrent} className="w-full sm:w-auto">
+              <Button variant="outline" onClick={handleExportCurrent} className="w-full text-base py-5 group">
                 <Download className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
                 Exportar Configuração Atual
               </Button>
-              <Button variant="outline" onClick={exportAllConfigs} className="w-full sm:w-auto">
+              <Button variant="outline" onClick={exportAllConfigs} className="w-full text-base py-5 group">
                 <FileDown className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
                 Exportar Todas
               </Button>
-              <Button variant="outline" className="relative w-full sm:w-auto" cursor="hand">
+              <Button variant="outline" className="w-full text-base py-5 group" cursor="hand">
                 <FileUp className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
                 Importar
                 <input
