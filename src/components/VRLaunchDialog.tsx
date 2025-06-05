@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { saveVisualizationToHistory } from "@/utils/visualizationUtils";
+import { Play, CircleChevronRight } from "lucide-react";
 
 interface VRLaunchDialogProps {
   open: boolean;
@@ -72,10 +73,11 @@ const VRLaunchDialog = ({
             
             <DialogFooter>
               <Button 
-                className="w-full vr-button" 
+                className="w-full vr-button group" 
                 onClick={onLaunch}
                 disabled={hasUnsavedChanges}
               >
+                <Play className="mr-2 h-4 w-4 group-hover:rotate-12" />
                 Iniciar Experiência VR
               </Button>
             </DialogFooter>
@@ -96,10 +98,11 @@ const VRLaunchDialog = ({
             
             <DialogFooter>
               <Button 
-                className="w-full vr-button" 
+                className="w-full vr-button group" 
                 onClick={handleJoinRoom}
                 disabled={!roomCode.trim()}
               >
+                <CircleChevronRight className="mr-2 h-4 w-4 group-hover:rotate-12" />
                 Entrar na Sala
               </Button>
             </DialogFooter>

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Save, Trash2, RefreshCw, FileDown, FileUp, Download } from "lucide-react";
+import { Save, Trash2, RefreshCw, FileDown, FileUp, Download, Upload } from "lucide-react";
 
 interface Chart {
   id: string;
@@ -243,25 +243,26 @@ const ConfigurationManager = ({
                         size="sm"
                         variant="ghost"
                         onClick={() => loadConfig(saved.config)}
-                        className="flex-1 sm:flex-initial"
+                        className="flex-1 sm:flex-initial group"
                       >
+                        <Upload className="w-4 h-4 group-hover:rotate-12"/>
                         Carregar
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => downloadConfig(saved)}
-                        className="flex-1 sm:flex-initial"
+                        className="flex-1 sm:flex-initial group"
                       >
-                        <Download className="w-4 h-4" />
+                        <Download className="w-4 h-4 group-hover:rotate-12"/>
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-red-500 hover:text-red-600 flex-1 sm:flex-initial"
+                        className="text-red-500 hover:text-red-600 flex-1 sm:flex-initial group"
                         onClick={() => deleteConfig(saved.name)}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4 group-hover:rotate-12"/>
                       </Button>
                     </div>
                   </div>

@@ -66,7 +66,7 @@ const DashboardHeader = ({ onLaunch, configSaved, onSave }: DashboardHeaderProps
           onClick={onLaunch} 
           disabled={!configSaved}
         >
-          <Play className="mr-2 h-4 w-4 group-hover:rotate-180" />
+          <Play className="mr-2 h-4 w-4 group-hover:rotate-12" />
           {isMobile ? "Iniciar VR" : "Iniciar Experiência VR"}
         </Button>
         
