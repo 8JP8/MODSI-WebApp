@@ -9,12 +9,10 @@ const translateChartType = (chartType: string): string => {
   switch (chartType) {
     case "bar":
       return "babia-bars";
-    case "line":
-      return "linha";
     case "pie":
       return "babia-pie";
-    case "area":
-      return "área";
+    case "cyls":
+      return "babia-cyls";
     case "scatter":
       return "babia-bubbles";
     default:
@@ -158,9 +156,8 @@ export const useChartData = () => {
         },
         // Convert back from VR format to configurator format
         chartType: chart.chartType === 'babia-bars' ? 'bar' : 
-                  chart.chartType === 'linha' ? 'line' :
                   chart.chartType === 'babia-pie' ? 'pie' :
-                  chart.chartType === 'área' ? 'area' :
+                  chart.chartType === 'babia-cyls' ? 'cyls' :
                   chart.chartType === 'babia-bubbles' ? 'scatter' : 'bar'
       }));
       
