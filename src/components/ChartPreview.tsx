@@ -169,7 +169,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
   };
 
   return (
-    <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
+    <Card>
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle>Pré-visualização do Gráfico</CardTitle>
