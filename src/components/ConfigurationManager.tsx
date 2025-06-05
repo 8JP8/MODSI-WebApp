@@ -195,34 +195,36 @@ const ConfigurationManager = ({
               placeholder="Nome da configuração"
               className="flex-1"
             />
-            <Button onClick={saveCurrentConfig} size="sm" className="relative w-full sm:w-auto group">
+            <Button onClick={saveCurrentConfig} size="sm" className="w-full sm:w-auto group">
               <Save className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
-              Guardar
+              <span className="truncate">Guardar</span>
             </Button>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
-            <Button variant="outline" onClick={onResetConfig} className="relative w-full sm:w-auto group">
-              <RefreshCw className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-90" />
-              Repor
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Button variant="outline" onClick={onResetConfig} className="group flex-shrink-0">
+              <RefreshCw className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-180" />
+              <span className="truncate">Repor</span>
             </Button>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <Button variant="outline" onClick={handleExportCurrent} className="relative w-full sm:w-auto group">
+            <div className="flex flex-wrap items-center gap-2 flex-1 justify-end">
+              <Button variant="outline" onClick={handleExportCurrent} className="group flex-shrink-0">
                 <Download className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
-                Exportar Configuração Atual
+                <span className="hidden sm:inline truncate">Exportar Atual</span>
+                <span className="sm:hidden truncate">Exportar</span>
               </Button>
-              <Button variant="outline" onClick={exportAllConfigs} className="relative w-full sm:w-auto group">
+              <Button variant="outline" onClick={exportAllConfigs} className="group flex-shrink-0">
                 <FileDown className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
-                Exportar Todas
+                <span className="hidden sm:inline truncate">Exportar Todas</span>
+                <span className="sm:hidden truncate">Todas</span>
               </Button>
-              <Button variant="outline" className="relative w-full sm:w-auto group">
-                <FileUp className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" cursor="hand"/>
-                Importar
+              <Button variant="outline" className="relative group flex-shrink-0">
+                <FileUp className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
+                <span className="truncate">Importar</span>
                 <input
                   type="file"
                   onChange={importConfigs}
                   accept=".json"
-                  className="absolute inset-0 opacity-0 cursor-hand"
+                  className="absolute inset-0 opacity-0 cursor-pointer"
                 />
               </Button>
             </div>
@@ -238,31 +240,31 @@ const ConfigurationManager = ({
                     className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-md bg-secondary p-3 gap-2"
                   >
                     <span className="truncate flex-1 text-sm">{saved.name}</span>
-                    <div className="flex flex-row gap-2 w-full sm:w-auto">
+                    <div className="flex flex-wrap gap-1 w-full sm:w-auto">
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => loadConfig(saved.config)}
-                        className="flex-1 sm:flex-initial group"
+                        className="group flex-shrink-0"
                       >
-                        <Upload className="w-4 h-4 group-hover:rotate-12"/>
-                        Carregar
+                        <Upload className="w-4 h-4 mr-1 group-hover:rotate-12 transition-transform duration-200"/>
+                        <span className="text-xs truncate">Carregar</span>
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => downloadConfig(saved)}
-                        className="flex-1 sm:flex-initial group"
+                        className="group flex-shrink-0"
                       >
-                        <Download className="w-4 h-4 group-hover:rotate-12"/>
+                        <Download className="w-4 h-4 group-hover:rotate-12 transition-transform duration-200"/>
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-red-500 hover:text-red-600 flex-1 sm:flex-initial group"
+                        className="text-red-500 hover:text-red-600 group flex-shrink-0"
                         onClick={() => deleteConfig(saved.name)}
                       >
-                        <Trash2 className="w-4 h-4 group-hover:rotate-12"/>
+                        <Trash2 className="w-4 h-4 group-hover:rotate-12 transition-transform duration-200"/>
                       </Button>
                     </div>
                   </div>
