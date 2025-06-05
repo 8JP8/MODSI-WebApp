@@ -43,7 +43,7 @@ const MainPreviewTabs = ({
   const isMobile = useIsMobile();
   
   return (
-    <div className="space-y-4 md:space-y-6 md:col-span-2">
+    <div className="lg:col-span-3 space-y-4 md:space-y-6">
       <Tabs defaultValue="preview" className="w-full">
         <TabsList className="grid grid-cols-2 w-full">
           <TabsTrigger value="preview" className="text-xs md:text-sm group">
