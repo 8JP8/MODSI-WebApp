@@ -4,7 +4,8 @@ import {
   BarChart3, 
   PieChart, 
   LineChart, 
-  ScatterChart
+  ScatterChart,
+  ChartColumnBig
 } from "lucide-react";
 
 interface ChartTypeSelectorProps {
@@ -15,6 +16,7 @@ interface ChartTypeSelectorProps {
 const ChartTypeSelector = ({ selectedType, onSelect }: ChartTypeSelectorProps) => {
   const chartTypes = [
     { id: "bar", name: "babia-bars", icon: BarChart3, disabled: false },
+    { id: "cyls", name: "babia-cyls", icon: ChartColumnBig, disabled: false },
     { id: "pie", name: "babia-pie", icon: PieChart, disabled: false },
     // { id: "line", name: "linha", icon: LineChart, disabled: true }, // Commented out as requested
     { id: "scatter", name: "babia-bubbles", icon: ScatterChart, disabled: false },
