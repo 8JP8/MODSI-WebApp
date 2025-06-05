@@ -39,13 +39,13 @@ const VRPositionController = ({ position, onPositionChange }: VRPositionControll
       <CardContent className="space-y-4">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-3 mb-4 w-full">
-            <TabsTrigger value="position" className="text-xs sm:text-sm px-1">
+            <TabsTrigger value="position" className="text-xs px-1">
               <span>Posição</span>
             </TabsTrigger>
-            <TabsTrigger value="rotation" className="text-xs sm:text-sm px-1">
+            <TabsTrigger value="rotation" className="text-xs px-1">
               <span>Rotação</span>
             </TabsTrigger>
-            <TabsTrigger value="size" className="text-xs sm:text-sm px-1">
+            <TabsTrigger value="size" className="text-xs px-1">
               <span>Dimensões</span>
             </TabsTrigger>
           </TabsList>

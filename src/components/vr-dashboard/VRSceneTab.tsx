@@ -21,8 +21,8 @@ const VRSceneTab = ({ chartType, position, charts, activeChartId, onPositionChan
   }));
 
   return (
-    <div className="grid grid-cols-1 2xl:grid-cols-3 gap-4">
-      <div className="2xl:col-span-2">
+    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+      <div className="xl:col-span-2">
         <div className="space-y-4">
           <VRScenePreview 
             chartType={chartType} 
@@ -32,7 +32,7 @@ const VRSceneTab = ({ chartType, position, charts, activeChartId, onPositionChan
           />
         </div>
       </div>
-      <div className="2xl:col-span-1">
+      <div className="xl:col-span-1">
         <VRPositionController 
           position={position} 
           onPositionChange={onPositionChange} 
