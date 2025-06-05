@@ -67,6 +67,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
   const renderChart = () => {
     switch (chartType) {
       case "bar":
+      case "cyls": // Use bar chart for cyls type as well
         return (
           <ResponsiveContainer width="100%" height={350}>
             <BarChart data={data}>
