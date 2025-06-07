@@ -26,6 +26,19 @@ export interface KPIValueHistory {
   OldValue_1: string | null;
   OldValue_2: string | null;
   ChangedAt: string;
+  Unit?: string;
+  ByProduct?: boolean;
+}
+
+export interface KPIDetails {
+  Id: number;
+  Name: string;
+  Description: string;
+  Unit: string;
+  Value_1: string;
+  Value_2: string | null;
+  ByProduct: boolean;
+  AvailableInDepartments: string[];
 }
 
 export const fetchUserKPIs = async (): Promise<KPIOption[]> => {
@@ -80,6 +93,38 @@ export const fetchUserKPIs = async (): Promise<KPIOption[]> => {
   }
 };
 
+export const fetchKPIById = async (kpiId: string): Promise<KPIDetails> => {
+  try {
+    const tokenData = localStorage.getItem("authToken");
+    if (!tokenData) {
+      throw new Error("No auth token found");
+    }
+
+    const parsedToken = JSON.parse(tokenData);
+    const token = parsedToken.token;
+
+    const response = await fetch(
+      `${API_BASE_URL}/kpis/byid/${kpiId}?code=${API_CODE}`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Error fetching KPI details: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching KPI details:", error);
+    throw error;
+  }
+};
+
 export const fetchKPIValueHistory = async (kpiId: string): Promise<KPIValueHistory[]> => {
   try {
     // Get auth token from localStorage
@@ -91,11 +136,8 @@ export const fetchKPIValueHistory = async (kpiId: string): Promise<KPIValueHisto
     const parsedToken = JSON.parse(tokenData);
     const token = parsedToken.token;
 
-    // Use the KPI ID directly (no more splitting by -)
-    const numericKpiId = kpiId;
-
     const response = await fetch(
-      `${API_BASE_URL}/kpis/valuehistory?kpiId=${numericKpiId}&code=${API_CODE}`,
+      `${API_BASE_URL}/kpis/valuehistory?kpiId=${kpiId}&code=${API_CODE}`,
       {
         method: 'GET',
         headers: {
@@ -110,6 +152,27 @@ export const fetchKPIValueHistory = async (kpiId: string): Promise<KPIValueHisto
     }
 
     const history: KPIValueHistory[] = await response.json();
+    
+    // If no history, fetch current value
+    if (history.length === 0) {
+      const kpiDetails = await fetchKPIById(kpiId);
+      
+      // Create a fake history entry with current values
+      const currentValueHistory: KPIValueHistory = {
+        Id: 0,
+        KpiId: kpiDetails.Id,
+        ChangedByUserId: 0,
+        NewValue_1: kpiDetails.Value_1,
+        NewValue_2: kpiDetails.Value_2,
+        OldValue_1: null,
+        OldValue_2: null,
+        ChangedAt: new Date().toISOString(),
+        Unit: kpiDetails.Unit,
+        ByProduct: kpiDetails.ByProduct
+      };
+      
+      return [currentValueHistory];
+    }
     
     // Sort by ChangedAt timestamp (newest first)
     return history.sort((a, b) => new Date(b.ChangedAt).getTime() - new Date(a.ChangedAt).getTime());

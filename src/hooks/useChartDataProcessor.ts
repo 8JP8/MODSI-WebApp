@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { fetchKPIValueHistory, KPIValueHistory } from "@/services/kpiService";
+import { fetchKPIValueHistory, fetchUserKPIs, KPIValueHistory } from "@/services/kpiService";
 import { toast } from "sonner";
 
 export interface ProcessedChartData {
@@ -10,6 +10,7 @@ export interface ProcessedChartData {
 export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: string) => {
   const [chartData, setChartData] = useState<ProcessedChartData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [kpiUnits, setKpiUnits] = useState<{[key: string]: string}>({});
 
   useEffect(() => {
     if (!zAxis || !xAxis) {
@@ -36,15 +37,20 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
   };
 
   const loadTimeBasedData = async () => {
-    // Use the KPI ID directly (no more splitting by -)
     const zKpiId = zAxis;
     console.log("ChartDataProcessor: Fetching history for KPI:", zKpiId);
     
     const history = await fetchKPIValueHistory(zKpiId);
     console.log("ChartDataProcessor: Raw history data:", history);
     
+    // Get KPI units information
+    const units: {[key: string]: string} = {};
+    if (history.length > 0 && history[0].Unit) {
+      units[zAxis] = history[0].Unit;
+    }
+    
     // Group data by time period based on xAxis selection
-    const groupedData = formatGraphData(history, xAxis);
+    const groupedData = formatGraphData(history, xAxis, zAxis);
     console.log("ChartDataProcessor: Grouped data:", groupedData);
     
     // If yAxis is selected, also load its data
@@ -53,9 +59,16 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
       const yKpiId = yAxis;
       console.log("ChartDataProcessor: Fetching Y-axis history for KPI:", yKpiId);
       const yHistory = await fetchKPIValueHistory(yKpiId);
-      yAxisData = formatGraphData(yHistory, xAxis);
+      
+      if (yHistory.length > 0 && yHistory[0].Unit) {
+        units[yAxis] = yHistory[0].Unit;
+      }
+      
+      yAxisData = formatGraphData(yHistory, xAxis, yAxis);
       console.log("ChartDataProcessor: Y-axis data:", yAxisData);
     }
+    
+    setKpiUnits(units);
     
     // Combine the data for multi-series display
     const processedData = combineSeriesData(groupedData, yAxisData, zAxis, yAxis);
@@ -64,8 +77,8 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
     setChartData(processedData);
   };
 
-  const formatGraphData = (rawData: KPIValueHistory[], groupBy: string): ProcessedChartData[] => {
-    console.log("ChartDataProcessor: formatGraphData input:", { rawData, groupBy });
+  const formatGraphData = (rawData: KPIValueHistory[], groupBy: string, kpiId: string): ProcessedChartData[] => {
+    console.log("ChartDataProcessor: formatGraphData input:", { rawData, groupBy, kpiId });
     
     // Helper: validate and format date keys according to groupBy
     function formatDateKey(dateStr: string) {
@@ -85,18 +98,31 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
       return d.toISOString().slice(0, 10); // default to day format
     }
 
+    // Check if this KPI is ByProduct
+    const isByProduct = rawData.length > 0 && rawData[0].ByProduct;
+
     // For "change" groupBy, keep all individual changes
     if (groupBy === "change") {
       const result = rawData.map((item, index) => {
         const val1 = parseFloat(item.NewValue_1);
         const val2 = parseFloat(item.NewValue_2);
         
-        return {
-          name: `Alteração ${rawData.length - index}`,
-          "Produto 1": isNaN(val1) ? 0 : val1,
-          "Produto 2": isNaN(val2) ? 0 : val2,
+        const date = new Date(item.ChangedAt);
+        const timeLabel = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')} - ${date.getDate().toString().padStart(2, '0')} ${date.toLocaleDateString('pt-PT', { month: 'short' })}`;
+        
+        const resultItem: ProcessedChartData = {
+          name: timeLabel,
           originalKey: item.ChangedAt
         };
+
+        if (isByProduct) {
+          resultItem[`KPI ${kpiId} (Produto 1)`] = isNaN(val1) ? 0 : val1;
+          resultItem[`KPI ${kpiId} (Produto 2)`] = isNaN(val2) ? 0 : val2;
+        } else {
+          resultItem[`KPI ${kpiId} (Valor)`] = isNaN(val1) ? 0 : val1;
+        }
+
+        return resultItem;
       }).reverse(); // Show oldest first
       
       console.log("ChartDataProcessor: Change-based result:", result);
@@ -155,12 +181,21 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
       return key;
     }
 
-    const result = sortedKeys.map(key => ({
-      name: formatLabel(key),
-      "Produto 1": grouped[key].NewValue_1,
-      "Produto 2": grouped[key].NewValue_2,
-      originalKey: key
-    }));
+    const result = sortedKeys.map(key => {
+      const resultItem: ProcessedChartData = {
+        name: formatLabel(key),
+        originalKey: key
+      };
+
+      if (isByProduct) {
+        resultItem[`KPI ${kpiId} (Produto 1)`] = grouped[key].NewValue_1;
+        resultItem[`KPI ${kpiId} (Produto 2)`] = grouped[key].NewValue_2;
+      } else {
+        resultItem[`KPI ${kpiId} (Valor)`] = grouped[key].NewValue_1;
+      }
+
+      return resultItem;
+    });
     
     console.log("ChartDataProcessor: formatGraphData result:", result);
     return result;
@@ -175,15 +210,8 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
     console.log("ChartDataProcessor: combineSeriesData input:", { primaryData, secondaryData, zAxisName, yAxisName });
     
     if (!secondaryData.length) {
-      // Only primary data - rename series to include KPI ID
-      const result = primaryData.map(item => ({
-        name: item.name,
-        [`KPI ${zAxisName} (Produto 1)`]: item["Produto 1"],
-        [`KPI ${zAxisName} (Produto 2)`]: item["Produto 2"]
-      }));
-      
-      console.log("ChartDataProcessor: Primary only result:", result);
-      return result;
+      console.log("ChartDataProcessor: Primary only result:", primaryData);
+      return primaryData;
     }
 
     // Combine both series
@@ -196,14 +224,23 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
     const result = primaryData.map(item => {
       const secondaryItem = secondaryMap.get(item.name);
       const resultItem: ProcessedChartData = {
-        name: item.name,
-        [`KPI ${zAxisName} (Produto 1)`]: item["Produto 1"],
-        [`KPI ${zAxisName} (Produto 2)`]: item["Produto 2"]
+        name: item.name
       };
 
+      // Copy primary data
+      Object.keys(item).forEach(key => {
+        if (key !== 'name' && key !== 'originalKey') {
+          resultItem[key] = item[key];
+        }
+      });
+
+      // Add secondary data if available
       if (secondaryItem) {
-        resultItem[`KPI ${yAxisName} (Produto 1)`] = secondaryItem["Produto 1"];
-        resultItem[`KPI ${yAxisName} (Produto 2)`] = secondaryItem["Produto 2"];
+        Object.keys(secondaryItem).forEach(key => {
+          if (key !== 'name' && key !== 'originalKey') {
+            resultItem[key] = secondaryItem[key];
+          }
+        });
       }
 
       return resultItem;
@@ -215,6 +252,7 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
 
   return {
     chartData,
-    loading
+    loading,
+    kpiUnits
   };
 };

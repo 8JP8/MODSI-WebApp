@@ -8,7 +8,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { fetchUserKPIs, KPIOption } from "@/services/kpiService";
+import { fetchUserKPIs, fetchKPIById, KPIOption } from "@/services/kpiService";
 import { toast } from "sonner";
 
 interface KPIAxisSelectorProps {
@@ -29,6 +29,7 @@ const KPIAxisSelector = ({
   onSelectYAxis
 }: KPIAxisSelectorProps) => {
   const [kpiOptions, setKpiOptions] = useState<KPIOption[]>([]);
+  const [kpiUnits, setKpiUnits] = useState<{[key: string]: string}>({});
   const [loading, setLoading] = useState(true);
 
   const timeOptions = [
@@ -44,6 +45,19 @@ const KPIAxisSelector = ({
         setLoading(true);
         const options = await fetchUserKPIs();
         setKpiOptions(options);
+        
+        // Load units for all KPIs
+        const units: {[key: string]: string} = {};
+        for (const option of options) {
+          try {
+            const kpiDetails = await fetchKPIById(option.id);
+            units[option.id] = kpiDetails.Unit;
+          } catch (error) {
+            console.error(`Error loading unit for KPI ${option.id}:`, error);
+            units[option.id] = "";
+          }
+        }
+        setKpiUnits(units);
       } catch (error) {
         toast.error("Erro ao carregar KPIs");
         console.error("Error loading KPIs:", error);
@@ -71,6 +85,20 @@ const KPIAxisSelector = ({
   // Check if product is selected for X axis
   const isProductSelected = selectedSecondaryAxis === "product";
 
+  const formatKPIOptionLabel = (option: KPIOption, isSelected: boolean = false) => {
+    const unit = kpiUnits[option.id];
+    if (isSelected && unit) {
+      return `${option.name} (${unit})`;
+    }
+    return unit ? `${option.name} (${unit})` : option.name;
+  };
+
+  const getSelectedKPILabel = (kpiId: string) => {
+    const option = kpiOptions.find(opt => opt.id === kpiId);
+    if (!option) return "Selecione o indicador";
+    return formatKPIOptionLabel(option, true);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -82,12 +110,14 @@ const KPIAxisSelector = ({
           <label className="text-sm font-medium">Eixo Y - Indicador Principal</label>
           <Select value={selectedZAxis} onValueChange={onSelectZAxis}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Selecione o indicador principal" />
+              <SelectValue placeholder="Selecione o indicador principal">
+                {selectedZAxis ? getSelectedKPILabel(selectedZAxis) : "Selecione o indicador principal"}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {kpiOptions.map((option) => (
                 <SelectItem key={option.id} value={option.id}>
-                  {option.name}
+                  {formatKPIOptionLabel(option)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -121,13 +151,15 @@ const KPIAxisSelector = ({
             onValueChange={onSelectYAxis}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Selecione indicador relacionado" />
+              <SelectValue placeholder="Selecione indicador relacionado">
+                {selectedYAxis && selectedYAxis !== "none" ? getSelectedKPILabel(selectedYAxis) : "Nenhum"}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Nenhum</SelectItem>
               {!isProductSelected && kpiOptions.map((option) => (
                 <SelectItem key={option.id} value={option.id}>
-                  {option.name}
+                  {formatKPIOptionLabel(option)}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -326,7 +326,7 @@ export const useChartData = () => {
     }
   };
 
-  const { chartData, loading: dataLoading } = useChartDataProcessor(zAxis, secondaryAxis, yAxis);
+  const { chartData, loading: dataLoading, kpiUnits } = useChartDataProcessor(zAxis, secondaryAxis, yAxis);
 
   // Update the data when chartData changes
   useEffect(() => {
@@ -344,6 +344,7 @@ export const useChartData = () => {
     data: chartData,
     configSaved: isConfigurationValid(),
     loading: dataLoading,
+    kpiUnits,
     setActiveChartId,
     updateActiveChart,
     handlePositionChange,

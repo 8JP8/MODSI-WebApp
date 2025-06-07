@@ -19,6 +19,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useChartDataProcessor } from "@/hooks/useChartDataProcessor";
 
 interface ChartPreviewProps {
   chartType: string;
@@ -30,6 +31,9 @@ interface ChartPreviewProps {
 
 const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProps) => {
   const [showZAxis, setShowZAxis] = useState(true); // Toggle between Y and Z axis data
+  const [showCombined, setShowCombined] = useState(false); // New toggle for Y/Z combined view
+  
+  const { kpiUnits } = useChartDataProcessor(zAxis, xAxis, yAxis);
 
   console.log("ChartPreview: Received props:", { chartType, data, xAxis, yAxis, zAxis });
 
@@ -47,15 +51,21 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
 
   // Determine which axis data to show
   const activeAxisId = showZAxis ? zAxis : yAxis;
-  const activeAxisName = showZAxis ? "Z" : "Y";
+  const activeAxisName = showZAxis ? "Y" : "Z";
   
-  // Filter data keys based on the active axis
+  // Filter data keys based on the active axis or combined view
   const getFilteredDataKeys = () => {
+    if (showCombined && yAxis && zAxis) {
+      // Show all series when in combined mode
+      const allKeys = Object.keys(data[0] || {});
+      return allKeys.filter(key => key !== "name" && key !== "originalKey");
+    }
+    
     if (!activeAxisId) return [];
     
     const allKeys = Object.keys(data[0] || {});
     return allKeys.filter(key => 
-      key.includes(`KPI ${activeAxisId}`) && key !== "name"
+      key.includes(`KPI ${activeAxisId}`) && key !== "name" && key !== "originalKey"
     );
   };
 
@@ -63,6 +73,15 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
   
   // Colors for different series
   const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff7300", "#8dd1e1"];
+
+  // Get the unit for Y-axis label
+  const getYAxisLabel = () => {
+    if (showCombined) {
+      return "Valor";
+    }
+    const unit = kpiUnits[activeAxisId];
+    return unit ? `Valor (${unit})` : "Valor";
+  };
 
   const renderChart = () => {
     switch (chartType) {
@@ -73,7 +92,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
             <BarChart data={data}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
-              <YAxis />
+              <YAxis label={{ value: getYAxisLabel(), angle: -90, position: 'insideLeft' }} />
               <Tooltip />
               <Legend />
               {dataKeys.map((key, index) => (
@@ -94,7 +113,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
             <LineChart data={data}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
-              <YAxis />
+              <YAxis label={{ value: getYAxisLabel(), angle: -90, position: 'insideLeft' }} />
               <Tooltip />
               <Legend />
               {dataKeys.map((key, index) => (
@@ -149,7 +168,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
             <ScatterChart data={data}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
-              <YAxis />
+              <YAxis label={{ value: getYAxisLabel(), angle: -90, position: 'insideLeft' }} />
               <Tooltip />
               <Legend />
               {dataKeys.map((key, index) => (
@@ -178,20 +197,28 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Mostrar eixo:</span>
               <Button
-                variant={showZAxis ? "default" : "outline"}
+                variant={showZAxis && !showCombined ? "default" : "outline"}
                 size="sm"
-                onClick={() => setShowZAxis(true)}
+                onClick={() => {setShowZAxis(true); setShowCombined(false);}}
                 className="transition-transform duration-200 hover:scale-105"
               >
                 Y (KPI {zAxis})
               </Button>
               <Button
-                variant={!showZAxis ? "default" : "outline"}
+                variant={!showZAxis && !showCombined ? "default" : "outline"}
                 size="sm"
-                onClick={() => setShowZAxis(false)}
+                onClick={() => {setShowZAxis(false); setShowCombined(false);}}
                 className="transition-transform duration-200 hover:scale-105"
               >
                 Z (KPI {yAxis})
+              </Button>
+              <Button
+                variant={showCombined ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowCombined(true)}
+                className="transition-transform duration-200 hover:scale-105"
+              >
+                Y/Z
               </Button>
             </div>
           )}
