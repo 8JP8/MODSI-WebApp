@@ -30,6 +30,7 @@ const KPIAxisSelector = ({
 }: KPIAxisSelectorProps) => {
   const [kpiOptions, setKpiOptions] = useState<KPIOption[]>([]);
   const [kpiUnits, setKpiUnits] = useState<{[key: string]: string}>({});
+  const [kpiByProduct, setKpiByProduct] = useState<{[key: string]: boolean}>({});
   const [loading, setLoading] = useState(true);
 
   const timeOptions = [
@@ -46,18 +47,22 @@ const KPIAxisSelector = ({
         const options = await fetchUserKPIs();
         setKpiOptions(options);
         
-        // Load units for all KPIs
+        // Load units and ByProduct for all KPIs
         const units: {[key: string]: string} = {};
+        const byProducts: {[key: string]: boolean} = {};
         for (const option of options) {
           try {
             const kpiDetails = await fetchKPIById(option.id);
             units[option.id] = kpiDetails.Unit;
+            byProducts[option.id] = kpiDetails.ByProduct;
           } catch (error) {
-            console.error(`Error loading unit for KPI ${option.id}:`, error);
+            console.error(`Error loading details for KPI ${option.id}:`, error);
             units[option.id] = "";
+            byProducts[option.id] = false;
           }
         }
         setKpiUnits(units);
+        setKpiByProduct(byProducts);
       } catch (error) {
         toast.error("Erro ao carregar KPIs");
         console.error("Error loading KPIs:", error);
@@ -82,9 +87,6 @@ const KPIAxisSelector = ({
     );
   }
 
-  // Check if product is selected for X axis
-  const isProductSelected = selectedSecondaryAxis === "product";
-
   const formatKPIOptionLabel = (option: KPIOption, isSelected: boolean = false) => {
     const unit = kpiUnits[option.id];
     if (isSelected && unit) {
@@ -98,6 +100,18 @@ const KPIAxisSelector = ({
     if (!option) return "Selecione o indicador";
     return formatKPIOptionLabel(option, true);
   };
+
+  // Filter Z-axis options based on main KPI's ByProduct
+  const getFilteredZAxisOptions = () => {
+    if (!selectedZAxis) return kpiOptions;
+    const mainKpiByProduct = kpiByProduct[selectedZAxis];
+    return kpiOptions.filter(option => 
+      option.id !== selectedZAxis && kpiByProduct[option.id] === mainKpiByProduct
+    );
+  };
+
+  // Check if Z-axis should be disabled
+  const isZAxisDisabled = !selectedYAxis || selectedYAxis === "none";
 
   return (
     <Card>
@@ -141,23 +155,50 @@ const KPIAxisSelector = ({
           </Select>
         </div>
 
-        {/* Z Axis - Optional Related Indicator */}
+        {/* Y Axis - Optional Related Indicator */}
         <div className="space-y-2">
           <label className="text-sm font-medium">
-            Eixo Z - Indicador Relacionado (Opcional)
+            Eixo Y - Indicador para Comparação (Opcional)
           </label>
           <Select 
-            value={isProductSelected ? "none" : selectedYAxis} 
+            value={selectedYAxis} 
             onValueChange={onSelectYAxis}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Selecione indicador relacionado">
+              <SelectValue placeholder="Selecione indicador para comparação">
                 {selectedYAxis && selectedYAxis !== "none" ? getSelectedKPILabel(selectedYAxis) : "Nenhum"}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Nenhum</SelectItem>
-              {!isProductSelected && kpiOptions.map((option) => (
+              {kpiOptions.filter(option => option.id !== selectedZAxis).map((option) => (
+                <SelectItem key={option.id} value={option.id}>
+                  {formatKPIOptionLabel(option)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Z Axis - Optional Related Indicator */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">
+            Eixo Z - Indicador Relacionado (Opcional)
+            {isZAxisDisabled && <span className="text-muted-foreground"> - Selecione primeiro o Eixo Y</span>}
+          </label>
+          <Select 
+            value={isZAxisDisabled ? "none" : selectedYAxis} 
+            onValueChange={onSelectYAxis}
+            disabled={isZAxisDisabled}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecione indicador relacionado">
+                {selectedYAxis && selectedYAxis !== "none" && !isZAxisDisabled ? getSelectedKPILabel(selectedYAxis) : "Nenhum"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Nenhum</SelectItem>
+              {!isZAxisDisabled && getFilteredZAxisOptions().map((option) => (
                 <SelectItem key={option.id} value={option.id}>
                   {formatKPIOptionLabel(option)}
                 </SelectItem>
