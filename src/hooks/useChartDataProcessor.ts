@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { fetchKPIValueHistory, fetchUserKPIs, KPIValueHistory } from "@/services/kpiService";
+import { fetchKPIValueHistory, fetchUserKPIs, fetchKPIById, KPIValueHistory } from "@/services/kpiService";
 import { toast } from "sonner";
 
 export interface ProcessedChartData {
@@ -40,7 +41,29 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
     const zKpiId = zAxis;
     console.log("ChartDataProcessor: Fetching history for KPI:", zKpiId);
     
-    const history = await fetchKPIValueHistory(zKpiId);
+    let history = await fetchKPIValueHistory(zKpiId);
+    
+    // If no history, fetch current value and create fake history entry
+    if (history.length === 0) {
+      console.log("ChartDataProcessor: No history found, fetching current KPI value");
+      const kpiDetails = await fetchKPIById(zKpiId);
+      
+      const currentValueHistory: KPIValueHistory = {
+        Id: 0,
+        KpiId: kpiDetails.Id,
+        ChangedByUserId: 0,
+        NewValue_1: kpiDetails.Value_1,
+        NewValue_2: kpiDetails.Value_2,
+        OldValue_1: null,
+        OldValue_2: null,
+        ChangedAt: new Date().toISOString(),
+        Unit: kpiDetails.Unit,
+        ByProduct: kpiDetails.ByProduct
+      };
+      
+      history = [currentValueHistory];
+    }
+    
     console.log("ChartDataProcessor: Raw history data:", history);
     
     // Get KPI units information
@@ -58,7 +81,28 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
     if (yAxis && yAxis !== "none") {
       const yKpiId = yAxis;
       console.log("ChartDataProcessor: Fetching Y-axis history for KPI:", yKpiId);
-      const yHistory = await fetchKPIValueHistory(yKpiId);
+      let yHistory = await fetchKPIValueHistory(yKpiId);
+      
+      // If no Y-axis history, fetch current value
+      if (yHistory.length === 0) {
+        console.log("ChartDataProcessor: No Y-axis history found, fetching current KPI value");
+        const yKpiDetails = await fetchKPIById(yKpiId);
+        
+        const currentYValueHistory: KPIValueHistory = {
+          Id: 0,
+          KpiId: yKpiDetails.Id,
+          ChangedByUserId: 0,
+          NewValue_1: yKpiDetails.Value_1,
+          NewValue_2: yKpiDetails.Value_2,
+          OldValue_1: null,
+          OldValue_2: null,
+          ChangedAt: new Date().toISOString(),
+          Unit: yKpiDetails.Unit,
+          ByProduct: yKpiDetails.ByProduct
+        };
+        
+        yHistory = [currentYValueHistory];
+      }
       
       if (yHistory.length > 0 && yHistory[0].Unit) {
         units[yAxis] = yHistory[0].Unit;
@@ -108,7 +152,7 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
         const val2 = parseFloat(item.NewValue_2);
         
         const date = new Date(item.ChangedAt);
-        const timeLabel = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')} - ${date.getDate().toString().padStart(2, '0')} ${date.toLocaleDateString('pt-PT', { month: 'short' })}`;
+        const timeLabel = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
         
         const resultItem: ProcessedChartData = {
           name: timeLabel,
@@ -119,7 +163,7 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
           resultItem[`KPI ${kpiId} (Produto 1)`] = isNaN(val1) ? 0 : val1;
           resultItem[`KPI ${kpiId} (Produto 2)`] = isNaN(val2) ? 0 : val2;
         } else {
-          resultItem[`KPI ${kpiId} (Valor)`] = isNaN(val1) ? 0 : val1;
+          resultItem[`KPI ${kpiId}`] = isNaN(val1) ? 0 : val1;
         }
 
         return resultItem;
@@ -191,7 +235,7 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
         resultItem[`KPI ${kpiId} (Produto 1)`] = grouped[key].NewValue_1;
         resultItem[`KPI ${kpiId} (Produto 2)`] = grouped[key].NewValue_2;
       } else {
-        resultItem[`KPI ${kpiId} (Valor)`] = grouped[key].NewValue_1;
+        resultItem[`KPI ${kpiId}`] = grouped[key].NewValue_1;
       }
 
       return resultItem;
