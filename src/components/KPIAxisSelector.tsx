@@ -110,9 +110,6 @@ const KPIAxisSelector = ({
     );
   };
 
-  // Check if Z-axis should be disabled
-  const isZAxisDisabled = !selectedYAxis || selectedYAxis === "none";
-
   return (
     <Card>
       <CardHeader>
@@ -155,10 +152,10 @@ const KPIAxisSelector = ({
           </Select>
         </div>
 
-        {/* Y Axis - Optional Related Indicator */}
+        {/* Z Axis - Optional Related Indicator */}
         <div className="space-y-2">
           <label className="text-sm font-medium">
-            Eixo Y - Indicador para Comparação (Opcional)
+            Eixo Z - Indicador para Comparação (Opcional)
           </label>
           <Select 
             value={selectedYAxis} 
@@ -171,34 +168,7 @@ const KPIAxisSelector = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Nenhum</SelectItem>
-              {kpiOptions.filter(option => option.id !== selectedZAxis).map((option) => (
-                <SelectItem key={option.id} value={option.id}>
-                  {formatKPIOptionLabel(option)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Z Axis - Optional Related Indicator */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">
-            Eixo Z - Indicador Relacionado (Opcional)
-            {isZAxisDisabled && <span className="text-muted-foreground"> - Selecione primeiro o Eixo Y</span>}
-          </label>
-          <Select 
-            value={isZAxisDisabled ? "none" : selectedYAxis} 
-            onValueChange={onSelectYAxis}
-            disabled={isZAxisDisabled}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Selecione indicador relacionado">
-                {selectedYAxis && selectedYAxis !== "none" && !isZAxisDisabled ? getSelectedKPILabel(selectedYAxis) : "Nenhum"}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">Nenhum</SelectItem>
-              {!isZAxisDisabled && getFilteredZAxisOptions().map((option) => (
+              {getFilteredZAxisOptions().map((option) => (
                 <SelectItem key={option.id} value={option.id}>
                   {formatKPIOptionLabel(option)}
                 </SelectItem>

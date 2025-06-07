@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   BarChart, 
@@ -82,7 +81,6 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
 
   // Determine which axis data to show
   const activeAxisId = showZAxis ? zAxis : yAxis;
-  const activeAxisName = showZAxis ? "Y" : "Z";
   
   // Filter data keys based on the active axis or combined view
   const getFilteredDataKeys = () => {

@@ -37,16 +37,13 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
     }
   };
 
-  const loadTimeBasedData = async () => {
-    const zKpiId = zAxis;
-    console.log("ChartDataProcessor: Fetching history for KPI:", zKpiId);
-    
-    let history = await fetchKPIValueHistory(zKpiId);
+  const ensureKPIData = async (kpiId: string): Promise<KPIValueHistory[]> => {
+    let history = await fetchKPIValueHistory(kpiId);
     
     // If no history, fetch current value and create fake history entry
     if (history.length === 0) {
-      console.log("ChartDataProcessor: No history found, fetching current KPI value");
-      const kpiDetails = await fetchKPIById(zKpiId);
+      console.log(`ChartDataProcessor: No history found for KPI ${kpiId}, fetching current value`);
+      const kpiDetails = await fetchKPIById(kpiId);
       
       const currentValueHistory: KPIValueHistory = {
         Id: 0,
@@ -64,7 +61,16 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
       history = [currentValueHistory];
     }
     
-    console.log("ChartDataProcessor: Raw history data:", history);
+    return history;
+  };
+
+  const loadTimeBasedData = async () => {
+    const zKpiId = zAxis;
+    console.log("ChartDataProcessor: Fetching history for KPI:", zKpiId);
+    
+    // Ensure we have data for the main KPI
+    const history = await ensureKPIData(zKpiId);
+    console.log("ChartDataProcessor: Raw Z-axis history data:", history);
     
     // Get KPI units information
     const units: {[key: string]: string} = {};
@@ -74,7 +80,7 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
     
     // Group data by time period based on xAxis selection
     const groupedData = formatGraphData(history, xAxis, zAxis);
-    console.log("ChartDataProcessor: Grouped data:", groupedData);
+    console.log("ChartDataProcessor: Grouped Z-axis data:", groupedData);
     
     // If yAxis is selected, also load its data
     let yAxisData: ProcessedChartData[] = [];
@@ -82,35 +88,17 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
     if (yAxis && yAxis !== "none") {
       const yKpiId = yAxis;
       console.log("ChartDataProcessor: Fetching Y-axis history for KPI:", yKpiId);
-      yHistory = await fetchKPIValueHistory(yKpiId);
       
-      // If no Y-axis history, fetch current value
-      if (yHistory.length === 0) {
-        console.log("ChartDataProcessor: No Y-axis history found, fetching current KPI value");
-        const yKpiDetails = await fetchKPIById(yKpiId);
-        
-        const currentYValueHistory: KPIValueHistory = {
-          Id: 0,
-          KpiId: yKpiDetails.Id,
-          ChangedByUserId: 0,
-          NewValue_1: yKpiDetails.Value_1,
-          NewValue_2: yKpiDetails.Value_2,
-          OldValue_1: null,
-          OldValue_2: null,
-          ChangedAt: new Date().toISOString(),
-          Unit: yKpiDetails.Unit,
-          ByProduct: yKpiDetails.ByProduct
-        };
-        
-        yHistory = [currentYValueHistory];
-      }
+      // Ensure we have data for the Y-axis KPI
+      yHistory = await ensureKPIData(yKpiId);
+      console.log("ChartDataProcessor: Raw Y-axis history data:", yHistory);
       
       if (yHistory.length > 0 && yHistory[0].Unit) {
         units[yAxis] = yHistory[0].Unit;
       }
       
       yAxisData = formatGraphData(yHistory, xAxis, yAxis);
-      console.log("ChartDataProcessor: Y-axis data:", yAxisData);
+      console.log("ChartDataProcessor: Grouped Y-axis data:", yAxisData);
     }
     
     setKpiUnits(units);
@@ -309,25 +297,38 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
       return Array.from(timeMap.values());
     }
 
-    // For other groupings, combine both series
-    // Create a map of secondary data by time key
-    const secondaryMap = new Map();
-    secondaryData.forEach(item => {
-      secondaryMap.set(item.name, item);
+    // For other groupings, merge both series ensuring all time periods are represented
+    const allTimeKeys = new Set([
+      ...primaryData.map(item => item.originalKey || item.name),
+      ...secondaryData.map(item => item.originalKey || item.name)
+    ]);
+
+    const primaryMap = new Map();
+    primaryData.forEach(item => {
+      primaryMap.set(item.originalKey || item.name, item);
     });
 
-    const result = primaryData.map(item => {
-      const secondaryItem = secondaryMap.get(item.name);
+    const secondaryMap = new Map();
+    secondaryData.forEach(item => {
+      secondaryMap.set(item.originalKey || item.name, item);
+    });
+
+    const result = Array.from(allTimeKeys).sort().map(timeKey => {
+      const primaryItem = primaryMap.get(timeKey);
+      const secondaryItem = secondaryMap.get(timeKey);
+      
       const resultItem: ProcessedChartData = {
-        name: item.name
+        name: primaryItem?.name || secondaryItem?.name || timeKey
       };
 
-      // Copy primary data
-      Object.keys(item).forEach(key => {
-        if (key !== 'name' && key !== 'originalKey') {
-          resultItem[key] = item[key];
-        }
-      });
+      // Copy primary data if available
+      if (primaryItem) {
+        Object.keys(primaryItem).forEach(key => {
+          if (key !== 'name' && key !== 'originalKey') {
+            resultItem[key] = primaryItem[key];
+          }
+        });
+      }
 
       // Add secondary data if available
       if (secondaryItem) {
