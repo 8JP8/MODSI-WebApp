@@ -78,10 +78,11 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
     
     // If yAxis is selected, also load its data
     let yAxisData: ProcessedChartData[] = [];
+    let yHistory: KPIValueHistory[] = [];
     if (yAxis && yAxis !== "none") {
       const yKpiId = yAxis;
       console.log("ChartDataProcessor: Fetching Y-axis history for KPI:", yKpiId);
-      let yHistory = await fetchKPIValueHistory(yKpiId);
+      yHistory = await fetchKPIValueHistory(yKpiId);
       
       // If no Y-axis history, fetch current value
       if (yHistory.length === 0) {
@@ -115,7 +116,7 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
     setKpiUnits(units);
     
     // Combine the data for multi-series display
-    const processedData = combineSeriesData(groupedData, yAxisData, zAxis, yAxis);
+    const processedData = combineSeriesData(groupedData, yAxisData, zAxis, yAxis, history, yHistory, xAxis);
     
     console.log("ChartDataProcessor: Final processed data:", processedData);
     setChartData(processedData);
@@ -249,7 +250,10 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
     primaryData: ProcessedChartData[], 
     secondaryData: ProcessedChartData[], 
     zAxisName: string, 
-    yAxisName: string
+    yAxisName: string,
+    zHistory: KPIValueHistory[],
+    yHistory: KPIValueHistory[],
+    xAxis: string
   ): ProcessedChartData[] => {
     console.log("ChartDataProcessor: combineSeriesData input:", { primaryData, secondaryData, zAxisName, yAxisName });
     
@@ -258,7 +262,54 @@ export const useChartDataProcessor = (zAxis: string, xAxis: string, yAxis: strin
       return primaryData;
     }
 
-    // Combine both series
+    // For "change" groupBy, we need to combine all timestamps from both KPIs
+    if (xAxis === "change") {
+      const allItems: Array<{item: KPIValueHistory, kpiId: string}> = [];
+      
+      // Add all Z-axis items
+      zHistory.forEach(item => {
+        allItems.push({item, kpiId: zAxisName});
+      });
+      
+      // Add all Y-axis items
+      yHistory.forEach(item => {
+        allItems.push({item, kpiId: yAxisName});
+      });
+      
+      // Sort by timestamp
+      allItems.sort((a, b) => new Date(a.item.ChangedAt).getTime() - new Date(b.item.ChangedAt).getTime());
+      
+      // Group by timestamp to combine values that occur at the same time
+      const timeMap = new Map<string, ProcessedChartData>();
+      
+      allItems.forEach(({item, kpiId}) => {
+        const date = new Date(item.ChangedAt);
+        const timeLabel = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+        
+        if (!timeMap.has(timeLabel)) {
+          timeMap.set(timeLabel, {
+            name: timeLabel,
+            originalKey: item.ChangedAt
+          });
+        }
+        
+        const resultItem = timeMap.get(timeLabel)!;
+        const val1 = parseFloat(item.NewValue_1);
+        const val2 = parseFloat(item.NewValue_2);
+        const isByProduct = item.ByProduct;
+        
+        if (isByProduct) {
+          resultItem[`KPI ${kpiId} (Produto 1)`] = isNaN(val1) ? 0 : val1;
+          resultItem[`KPI ${kpiId} (Produto 2)`] = isNaN(val2) ? 0 : val2;
+        } else {
+          resultItem[`KPI ${kpiId}`] = isNaN(val1) ? 0 : val1;
+        }
+      });
+      
+      return Array.from(timeMap.values());
+    }
+
+    // For other groupings, combine both series
     // Create a map of secondary data by time key
     const secondaryMap = new Map();
     secondaryData.forEach(item => {

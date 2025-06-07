@@ -77,7 +77,16 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
   // Get the unit for Y-axis label
   const getYAxisLabel = () => {
     if (showCombined) {
-      return "Valor";
+      const zUnit = kpiUnits[zAxis] || "";
+      const yUnit = kpiUnits[yAxis] || "";
+      
+      if (zUnit && yUnit) {
+        return `Valor (${zUnit} | ${yUnit})`;
+      } else if (zUnit || yUnit) {
+        return `Valor (${zUnit || yUnit})`;
+      } else {
+        return "Valor";
+      }
     }
     const unit = kpiUnits[activeAxisId];
     return unit ? `Valor (${unit})` : "Valor";
