@@ -12,21 +12,21 @@ import { fetchUserKPIs, fetchKPIById, KPIOption } from "@/services/kpiService";
 import { toast } from "sonner";
 
 interface KPIAxisSelectorProps {
-  selectedZAxis: string;
-  selectedSecondaryAxis: string;
   selectedYAxis: string;
-  onSelectZAxis: (value: string) => void;
-  onSelectSecondaryAxis: (value: string) => void;
+  selectedSecondaryAxis: string;
+  selectedZAxis: string;
   onSelectYAxis: (value: string) => void;
+  onSelectSecondaryAxis: (value: string) => void;
+  onSelectZAxis: (value: string) => void;
 }
 
 const KPIAxisSelector = ({
-  selectedZAxis,
-  selectedSecondaryAxis,
   selectedYAxis,
-  onSelectZAxis,
+  selectedSecondaryAxis,
+  selectedZAxis,
+  onSelectYAxis,
   onSelectSecondaryAxis,
-  onSelectYAxis
+  onSelectZAxis
 }: KPIAxisSelectorProps) => {
   const [kpiOptions, setKpiOptions] = useState<KPIOption[]>([]);
   const [kpiUnits, setKpiUnits] = useState<{[key: string]: string}>({});
@@ -103,10 +103,10 @@ const KPIAxisSelector = ({
 
   // Filter Z-axis options based on main KPI's ByProduct
   const getFilteredZAxisOptions = () => {
-    if (!selectedZAxis) return kpiOptions;
-    const mainKpiByProduct = kpiByProduct[selectedZAxis];
+    if (!selectedYAxis) return kpiOptions;
+    const mainKpiByProduct = kpiByProduct[selectedYAxis];
     return kpiOptions.filter(option => 
-      option.id !== selectedZAxis && kpiByProduct[option.id] === mainKpiByProduct
+      option.id !== selectedYAxis && kpiByProduct[option.id] === mainKpiByProduct
     );
   };
 
@@ -119,10 +119,10 @@ const KPIAxisSelector = ({
         {/* Y Axis - Main Indicator */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Eixo Y - Indicador Principal</label>
-          <Select value={selectedZAxis} onValueChange={onSelectZAxis}>
+          <Select value={selectedYAxis} onValueChange={onSelectYAxis}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Selecione o indicador principal">
-                {selectedZAxis ? getSelectedKPILabel(selectedZAxis) : "Selecione o indicador principal"}
+                {selectedYAxis ? getSelectedKPILabel(selectedYAxis) : "Selecione o indicador principal"}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -158,12 +158,13 @@ const KPIAxisSelector = ({
             Eixo Z - Indicador para Comparação (Opcional)
           </label>
           <Select 
-            value={selectedYAxis} 
-            onValueChange={onSelectYAxis}
+            value={selectedZAxis} 
+            onValueChange={onSelectZAxis}
+            disabled={!selectedYAxis}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Selecione indicador para comparação">
-                {selectedYAxis && selectedYAxis !== "none" ? getSelectedKPILabel(selectedYAxis) : "Nenhum"}
+              <SelectValue placeholder={!selectedYAxis ? "Selecione primeiro o indicador principal" : "Selecione indicador para comparação"}>
+                {selectedZAxis && selectedZAxis !== "none" ? getSelectedKPILabel(selectedZAxis) : "Nenhum"}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>

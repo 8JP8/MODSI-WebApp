@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Chart, VRPosition, defaultPosition, CHART_COLORS } from "@/types/vr-dashboard";
 import { useChartDataProcessor } from "./useChartDataProcessor";
@@ -25,15 +26,15 @@ export const useChartData = () => {
   const [activeChartId, setActiveChartId] = useState<string>("");
   const [chartType, setChartType] = useState("bar");
   const [position, setPosition] = useState<VRPosition>(defaultPosition);
-  const [zAxis, setZAxis] = useState("");
-  const [secondaryAxis, setSecondaryAxis] = useState("");
-  const [yAxis, setYAxis] = useState("");
+  const [yAxis, setYAxis] = useState(""); // Main KPI - Y axis selector
+  const [secondaryAxis, setSecondaryAxis] = useState(""); // X axis - time
+  const [zAxis, setZAxis] = useState(""); // Optional KPI - Z axis selector
   const [data, setData] = useState<any[]>([]);
   const [configSaved, setConfigSaved] = useState(false);
 
   // Function to check if configuration is valid
   const isConfigurationValid = (): boolean => {
-    return charts.some(chart => chart.zAxis && chart.zAxis.trim() !== "");
+    return charts.some(chart => chart.yAxis && chart.yAxis.trim() !== "");
   };
 
   // Initialize with one chart
@@ -48,9 +49,9 @@ export const useChartData = () => {
       if (activeChart) {
         setChartType(activeChart.chartType);
         setPosition(activeChart.position);
-        setZAxis(activeChart.zAxis); // Z axis for main indicator
+        setYAxis(activeChart.yAxis); // Y axis for main indicator
         setSecondaryAxis(activeChart.xAxis); // X axis for time/product
-        setYAxis(activeChart.yAxis); // Y axis for secondary indicator
+        setZAxis(activeChart.zAxis); // Z axis for optional indicator
       }
     }
   }, [activeChartId, charts]);
@@ -97,10 +98,10 @@ export const useChartData = () => {
     updateActiveChart({ position: newPosition });
   };
   
-  // Handle Z axis change (main indicator) - use KPI ID directly
-  const handleZAxisChange = (value: string) => {
-    setZAxis(value);
-    updateActiveChart({ zAxis: value });
+  // Handle Y axis change (main indicator)
+  const handleYAxisChange = (value: string) => {
+    setYAxis(value);
+    updateActiveChart({ yAxis: value });
   };
   
   // Handle secondary axis change (X axis - time/product)
@@ -109,19 +110,19 @@ export const useChartData = () => {
     updateActiveChart({ xAxis: value });
   };
   
-  // Handle Y axis change (secondary indicator) - use KPI ID directly
-  const handleYAxisChange = (value: string) => {
-    const yAxisValue = value === "none" ? "" : value;
-    setYAxis(yAxisValue);
-    updateActiveChart({ yAxis: yAxisValue });
+  // Handle Z axis change (optional indicator)
+  const handleZAxisChange = (value: string) => {
+    const zAxisValue = value === "none" ? "" : value;
+    setZAxis(zAxisValue);
+    updateActiveChart({ zAxis: zAxisValue });
   };
 
   const resetConfiguration = () => {
     setChartType("bar");
     setPosition(defaultPosition);
-    setZAxis("");
-    setSecondaryAxis("");
     setYAxis("");
+    setSecondaryAxis("");
+    setZAxis("");
     
     // Update active chart
     if (activeChartId) {
@@ -168,9 +169,9 @@ export const useChartData = () => {
         setActiveChartId(activeChart.id);
         setChartType(activeChart.chartType);
         setPosition(activeChart.position);
-        setZAxis(activeChart.zAxis);
+        setYAxis(activeChart.yAxis);
         setSecondaryAxis(activeChart.xAxis);
-        setYAxis(activeChart.yAxis || "");
+        setZAxis(activeChart.zAxis || "");
       }
     }
     
@@ -183,11 +184,11 @@ export const useChartData = () => {
       // Get all unique KPI IDs used in charts
       const allKpiIds: string[] = [];
       charts.forEach(chart => {
-        if (chart.zAxis && !allKpiIds.includes(chart.zAxis)) {
-          allKpiIds.push(chart.zAxis);
-        }
         if (chart.yAxis && !allKpiIds.includes(chart.yAxis)) {
           allKpiIds.push(chart.yAxis);
+        }
+        if (chart.zAxis && !allKpiIds.includes(chart.zAxis)) {
+          allKpiIds.push(chart.zAxis);
         }
       });
 
@@ -211,19 +212,19 @@ export const useChartData = () => {
         charts.map(async (chart) => {
           let graphname = "KPIName";
           
-          // Get the KPI name from zAxis (main KPI)
-          if (chart.zAxis) {
-            const kpi = kpiOptions.find(option => option.id === chart.zAxis);
+          // Get the KPI name from yAxis (main KPI)
+          if (chart.yAxis) {
+            const kpi = kpiOptions.find(option => option.id === chart.yAxis);
             if (kpi) {
               graphname = kpi.name;
             }
           }
 
           // If both Y and Z axis are defined, combine their names
-          if (chart.yAxis) {
-            const yAxisKpi = kpiOptions.find(option => option.id === chart.yAxis);
-            if (yAxisKpi) {
-              graphname = `${graphname} / ${yAxisKpi.name}`;
+          if (chart.zAxis) {
+            const zAxisKpi = kpiOptions.find(option => option.id === chart.zAxis);
+            if (zAxisKpi) {
+              graphname = `${graphname} / ${zAxisKpi.name}`;
             }
           }
           
@@ -326,7 +327,7 @@ export const useChartData = () => {
     }
   };
 
-  const { chartData, loading: dataLoading, kpiUnits } = useChartDataProcessor(zAxis, secondaryAxis, yAxis);
+  const { chartData, loading: dataLoading, kpiUnits } = useChartDataProcessor(yAxis, secondaryAxis, zAxis);
 
   // Update the data when chartData changes
   useEffect(() => {
@@ -338,9 +339,9 @@ export const useChartData = () => {
     activeChartId,
     chartType,
     position,
-    zAxis,
-    secondaryAxis,
     yAxis,
+    secondaryAxis,
+    zAxis,
     data: chartData,
     configSaved: isConfigurationValid(),
     loading: dataLoading,
@@ -348,9 +349,9 @@ export const useChartData = () => {
     setActiveChartId,
     updateActiveChart,
     handlePositionChange,
-    handleZAxisChange,
-    handleSecondaryAxisChange,
     handleYAxisChange,
+    handleSecondaryAxisChange,
+    handleZAxisChange,
     addNewChart,
     resetConfiguration,
     handleLoadConfig,

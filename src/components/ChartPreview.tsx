@@ -31,7 +31,7 @@ interface ChartPreviewProps {
 }
 
 const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProps) => {
-  const [showZAxis, setShowZAxis] = useState(true); // Toggle between Y and Z axis data
+  const [showYAxis, setShowYAxis] = useState(true); // Default to Y axis
   const [showCombined, setShowCombined] = useState(false); // New toggle for Y/Z combined view
   const [combinedType, setCombinedType] = useState<1 | 2>(1); // For Y/Z [1] and Y/Z [2]
   const [zAxisByProduct, setZAxisByProduct] = useState(false);
@@ -105,8 +105,8 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
       }
     }
     
-    // Individual KPI view - only show the selected KPI's data
-    const targetKpiId = showZAxis ? yAxis : zAxis;
+    // Individual KPI view - show the selected KPI's data
+    const targetKpiId = showYAxis ? yAxis : zAxis;
     if (!targetKpiId || targetKpiId === "none") return [];
     
     const allKeys = Object.keys(data[0] || {});
@@ -135,7 +135,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
       }
     }
     
-    const activeKpiId = showZAxis ? yAxis : zAxis;
+    const activeKpiId = showYAxis ? yAxis : zAxis;
     const unit = kpiUnits[activeKpiId];
     return unit ? `Valor (${unit})` : "Valor";
   };
@@ -246,57 +246,64 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
   };
 
   const renderToggleButtons = () => {
-    if (!zAxis || zAxis === "none") return null;
-
+    const hasZAxis = zAxis && zAxis !== "none";
     const bothByProduct = yAxisByProduct && zAxisByProduct;
 
     return (
       <div className="flex items-center gap-2 flex-wrap">
+        {/* Y Button - Always visible if Y axis is selected */}
         <Button
-          variant={showZAxis && !showCombined ? "default" : "outline"}
+          variant={showYAxis && !showCombined ? "default" : "outline"}
           size="sm"
-          onClick={() => {setShowZAxis(true); setShowCombined(false);}}
+          onClick={() => {setShowYAxis(true); setShowCombined(false);}}
           className="transition-transform duration-200 hover:scale-105"
         >
           Y (KPI {yAxis})
         </Button>
-        <Button
-          variant={!showZAxis && !showCombined ? "default" : "outline"}
-          size="sm"
-          onClick={() => {setShowZAxis(false); setShowCombined(false);}}
-          className="transition-transform duration-200 hover:scale-105"
-        >
-          Z (KPI {zAxis})
-        </Button>
         
-        {bothByProduct ? (
-          <>
-            <Button
-              variant={showCombined && combinedType === 1 ? "default" : "outline"}
-              size="sm"
-              onClick={() => {setShowCombined(true); setCombinedType(1);}}
-              className="transition-transform duration-200 hover:scale-105"
-            >
-              Y/Z [1]
-            </Button>
-            <Button
-              variant={showCombined && combinedType === 2 ? "default" : "outline"}
-              size="sm"
-              onClick={() => {setShowCombined(true); setCombinedType(2);}}
-              className="transition-transform duration-200 hover:scale-105"
-            >
-              Y/Z [2]
-            </Button>
-          </>
-        ) : (
+        {/* Z Button - Only visible if Z axis is selected */}
+        {hasZAxis && (
           <Button
-            variant={showCombined ? "default" : "outline"}
+            variant={!showYAxis && !showCombined ? "default" : "outline"}
             size="sm"
-            onClick={() => setShowCombined(true)}
+            onClick={() => {setShowYAxis(false); setShowCombined(false);}}
             className="transition-transform duration-200 hover:scale-105"
           >
-            Y/Z
+            Z (KPI {zAxis})
           </Button>
+        )}
+        
+        {/* Y/Z Buttons - Only visible if both Y and Z axes are selected */}
+        {hasZAxis && (
+          bothByProduct ? (
+            <>
+              <Button
+                variant={showCombined && combinedType === 1 ? "default" : "outline"}
+                size="sm"
+                onClick={() => {setShowCombined(true); setCombinedType(1);}}
+                className="transition-transform duration-200 hover:scale-105"
+              >
+                Y/Z [1]
+              </Button>
+              <Button
+                variant={showCombined && combinedType === 2 ? "default" : "outline"}
+                size="sm"
+                onClick={() => {setShowCombined(true); setCombinedType(2);}}
+                className="transition-transform duration-200 hover:scale-105"
+              >
+                Y/Z [2]
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant={showCombined ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowCombined(true)}
+              className="transition-transform duration-200 hover:scale-105"
+            >
+              Y/Z
+            </Button>
+          )
         )}
       </div>
     );

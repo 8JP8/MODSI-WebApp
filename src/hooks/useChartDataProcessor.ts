@@ -64,11 +64,10 @@ export const useChartDataProcessor = (yAxis: string, xAxis: string, zAxis: strin
   };
 
   const loadTimeBasedData = async () => {
-    // Always load Y-axis data first
-    const yKpiId = yAxis;
-    console.log("ChartDataProcessor: Fetching history for Y-axis KPI:", yKpiId);
+    // Always load Y-axis data (main KPI)
+    console.log("ChartDataProcessor: Fetching history for Y-axis KPI:", yAxis);
     
-    const yHistory = await ensureKPIData(yKpiId);
+    const yHistory = await ensureKPIData(yAxis);
     console.log("ChartDataProcessor: Raw Y-axis history data:", yHistory);
     
     // Get KPI units information
@@ -77,7 +76,7 @@ export const useChartDataProcessor = (yAxis: string, xAxis: string, zAxis: strin
       units[yAxis] = yHistory[0].Unit;
     }
     
-    // Process Y-axis data independently
+    // Process Y-axis data
     const yAxisData = formatGraphData(yHistory, xAxis, yAxis);
     console.log("ChartDataProcessor: Formatted Y-axis data:", yAxisData);
     
@@ -86,10 +85,9 @@ export const useChartDataProcessor = (yAxis: string, xAxis: string, zAxis: strin
     
     // If Z-axis is selected, load and process its data independently
     if (zAxis && zAxis !== "none") {
-      const zKpiId = zAxis;
-      console.log("ChartDataProcessor: Fetching Z-axis history for KPI:", zKpiId);
+      console.log("ChartDataProcessor: Fetching Z-axis history for KPI:", zAxis);
       
-      const zHistory = await ensureKPIData(zKpiId);
+      const zHistory = await ensureKPIData(zAxis);
       console.log("ChartDataProcessor: Raw Z-axis history data:", zHistory);
       
       if (zHistory.length > 0 && zHistory[0].Unit) {
@@ -99,7 +97,7 @@ export const useChartDataProcessor = (yAxis: string, xAxis: string, zAxis: strin
       const zAxisData = formatGraphData(zHistory, xAxis, zAxis);
       console.log("ChartDataProcessor: Formatted Z-axis data:", zAxisData);
       
-      // Combine both datasets properly
+      // Combine both datasets
       finalData = combineIndependentSeries(yAxisData, zAxisData, yAxis, zAxis, xAxis);
     }
     

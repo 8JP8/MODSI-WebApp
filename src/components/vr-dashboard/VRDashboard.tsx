@@ -67,17 +67,17 @@ const VRDashboard = () => {
           activeChartId,
           chartType,
           position,
-          zAxis,
-          secondaryAxis,
           yAxis,
+          secondaryAxis,
+          zAxis,
           data,
           configSaved,
           setActiveChartId,
           updateActiveChart,
           handlePositionChange,
-          handleZAxisChange,
-          handleSecondaryAxisChange,
           handleYAxisChange,
+          handleSecondaryAxisChange,
+          handleZAxisChange,
           addNewChart,
           resetConfiguration,
           handleLoadConfig,
@@ -118,12 +118,12 @@ const VRDashboard = () => {
                 </Card>
                 
                 <KPIAxisSelector
-                  selectedZAxis={zAxis}
-                  selectedSecondaryAxis={secondaryAxis}
                   selectedYAxis={yAxis}
-                  onSelectZAxis={handleZAxisChange}
-                  onSelectSecondaryAxis={handleSecondaryAxisChange}
+                  selectedSecondaryAxis={secondaryAxis}
+                  selectedZAxis={zAxis}
                   onSelectYAxis={handleYAxisChange}
+                  onSelectSecondaryAxis={handleSecondaryAxisChange}
+                  onSelectZAxis={handleZAxisChange}
                 />
               </div>
               
