@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { 
   BarChart, 
@@ -36,24 +37,14 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
   const [zAxisByProduct, setZAxisByProduct] = useState(false);
   const [yAxisByProduct, setYAxisByProduct] = useState(false);
   
-  const { kpiUnits } = useChartDataProcessor(zAxis, xAxis, yAxis);
+  const { kpiUnits } = useChartDataProcessor(yAxis, xAxis, zAxis);
 
   console.log("ChartPreview: Received props:", { chartType, data, xAxis, yAxis, zAxis });
 
   // Load ByProduct info for both KPIs
   useEffect(() => {
     const loadKPIDetails = async () => {
-      if (zAxis) {
-        try {
-          const zKpiDetails = await fetchKPIById(zAxis);
-          setZAxisByProduct(zKpiDetails.ByProduct);
-        } catch (error) {
-          console.error("Error loading Z-axis KPI details:", error);
-          setZAxisByProduct(false);
-        }
-      }
-      
-      if (yAxis && yAxis !== "none") {
+      if (yAxis) {
         try {
           const yKpiDetails = await fetchKPIById(yAxis);
           setYAxisByProduct(yKpiDetails.ByProduct);
@@ -62,10 +53,20 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
           setYAxisByProduct(false);
         }
       }
+      
+      if (zAxis && zAxis !== "none") {
+        try {
+          const zKpiDetails = await fetchKPIById(zAxis);
+          setZAxisByProduct(zKpiDetails.ByProduct);
+        } catch (error) {
+          console.error("Error loading Z-axis KPI details:", error);
+          setZAxisByProduct(false);
+        }
+      }
     };
 
     loadKPIDetails();
-  }, [zAxis, yAxis]);
+  }, [yAxis, zAxis]);
 
   if (!data || data.length === 0) {
     return (
@@ -79,37 +80,38 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
     );
   }
 
-  // Determine which axis data to show
-  const activeAxisId = showZAxis ? zAxis : yAxis;
-  
-  // Filter data keys based on the active axis or combined view
+  // Determine which axis data to show - isolate individual views properly
   const getFilteredDataKeys = () => {
-    if (showCombined && yAxis && zAxis) {
+    if (showCombined && zAxis && zAxis !== "none" && yAxis) {
       // Show specific series based on combinedType for ByProduct KPIs
-      if (zAxisByProduct && yAxisByProduct) {
+      if (yAxisByProduct && zAxisByProduct) {
         if (combinedType === 1) {
           return [
-            `KPI ${zAxis} (Produto 1)`,
-            `KPI ${yAxis} (Produto 1)`
+            `KPI ${yAxis} (Produto 1)`,
+            `KPI ${zAxis} (Produto 1)`
           ].filter(key => data.some(item => key in item));
         } else {
           return [
-            `KPI ${zAxis} (Produto 2)`,
-            `KPI ${yAxis} (Produto 2)`
+            `KPI ${yAxis} (Produto 2)`,
+            `KPI ${zAxis} (Produto 2)`
           ].filter(key => data.some(item => key in item));
         }
       } else {
         // Regular combined view for non-ByProduct KPIs
-        const allKeys = Object.keys(data[0] || {});
-        return allKeys.filter(key => key !== "name" && key !== "originalKey");
+        return [
+          `KPI ${yAxis}`,
+          `KPI ${zAxis}`
+        ].filter(key => data.some(item => key in item));
       }
     }
     
-    if (!activeAxisId) return [];
+    // Individual KPI view - only show the selected KPI's data
+    const targetKpiId = showZAxis ? yAxis : zAxis;
+    if (!targetKpiId || targetKpiId === "none") return [];
     
     const allKeys = Object.keys(data[0] || {});
     return allKeys.filter(key => 
-      key.includes(`KPI ${activeAxisId}`) && key !== "name" && key !== "originalKey"
+      key.includes(`KPI ${targetKpiId}`) && key !== "name" && key !== "originalKey"
     );
   };
 
@@ -120,19 +122,21 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
 
   // Get the unit for Y-axis label
   const getYAxisLabel = () => {
-    if (showCombined) {
-      const zUnit = kpiUnits[zAxis] || "";
+    if (showCombined && yAxis && zAxis && zAxis !== "none") {
       const yUnit = kpiUnits[yAxis] || "";
+      const zUnit = kpiUnits[zAxis] || "";
       
-      if (zUnit && yUnit) {
-        return `Valor (${zUnit} | ${yUnit})`;
-      } else if (zUnit || yUnit) {
-        return `Valor (${zUnit || yUnit})`;
+      if (yUnit && zUnit) {
+        return `Valor (${yUnit} | ${zUnit})`;
+      } else if (yUnit || zUnit) {
+        return `Valor (${yUnit || zUnit})`;
       } else {
         return "Valor";
       }
     }
-    const unit = kpiUnits[activeAxisId];
+    
+    const activeKpiId = showZAxis ? yAxis : zAxis;
+    const unit = kpiUnits[activeKpiId];
     return unit ? `Valor (${unit})` : "Valor";
   };
 
@@ -242,20 +246,19 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
   };
 
   const renderToggleButtons = () => {
-    if (!yAxis || yAxis === "none") return null;
+    if (!zAxis || zAxis === "none") return null;
 
-    const bothByProduct = zAxisByProduct && yAxisByProduct;
+    const bothByProduct = yAxisByProduct && zAxisByProduct;
 
     return (
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Mostrar eixo:</span>
+      <div className="flex items-center gap-2 flex-wrap">
         <Button
           variant={showZAxis && !showCombined ? "default" : "outline"}
           size="sm"
           onClick={() => {setShowZAxis(true); setShowCombined(false);}}
           className="transition-transform duration-200 hover:scale-105"
         >
-          Y (KPI {zAxis})
+          Y (KPI {yAxis})
         </Button>
         <Button
           variant={!showZAxis && !showCombined ? "default" : "outline"}
@@ -263,7 +266,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
           onClick={() => {setShowZAxis(false); setShowCombined(false);}}
           className="transition-transform duration-200 hover:scale-105"
         >
-          Z (KPI {yAxis})
+          Z (KPI {zAxis})
         </Button>
         
         {bothByProduct ? (
@@ -302,9 +305,11 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-start gap-4">
           <CardTitle>Pré-visualização do Gráfico</CardTitle>
-          {renderToggleButtons()}
+          <div className="flex-shrink-0">
+            {renderToggleButtons()}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
