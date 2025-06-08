@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   BarChart, 
@@ -31,30 +30,20 @@ interface ChartPreviewProps {
 }
 
 const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProps) => {
-  const [showYAxis, setShowYAxis] = useState(true); // Default to Y axis
+  const [showZAxis, setShowZAxis] = useState(true); // Toggle between Y and Z axis data
   const [showCombined, setShowCombined] = useState(false); // New toggle for Y/Z combined view
   const [combinedType, setCombinedType] = useState<1 | 2>(1); // For Y/Z [1] and Y/Z [2]
   const [zAxisByProduct, setZAxisByProduct] = useState(false);
   const [yAxisByProduct, setYAxisByProduct] = useState(false);
   
-  const { kpiUnits } = useChartDataProcessor(yAxis, xAxis, zAxis);
+  const { kpiUnits } = useChartDataProcessor(zAxis, xAxis, yAxis);
 
   console.log("ChartPreview: Received props:", { chartType, data, xAxis, yAxis, zAxis });
 
   // Load ByProduct info for both KPIs
   useEffect(() => {
     const loadKPIDetails = async () => {
-      if (yAxis) {
-        try {
-          const yKpiDetails = await fetchKPIById(yAxis);
-          setYAxisByProduct(yKpiDetails.ByProduct);
-        } catch (error) {
-          console.error("Error loading Y-axis KPI details:", error);
-          setYAxisByProduct(false);
-        }
-      }
-      
-      if (zAxis && zAxis !== "none") {
+      if (zAxis) {
         try {
           const zKpiDetails = await fetchKPIById(zAxis);
           setZAxisByProduct(zKpiDetails.ByProduct);
@@ -63,10 +52,20 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
           setZAxisByProduct(false);
         }
       }
+      
+      if (yAxis && yAxis !== "none") {
+        try {
+          const yKpiDetails = await fetchKPIById(yAxis);
+          setYAxisByProduct(yKpiDetails.ByProduct);
+        } catch (error) {
+          console.error("Error loading Y-axis KPI details:", error);
+          setYAxisByProduct(false);
+        }
+      }
     };
 
     loadKPIDetails();
-  }, [yAxis, zAxis]);
+  }, [zAxis, yAxis]);
 
   if (!data || data.length === 0) {
     return (
@@ -80,38 +79,37 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
     );
   }
 
-  // Determine which axis data to show - isolate individual views properly
+  // Determine which axis data to show
+  const activeAxisId = showZAxis ? zAxis : yAxis;
+  
+  // Filter data keys based on the active axis or combined view
   const getFilteredDataKeys = () => {
-    if (showCombined && zAxis && zAxis !== "none" && yAxis) {
+    if (showCombined && yAxis && zAxis) {
       // Show specific series based on combinedType for ByProduct KPIs
-      if (yAxisByProduct && zAxisByProduct) {
+      if (zAxisByProduct && yAxisByProduct) {
         if (combinedType === 1) {
           return [
-            `KPI ${yAxis} (Produto 1)`,
-            `KPI ${zAxis} (Produto 1)`
+            `KPI ${zAxis} (Produto 1)`,
+            `KPI ${yAxis} (Produto 1)`
           ].filter(key => data.some(item => key in item));
         } else {
           return [
-            `KPI ${yAxis} (Produto 2)`,
-            `KPI ${zAxis} (Produto 2)`
+            `KPI ${zAxis} (Produto 2)`,
+            `KPI ${yAxis} (Produto 2)`
           ].filter(key => data.some(item => key in item));
         }
       } else {
         // Regular combined view for non-ByProduct KPIs
-        return [
-          `KPI ${yAxis}`,
-          `KPI ${zAxis}`
-        ].filter(key => data.some(item => key in item));
+        const allKeys = Object.keys(data[0] || {});
+        return allKeys.filter(key => key !== "name" && key !== "originalKey");
       }
     }
     
-    // Individual KPI view - show the selected KPI's data
-    const targetKpiId = showYAxis ? yAxis : zAxis;
-    if (!targetKpiId || targetKpiId === "none") return [];
+    if (!activeAxisId) return [];
     
     const allKeys = Object.keys(data[0] || {});
     return allKeys.filter(key => 
-      key.includes(`KPI ${targetKpiId}`) && key !== "name" && key !== "originalKey"
+      key.includes(`KPI ${activeAxisId}`) && key !== "name" && key !== "originalKey"
     );
   };
 
@@ -122,21 +120,19 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
 
   // Get the unit for Y-axis label
   const getYAxisLabel = () => {
-    if (showCombined && yAxis && zAxis && zAxis !== "none") {
-      const yUnit = kpiUnits[yAxis] || "";
+    if (showCombined) {
       const zUnit = kpiUnits[zAxis] || "";
+      const yUnit = kpiUnits[yAxis] || "";
       
-      if (yUnit && zUnit) {
-        return `Valor (${yUnit} | ${zUnit})`;
-      } else if (yUnit || zUnit) {
-        return `Valor (${yUnit || zUnit})`;
+      if (zUnit && yUnit) {
+        return `Valor (${zUnit} | ${yUnit})`;
+      } else if (zUnit || yUnit) {
+        return `Valor (${zUnit || yUnit})`;
       } else {
         return "Valor";
       }
     }
-    
-    const activeKpiId = showYAxis ? yAxis : zAxis;
-    const unit = kpiUnits[activeKpiId];
+    const unit = kpiUnits[activeAxisId];
     return unit ? `Valor (${unit})` : "Valor";
   };
 
@@ -246,64 +242,58 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
   };
 
   const renderToggleButtons = () => {
-    const hasZAxis = zAxis && zAxis !== "none";
-    const bothByProduct = yAxisByProduct && zAxisByProduct;
+    if (!yAxis || yAxis === "none") return null;
+
+    const bothByProduct = zAxisByProduct && yAxisByProduct;
 
     return (
-      <div className="flex items-center gap-2 flex-wrap">
-        {/* Y Button - Always visible if Y axis is selected */}
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">Mostrar eixo:</span>
         <Button
-          variant={showYAxis && !showCombined ? "default" : "outline"}
+          variant={showZAxis && !showCombined ? "default" : "outline"}
           size="sm"
-          onClick={() => {setShowYAxis(true); setShowCombined(false);}}
+          onClick={() => {setShowZAxis(true); setShowCombined(false);}}
           className="transition-transform duration-200 hover:scale-105"
         >
-          Y (KPI {yAxis})
+          Y (KPI {zAxis})
+        </Button>
+        <Button
+          variant={!showZAxis && !showCombined ? "default" : "outline"}
+          size="sm"
+          onClick={() => {setShowZAxis(false); setShowCombined(false);}}
+          className="transition-transform duration-200 hover:scale-105"
+        >
+          Z (KPI {yAxis})
         </Button>
         
-        {/* Z Button - Only visible if Z axis is selected */}
-        {hasZAxis && (
-          <Button
-            variant={!showYAxis && !showCombined ? "default" : "outline"}
-            size="sm"
-            onClick={() => {setShowYAxis(false); setShowCombined(false);}}
-            className="transition-transform duration-200 hover:scale-105"
-          >
-            Z (KPI {zAxis})
-          </Button>
-        )}
-        
-        {/* Y/Z Buttons - Only visible if both Y and Z axes are selected */}
-        {hasZAxis && (
-          bothByProduct ? (
-            <>
-              <Button
-                variant={showCombined && combinedType === 1 ? "default" : "outline"}
-                size="sm"
-                onClick={() => {setShowCombined(true); setCombinedType(1);}}
-                className="transition-transform duration-200 hover:scale-105"
-              >
-                Y/Z [1]
-              </Button>
-              <Button
-                variant={showCombined && combinedType === 2 ? "default" : "outline"}
-                size="sm"
-                onClick={() => {setShowCombined(true); setCombinedType(2);}}
-                className="transition-transform duration-200 hover:scale-105"
-              >
-                Y/Z [2]
-              </Button>
-            </>
-          ) : (
+        {bothByProduct ? (
+          <>
             <Button
-              variant={showCombined ? "default" : "outline"}
+              variant={showCombined && combinedType === 1 ? "default" : "outline"}
               size="sm"
-              onClick={() => setShowCombined(true)}
+              onClick={() => {setShowCombined(true); setCombinedType(1);}}
               className="transition-transform duration-200 hover:scale-105"
             >
-              Y/Z
+              Y/Z [1]
             </Button>
-          )
+            <Button
+              variant={showCombined && combinedType === 2 ? "default" : "outline"}
+              size="sm"
+              onClick={() => {setShowCombined(true); setCombinedType(2);}}
+              className="transition-transform duration-200 hover:scale-105"
+            >
+              Y/Z [2]
+            </Button>
+          </>
+        ) : (
+          <Button
+            variant={showCombined ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowCombined(true)}
+            className="transition-transform duration-200 hover:scale-105"
+          >
+            Y/Z
+          </Button>
         )}
       </div>
     );
@@ -312,11 +302,9 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-start gap-4">
+        <div className="flex justify-between items-center">
           <CardTitle>Pré-visualização do Gráfico</CardTitle>
-          <div className="flex-shrink-0">
-            {renderToggleButtons()}
-          </div>
+          {renderToggleButtons()}
         </div>
       </CardHeader>
       <CardContent>
