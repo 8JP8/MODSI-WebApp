@@ -43,9 +43,8 @@ const CustomizedAxisTick = (props: any) => {
   );
 };
 
-// Custom Tooltip Component (from previous step)
+// Custom Tooltip Component (for Bar/Line/Scatter charts)
 const CustomTooltip = ({ active, payload, label }: any) => {
-  // ... (this component remains unchanged)
   if (active && payload && payload.length) {
     return (
       <div className="p-2 bg-white border border-gray-300 rounded-md shadow-lg">
@@ -70,7 +69,6 @@ interface ChartPreviewProps {
 }
 
 const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProps) => {
-  // ... (all state, hooks, and functions up to renderChart remain the same)
   const [showYAxis, setShowYAxis] = useState(true);
   const [showCombined, setShowCombined] = useState(false);
   const [combinedType, setCombinedType] = useState<1 | 2>(1);
@@ -164,7 +162,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
     );
   }
 
-  const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff7300", "#8dd1e1"];
+  const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff7300", "#dd88dd"];
 
   const getYAxisLabel = () => {
     if (showCombined && yAxis && zAxis && zAxis !== "none") {
@@ -180,17 +178,12 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
   };
   
   const renderChart = () => {
-    // --- FIX 2: Check if labels should be rotated ---
     const shouldRotateLabels = displayData.length > 3;
 
-    // --- FIX 3: Define XAxis props once for reuse ---
     const xAxisProps = {
       dataKey: "name",
-      // Increase height to make space for rotated labels
       height: shouldRotateLabels ? 80 : 30,
-      // Use our custom tick component if labels should be rotated
       tick: shouldRotateLabels ? <CustomizedAxisTick /> : undefined,
-      // Ensure all labels are shown when rotated, otherwise let Recharts decide
       interval: shouldRotateLabels ? 0 : 'auto',
     };
 
@@ -199,7 +192,6 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
       case "cyls":
         return (
           <ResponsiveContainer width="100%" height={350}>
-            {/* Increase bottom margin to prevent cutting off labels */}
             <BarChart data={displayData} margin={{ top: 5, right: 20, left: 10, bottom: shouldRotateLabels ? 25 : 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis {...xAxisProps} />
@@ -228,7 +220,6 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
           </ResponsiveContainer>
         );
       case "pie":
-        // Check if we have Product 1 and Product 2 data (ByProduct KPIs)
         const hasProduct1Data = dataKeys.some(key => key.includes('(Produto 1)'));
         const hasProduct2Data = dataKeys.some(key => key.includes('(Produto 2)'));
         const hasBothProducts = hasProduct1Data && hasProduct2Data;
@@ -237,7 +228,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
           const product1Key = dataKeys.find(key => key.includes('(Produto 1)'));
           const product2Key = dataKeys.find(key => key.includes('(Produto 2)'));
           
-          if (!product1Key || !product2Key) return null; // Should not happen due to checks above
+          if (!product1Key || !product2Key) return null;
 
           const pieDataProduct1 = displayData.map((item, index) => ({
             name: item.name,
@@ -249,11 +240,10 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
           const pieDataProduct2 = displayData.map((item, index) => ({
             name: item.name,
             value: item[product2Key] || 0,
-            fill: colors[(index + 2) % colors.length], // Offset colors for distinction
+            fill: colors[(index + 2) % colors.length],
             seriesName: product2Key,
           })).filter(item => item.value > 0);
           
-          // --- FIX: Create a single, unified payload for the legend ---
           const legendPayload = [
             ...pieDataProduct1,
             ...pieDataProduct2
@@ -266,54 +256,25 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
           return (
             <ResponsiveContainer width="100%" height={350}>
               <PieChart>
-                {/* Inner pie for Product 1 */}
-                <Pie
-                  data={pieDataProduct1}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={false} // Disable labels for inner pie to avoid overlap
-                  innerRadius={30}
-                  outerRadius={60}
-                  fill="#8884d8"
-                  dataKey="value"
-                  name={product1Key}
-                  animationBegin={0}
-                  animationDuration={800}
-                >
-                  {pieDataProduct1.map((entry, index) => (
-                    <Cell key={`inner-cell-${index}`} fill={entry.fill} />
-                  ))}
+                <Pie data={pieDataProduct1} cx="50%" cy="50%" labelLine={false} label={false} innerRadius={30} outerRadius={60} fill="#8884d8" dataKey="value" name={product1Key}>
+                  {pieDataProduct1.map((entry, index) => ( <Cell key={`inner-cell-${index}`} fill={entry.fill} /> ))}
                 </Pie>
-                {/* Outer pie for Product 2 */}
-                <Pie
-                  data={pieDataProduct2}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  innerRadius={70}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                  name={product2Key}
-                  animationBegin={0}
-                  animationDuration={800}
-                >
-                  {pieDataProduct2.map((entry, index) => (
-                    <Cell key={`outer-cell-${index}`} fill={entry.fill} />
-                  ))}
+                <Pie data={pieDataProduct2} cx="50%" cy="50%" labelLine={false} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} innerRadius={70} outerRadius={100} fill="#8884d8" dataKey="value" name={product2Key}>
+                  {pieDataProduct2.map((entry, index) => ( <Cell key={`outer-cell-${index}`} fill={entry.fill} /> ))}
                 </Pie>
+                {/* --- FIX: Corrected Tooltip Content Logic --- */}
                 <Tooltip 
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       const data = payload[0];
-                      const seriesName = data.payload.seriesName || data.name;
+                      const categoryName = data.name; // e.g., "Jun 2025"
+                      const seriesName = data.payload.seriesName; // e.g., "KPI 28 (Produto 1)"
+                      
                       return (
                         <div className="p-2 bg-white border border-gray-300 rounded-md shadow-lg">
-                          <p className="font-bold text-gray-800">{seriesName}</p>
+                          <p className="font-bold text-gray-800">{categoryName}</p>
                           <p style={{ color: data.payload.fill }}>
-                            {data.name}: {data.value}
+                            {`${seriesName}: ${data.value}`}
                           </p>
                         </div>
                       );
@@ -321,44 +282,26 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                     return null;
                   }}
                 />
-                <Legend 
-                  payload={legendPayload}
-                  wrapperStyle={{ paddingTop: '20px', color: '#374151' }}
-                  iconType="square"
-                />
+                <Legend payload={legendPayload} wrapperStyle={{ paddingTop: '20px' }} iconType="square" />
               </PieChart>
             </ResponsiveContainer>
           );
         } else {
-          // Single pie chart for non-ByProduct KPIs or single product
+          // Single pie chart logic (remains the same)
           const pieData = displayData.map((item, index) => {
-            const dataKey = dataKeys[0]; // Use the first (and typically only) data key
+            const dataKey = dataKeys[0];
             return {
               name: item.name,
               value: item[dataKey] || 0,
               fill: colors[index % colors.length]
             };
-          }).filter(item => item.value > 0); // Filter out zero values
+          }).filter(item => item.value > 0);
 
           return (
             <ResponsiveContainer width="100%" height={350}>
               <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  name={dataKeys[0]}
-                  animationBegin={0}
-                  animationDuration={800}
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
+                <Pie data={pieData} cx="50%" cy="50%" labelLine={false} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} outerRadius={80} fill="#8884d8" dataKey="value" name={dataKeys[0]}>
+                  {pieData.map((entry, index) => ( <Cell key={`cell-${index}`} fill={entry.fill} /> ))}
                 </Pie>
                 <Tooltip 
                   content={({ active, payload }) => {
@@ -368,7 +311,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                         <div className="p-2 bg-white border border-gray-300 rounded-md shadow-lg">
                           <p className="font-bold text-gray-800">{data.name}</p>
                           <p style={{ color: data.payload.fill }}>
-                            {dataKeys[0]}: {data.value}
+                            {`${dataKeys[0]}: ${data.value}`}
                           </p>
                         </div>
                       );
@@ -376,15 +319,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                     return null;
                   }}
                 />
-                <Legend 
-                  payload={pieData.map((item) => ({
-                    value: `${dataKeys[0]} - ${item.name}`,
-                    type: 'square' as const,
-                    color: item.fill
-                  }))}
-                  wrapperStyle={{ paddingTop: '20px', color: '#374151' }}
-                  iconType="square"
-                />
+                <Legend payload={pieData.map((item) => ({ value: `${dataKeys[0]} - ${item.name}`, type: 'square' as const, color: item.fill }))} wrapperStyle={{ paddingTop: '20px' }} iconType="square" />
               </PieChart>
             </ResponsiveContainer>
           );
@@ -394,7 +329,6 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
           <ResponsiveContainer width="100%" height={350}>
             <ScatterChart data={displayData} margin={{ top: 5, right: 20, left: 10, bottom: shouldRotateLabels ? 25 : 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              {/* For scatter, we must also set `type="category"` */}
               <XAxis {...xAxisProps} type="category" />
               <YAxis>
                 <Label value={getYAxisLabel()} angle={-90} position="insideLeft" style={{ textAnchor: 'middle' }}/>
@@ -411,7 +345,6 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
   };
 
   const renderToggleButtons = () => {
-    // ... (This function remains unchanged)
     const hasZAxis = zAxis && zAxis !== "none";
     const bothByProduct = yAxisByProduct && zAxisByProduct;
     return (
