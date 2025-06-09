@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext"; // Confirme que o caminho está correto
 import { 
   Select, 
   SelectContent, 
@@ -27,6 +29,9 @@ const KPIAxisSelector = ({
   onSelectSecondaryAxis,
   onSelectZAxis
 }: KPIAxisSelectorProps) => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
   const [kpiOptions, setKpiOptions] = useState<KPIOption[]>([]);
   const [kpiUnits, setKpiUnits] = useState<{[key: string]: string}>({});
   const [kpiByProduct, setKpiByProduct] = useState<{[key: string]: boolean}>({});
@@ -40,37 +45,62 @@ const KPIAxisSelector = ({
   ];
 
   useEffect(() => {
+    // Definimos a função async dentro do useEffect para poder usar async/await
     const loadKPIs = async () => {
       try {
         setLoading(true);
+        // A função fetchUserKPIs agora lança um erro que podemos inspecionar
         const options = await fetchUserKPIs();
         setKpiOptions(options);
         
         const units: {[key: string]: string} = {};
         const byProducts: {[key: string]: boolean} = {};
-        for (const option of options) {
+        
+        // Usamos Promise.all para buscar os detalhes de todos os KPIs em paralelo
+        await Promise.all(options.map(async (option) => {
           try {
             const kpiDetails = await fetchKPIById(option.id);
             units[option.id] = kpiDetails.Unit;
             byProducts[option.id] = kpiDetails.ByProduct;
-          } catch (error) {
+          } catch (error: any) {
+            // Se um dos fetches individuais falhar, pode ser um erro 401 também
+            if (error.response?.status === 401 || error.response?.status === 403) {
+              throw error; // Lança o erro para ser apanhado pelo catch principal
+            }
             console.error(`Error loading details for KPI ${option.id}:`, error);
+            // Define valores padrão em caso de erro para este KPI específico
             units[option.id] = "";
             byProducts[option.id] = false;
           }
-        }
+        }));
+
         setKpiUnits(units);
         setKpiByProduct(byProducts);
-      } catch (error) {
-        toast.error("Erro ao carregar KPIs");
-        console.error("Error loading KPIs:", error);
+
+      } catch (error: any) {
+        console.error("Critical error loading KPIs:", error);
+
+        // Verifica se o erro tem a `response` e se o status é 401 ou 403
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          toast.error("A sua sessão expirou. Por favor, faça login novamente.");
+          
+          // Aguarda um pouco para o utilizador ler o toast e depois faz logout
+          setTimeout(() => {
+            logout();
+            navigate('/login');
+          }, 2500);
+
+        } else {
+          // Para outros tipos de erro, apenas mostra a mensagem
+          toast.error("Erro ao carregar os seus KPIs. Tente novamente mais tarde.");
+        }
       } finally {
         setLoading(false);
       }
     };
 
     loadKPIs();
-  }, []);
+  }, [logout, navigate]); // Adicionar logout e navigate às dependências do useEffect
 
   if (loading) {
     return (
