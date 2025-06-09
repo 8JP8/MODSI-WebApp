@@ -234,21 +234,34 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
         const hasBothProducts = hasProduct1Data && hasProduct2Data;
 
         if (hasBothProducts) {
-          // Create nested pie chart for Product 1 (inner) and Product 2 (outer)
-          const product1Keys = dataKeys.filter(key => key.includes('(Produto 1)'));
-          const product2Keys = dataKeys.filter(key => key.includes('(Produto 2)'));
+          const product1Key = dataKeys.find(key => key.includes('(Produto 1)'));
+          const product2Key = dataKeys.find(key => key.includes('(Produto 2)'));
           
+          if (!product1Key || !product2Key) return null; // Should not happen due to checks above
+
           const pieDataProduct1 = displayData.map((item, index) => ({
             name: item.name,
-            value: item[product1Keys[0]] || 0,
-            fill: colors[index % colors.length]
+            value: item[product1Key] || 0,
+            fill: colors[index % colors.length],
+            seriesName: product1Key,
           })).filter(item => item.value > 0);
 
           const pieDataProduct2 = displayData.map((item, index) => ({
             name: item.name,
-            value: item[product2Keys[0]] || 0,
-            fill: colors[(index + 2) % colors.length] // Offset colors for distinction
+            value: item[product2Key] || 0,
+            fill: colors[(index + 2) % colors.length], // Offset colors for distinction
+            seriesName: product2Key,
           })).filter(item => item.value > 0);
+          
+          // --- FIX: Create a single, unified payload for the legend ---
+          const legendPayload = [
+            ...pieDataProduct1,
+            ...pieDataProduct2
+          ].map(entry => ({
+            value: `${entry.seriesName} - ${entry.name}`,
+            type: 'square' as const,
+            color: entry.fill
+          }));
 
           return (
             <ResponsiveContainer width="100%" height={350}>
@@ -264,7 +277,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                   outerRadius={60}
                   fill="#8884d8"
                   dataKey="value"
-                  name={product1Keys[0]}
+                  name={product1Key}
                   animationBegin={0}
                   animationDuration={800}
                 >
@@ -283,7 +296,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
-                  name={product2Keys[0]}
+                  name={product2Key}
                   animationBegin={0}
                   animationDuration={800}
                 >
@@ -295,11 +308,12 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       const data = payload[0];
+                      const seriesName = data.payload.seriesName || data.name;
                       return (
                         <div className="p-2 bg-white border border-gray-300 rounded-md shadow-lg">
-                          <p className="font-bold text-gray-800">{data.name}</p>
-                          <p style={{ color: data.color }}>
-                            {data.payload.name}: {data.value}
+                          <p className="font-bold text-gray-800">{seriesName}</p>
+                          <p style={{ color: data.payload.fill }}>
+                            {data.name}: {data.value}
                           </p>
                         </div>
                       );
@@ -308,18 +322,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                   }}
                 />
                 <Legend 
-                  payload={[
-                    ...pieDataProduct1.map((item, index) => ({
-                      value: `${product1Keys[0]} - ${item.name}`,
-                      type: 'square' as const,
-                      color: item.fill
-                    })),
-                    ...pieDataProduct2.map((item, index) => ({
-                      value: `${product2Keys[0]} - ${item.name}`,
-                      type: 'square' as const,
-                      color: item.fill
-                    }))
-                  ]}
+                  payload={legendPayload}
                   wrapperStyle={{ paddingTop: '20px', color: '#374151' }}
                   iconType="square"
                 />
@@ -364,7 +367,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                       return (
                         <div className="p-2 bg-white border border-gray-300 rounded-md shadow-lg">
                           <p className="font-bold text-gray-800">{data.name}</p>
-                          <p style={{ color: data.color }}>
+                          <p style={{ color: data.payload.fill }}>
                             {dataKeys[0]}: {data.value}
                           </p>
                         </div>
@@ -374,7 +377,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                   }}
                 />
                 <Legend 
-                  payload={pieData.map((item, index) => ({
+                  payload={pieData.map((item) => ({
                     value: `${dataKeys[0]} - ${item.name}`,
                     type: 'square' as const,
                     color: item.fill
