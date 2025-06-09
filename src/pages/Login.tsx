@@ -192,7 +192,7 @@ const Login = () => {
               </div>
               <Button 
                 type="submit" 
-                className="w-full text-base py-5"
+                className="w-full text-base py-5 group"
                 disabled={isLoading || emailExists === false}
               >
                 {isLoading ? (
@@ -202,7 +202,7 @@ const Login = () => {
                   </>
                 ) : (
                   <>
-                    <LogIn className="mr-2 h-4 w-4" />
+                    <LogIn className="mr-2 h-4 w-4 group-hover:rotate-12" />
                     Entrar
                   </>
                 )}
@@ -239,4 +239,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Login
