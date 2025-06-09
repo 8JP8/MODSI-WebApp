@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowLeft, Lock, Loader2, Eye, EyeOff, KeyRound, Repeat2, UserLock } from "lucide-react";
+import { ArrowLeft, Lock, Loader2, Eye, EyeOff, KeyRound, Repeat2, SquarePen } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const PasswordReset = () => {
@@ -188,7 +188,7 @@ const PasswordReset = () => {
                   </>
                 ) : (
                   <>
-                    <UserLock className="mr-2 h-4 w-4 group-hover:rotate-12" />
+                    <SquarePen className="mr-2 h-4 w-4 group-hover:rotate-12" />
                     Alterar Password
                   </>
                 )}
