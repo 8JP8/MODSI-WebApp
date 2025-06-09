@@ -9,6 +9,7 @@ import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import VisualizationHub from "./pages/VisualizationHub";
+import VisualizationLanding from "./pages/VisualizationLanding";
 import VRConfiguratorPage from "./pages/VRConfiguratorPage";
 import VRRoom from "./pages/VRRoom";
 import NotFound from "./pages/NotFound";
@@ -77,12 +78,8 @@ const App = () => {
               expand={true}
               duration={4000}
             />
-            {/* 
-              FIX: BrowserRouter must wrap AuthProvider because AuthProvider
-              now uses the useNavigate() hook, which needs the router context.
-            */}
-            <BrowserRouter>
-              <AuthProvider>
+            <AuthProvider>
+              <BrowserRouter>
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/dashboard" element={<Dashboard />} />
@@ -102,8 +99,8 @@ const App = () => {
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <PWAInstallPrompt />
-              </AuthProvider>
-            </BrowserRouter>
+              </BrowserRouter>
+            </AuthProvider>
           </TooltipProvider>
         </ThemeProvider>
       </QueryClientProvider>

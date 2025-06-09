@@ -53,19 +53,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [username, setUsername] = useState<string | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
-  const navigate = useNavigate();
   
   useEffect(() => {
     checkAuth();
   }, []);
-
-  const logout = () => {
-    localStorage.removeItem("authToken");
-    setIsAuthenticated(false);
-    setUsername(null);
-    setUserData(null);
-    navigate("/login", { replace: true });
-  };
 
   // Validate token with server
   const validateToken = async (): Promise<boolean> => {
@@ -78,11 +69,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const parsedToken = JSON.parse(tokenData) as AuthTokenData;
       
+      // Check if token is expired locally first
       if (new Date().getTime() >= parsedToken.expiry) {
-        logout();
+        localStorage.removeItem("authToken");
+        setIsAuthenticated(false);
+        setUsername(null);
+        setUserData(null);
         return false;
       }
       
+      // Validate token with server - use Bearer authorization header
       const response = await fetch(
         `${API_BASE_URL}/User/CheckToken?code=${API_CODE}`,
         {
@@ -96,7 +92,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (!response.ok) {
         console.error("Token validation failed:", response.statusText);
-        logout();
+        localStorage.removeItem("authToken");
+        setIsAuthenticated(false);
+        setUsername(null);
+        setUserData(null);
         return false;
       }
       
@@ -108,12 +107,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUserData(parsedToken.userData);
         return true;
       } else {
-        logout();
+        localStorage.removeItem("authToken");
+        setIsAuthenticated(false);
+        setUsername(null);
+        setUserData(null);
         return false;
       }
     } catch (error) {
       console.error("Error validating token:", error);
-      logout();
+      localStorage.removeItem("authToken");
+      setIsAuthenticated(false);
+      setUsername(null);
+      setUserData(null);
       return false;
     }
   };
@@ -214,10 +219,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
+    // Reset state
     setIsAuthenticated(false);
     setUsername(null);
     setUserData(null);
     
+    // Validate input
     if (!validateEmail(email)) {
       toast.error("Formato de email inválido");
       return false;
@@ -229,20 +236,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     
     try {
+      // First check if email exists
       const emailExists = await checkEmail(email);
       if (!emailExists) {
         toast.error("Email não registado no sistema");
         return false;
       }
       
+      // Get salt for hashing
       const salt = await getSaltForUser(email);
       if (!salt) {
         toast.error("Erro ao obter dados de autenticação");
         return false;
       }
       
+      // Hash the password
       const hashedPassword = hashPassword(password, salt);
       
+      // Attempt login
       const loginResponse = await fetch(`${API_BASE_URL}/User/Login`, {
         method: 'POST',
         headers: {
@@ -267,12 +278,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const loginData = await loginResponse.json();
       
       if (loginData && loginData.Token) {
+        // Now get user details using the received token
         const userDetails = await getUserDetails(email, loginData.Token);
         if (!userDetails) {
           toast.error("Não foi possível obter os detalhes do utilizador");
           return false;
         }
         
+        // Store token with expiry (8 hours instead of 1)
         const tokenData: AuthTokenData = {
           token: loginData.Token,
           expiry: new Date().getTime() + 8 * 60 * 60 * 1000, // 8 hours
@@ -312,10 +325,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const parsedToken = JSON.parse(tokenData) as AuthTokenData;
       
+      // Only check local expiry - don't validate with server on every check
       const isValid = new Date().getTime() < parsedToken.expiry;
       
       if (!isValid) {
-        logout();
+        localStorage.removeItem("authToken");
+        setIsAuthenticated(false);
+        setUsername(null);
+        setUserData(null);
         return false;
       }
       
@@ -325,9 +342,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return true;
     } catch (error) {
       console.error("Error parsing auth token:", error);
-      logout();
+      localStorage.removeItem("authToken");
+      setIsAuthenticated(false);
+      setUsername(null);
+      setUserData(null);
       return false;
     }
+  };
+
+  const logout = () => {
+    localStorage.removeItem("authToken");
+    setIsAuthenticated(false);
+    setUsername(null);
+    setUserData(null);
   };
 
   // Request password reset
@@ -338,6 +365,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
+      // First check if email exists
       const emailExists = await checkEmail(email);
       if (!emailExists) {
         toast.error("Email não registado no sistema");
@@ -381,6 +409,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
+      // Generate new salt and hash password
       const salt = generateSalt();
       const hashedPassword = hashPassword(password, salt);
 
@@ -407,7 +436,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       toast.success("Password alterada com sucesso");
       return true;
-    } catch (error)_ {
+    } catch (error) {
       console.error("Error resetting password:", error);
       toast.error("Erro ao alterar password");
       return false;

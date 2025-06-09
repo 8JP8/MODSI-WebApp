@@ -9,7 +9,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fetchUserKPIs, fetchKPIById, KPIOption } from "@/services/kpiService";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth";
 
 interface KPIAxisSelectorProps {
   selectedYAxis: string;
@@ -32,7 +31,6 @@ const KPIAxisSelector = ({
   const [kpiUnits, setKpiUnits] = useState<{[key: string]: string}>({});
   const [kpiByProduct, setKpiByProduct] = useState<{[key: string]: boolean}>({});
   const [loading, setLoading] = useState(true);
-  const { logout } = useAuth();
 
   const timeOptions = [
     { value: "days", label: "Dias" },
@@ -46,11 +44,6 @@ const KPIAxisSelector = ({
       try {
         setLoading(true);
         const options = await fetchUserKPIs();
-        
-        if (!options) {
-          throw new Error("Failed to fetch KPIs or data is null.");
-        }
-
         setKpiOptions(options);
         
         const units: {[key: string]: string} = {};
@@ -69,16 +62,15 @@ const KPIAxisSelector = ({
         setKpiUnits(units);
         setKpiByProduct(byProducts);
       } catch (error) {
-        console.error("Error loading KPIs, logging out:", error);
-        toast.error("Sua sessão expirou. Por favor, faça login novamente.");
-        logout();
+        toast.error("Erro ao carregar KPIs");
+        console.error("Error loading KPIs:", error);
       } finally {
         setLoading(false);
       }
     };
 
     loadKPIs();
-  }, [logout]);
+  }, []);
 
   if (loading) {
     return (
