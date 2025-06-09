@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { useNavigate } from "react-router-dom"; // Import for redirection
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import forge from "node-forge";
 
@@ -53,11 +53,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [username, setUsername] = useState<string | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
-  const navigate = useNavigate(); // Hook for programmatic navigation
+  const navigate = useNavigate();
   
   useEffect(() => {
     checkAuth();
   }, []);
+
+  const logout = () => {
+    localStorage.removeItem("authToken");
+    setIsAuthenticated(false);
+    setUsername(null);
+    setUserData(null);
+    navigate("/login", { replace: true });
+  };
 
   // Validate token with server
   const validateToken = async (): Promise<boolean> => {
@@ -71,7 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const parsedToken = JSON.parse(tokenData) as AuthTokenData;
       
       if (new Date().getTime() >= parsedToken.expiry) {
-        logout(); // Use the enhanced logout function
+        logout();
         return false;
       }
       
@@ -307,7 +315,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const isValid = new Date().getTime() < parsedToken.expiry;
       
       if (!isValid) {
-        logout(); // Use the enhanced logout function
+        logout();
         return false;
       }
       
@@ -317,19 +325,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return true;
     } catch (error) {
       console.error("Error parsing auth token:", error);
-      logout(); // Use the enhanced logout function
+      logout();
       return false;
     }
-  };
-
-  const logout = () => {
-    localStorage.removeItem("authToken");
-    setIsAuthenticated(false);
-    setUsername(null);
-    setUserData(null);
-    // Key change: Redirect user to the login page
-    // The `replace` option prevents using the browser's back button
-    navigate("/login", { replace: true });
   };
 
   // Request password reset
@@ -409,7 +407,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       toast.success("Password alterada com sucesso");
       return true;
-    } catch (error) {
+    } catch (error)_ {
       console.error("Error resetting password:", error);
       toast.error("Erro ao alterar password");
       return false;
