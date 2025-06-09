@@ -8,7 +8,7 @@ interface RequireAuthProps {
 }
 
 const RequireAuth = ({ children }: RequireAuthProps) => {
-  const { checkAuth, validateToken, logout } = useAuth();
+  const { checkAuth, validateToken, logout, isAuthenticated: authIsAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [isValidating, setIsValidating] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -21,11 +21,12 @@ const RequireAuth = ({ children }: RequireAuthProps) => {
       if (!checkAuth()) {
         toast.error("Sessão expirada. Por favor, faça login novamente.");
         navigate("/login", { replace: true });
+        setIsValidating(false);
         return;
       }
 
       try {
-        // Then validate with server
+        // Then validate with server - only if we have a token
         const isValid = await validateToken();
         
         if (!isValid) {
@@ -45,8 +46,15 @@ const RequireAuth = ({ children }: RequireAuthProps) => {
       }
     };
 
-    validateAuthentication();
-  }, [checkAuth, validateToken, logout, navigate]);
+    // Only validate if we think we should be authenticated
+    if (authIsAuthenticated || localStorage.getItem("authToken")) {
+      validateAuthentication();
+    } else {
+      // No token, redirect immediately
+      navigate("/login", { replace: true });
+      setIsValidating(false);
+    }
+  }, [checkAuth, validateToken, logout, navigate, authIsAuthenticated]);
 
   // Show loading while validating
   if (isValidating) {
