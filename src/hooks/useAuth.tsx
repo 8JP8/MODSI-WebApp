@@ -1,5 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import forge from "node-forge";
 
@@ -54,6 +53,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [username, setUsername] = useState<string | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const periodicValidationRef = useRef<NodeJS.Timeout | null>(null);
   
   // Memoized logout function to prevent recreation on every render
   const logout = useCallback(() => {
@@ -62,48 +62,57 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsAuthenticated(false);
     setUsername(null);
     setUserData(null);
+    
+    // Clear periodic validation
+    if (periodicValidationRef.current) {
+      clearInterval(periodicValidationRef.current);
+      periodicValidationRef.current = null;
+    }
   }, []);
 
   // Initialize auth state on mount
   useEffect(() => {
     console.log('Initializing auth state...');
-    checkAuth();
+    const hasToken = checkAuth();
     setIsInitialized(true);
+    
+    // Set up periodic validation only if we have a token
+    if (hasToken) {
+      setupPeriodicValidation();
+    }
   }, []);
 
-  // Periodic token validation - every 30 minutes
-  useEffect(() => {
-    if (isAuthenticated && isInitialized) {
-      console.log('Setting up periodic token validation');
-      const interval = setInterval(async () => {
-        console.log("Performing periodic token validation...");
-        
-        // Double check we still have a token before validating
-        const tokenData = localStorage.getItem("authToken");
-        if (!tokenData) {
-          console.log("No token found during periodic check, clearing interval");
-          logout();
-          return;
-        }
-        
-        const isValid = await validateToken();
-        if (!isValid) {
-          console.log("Periodic validation failed, logging out");
-          toast.error("Sessão expirada. Por favor, faça login novamente.");
-          logout();
-          // Force page reload to trigger navigation to login
-          window.location.href = "/login";
-        } else {
-          console.log("Periodic validation successful");
-        }
-      }, 30 * 60 * 1000); // 30 minutes
-
-      return () => {
-        console.log("Clearing periodic validation interval");
-        clearInterval(interval);
-      };
+  // Setup periodic validation
+  const setupPeriodicValidation = useCallback(() => {
+    // Clear existing interval if any
+    if (periodicValidationRef.current) {
+      clearInterval(periodicValidationRef.current);
     }
-  }, [isAuthenticated, isInitialized, logout]);
+
+    console.log('Setting up periodic token validation');
+    periodicValidationRef.current = setInterval(async () => {
+      console.log("Performing periodic token validation...");
+      
+      // Double check we still have a token before validating
+      const tokenData = localStorage.getItem("authToken");
+      if (!tokenData) {
+        console.log("No token found during periodic check");
+        logout();
+        return;
+      }
+      
+      const isValid = await validateToken();
+      if (!isValid) {
+        console.log("Periodic validation failed, logging out");
+        toast.error("Sessão expirada. Por favor, faça login novamente.");
+        logout();
+        // Force redirect to login
+        window.location.href = "/login";
+      } else {
+        console.log("Periodic validation successful");
+      }
+    }, 30 * 60 * 1000); // 30 minutes
+  }, [logout]);
 
   // Validate token with server
   const validateToken = async (): Promise<boolean> => {
@@ -340,6 +349,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUsername(userDetails.username || email);
         setUserData(userDetails);
         
+        // Setup periodic validation after successful login
+        setupPeriodicValidation();
+        
         console.log('Login successful, user authenticated');
         toast.success("Login efetuado com sucesso");
         return true;
@@ -473,6 +485,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (periodicValidationRef.current) {
+        clearInterval(periodicValidationRef.current);
+      }
+    };
+  }, []);
 
   return (
     <AuthContext.Provider value={{ 
