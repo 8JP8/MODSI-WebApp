@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext"; // Confirme que o caminho está correto
+import { useAuth } from "@/hooks/useAuth"; // Confirme que o caminho está correto
 import { 
   Select, 
   SelectContent, 
