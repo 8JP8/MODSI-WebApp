@@ -113,7 +113,7 @@ const PasswordReset = () => {
                   type="text"
                   value={resetCode}
                   onChange={(e) => setResetCode(e.target.value)}
-                  className="text-base p-4"
+                  className="text-base p-4 pl-10"
                   disabled={isLoading}
                 />
               </div>
@@ -127,7 +127,7 @@ const PasswordReset = () => {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="text-base p-4 pr-12"
+                    className="text-base p-4 pl-10"
                     disabled={isLoading}
                   />
                   <Button
@@ -156,7 +156,7 @@ const PasswordReset = () => {
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="text-base p-4 pr-12"
+                    className="text-base p-4 pl-10"
                     disabled={isLoading}
                   />
                   <Button
