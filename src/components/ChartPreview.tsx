@@ -212,111 +212,106 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
           </ResponsiveContainer>
         );
 
-      case "pie":
-        const hasProduct1Data = dataKeys.some(key => key.includes('(Produto 1)'));
-        const hasProduct2Data = dataKeys.some(key => key.includes('(Produto 2)'));
-        const hasBothProducts = hasProduct1Data && hasProduct2Data;
+      // --- START: Rigorously Re-implemented Pie Chart Logic ---
+      case "pie": {
+        const product1Key = dataKeys.find(key => key.includes('(Produto 1)'));
+        const product2Key = dataKeys.find(key => key.includes('(Produto 2)'));
 
-        if (hasBothProducts) {
-          const product1Key = dataKeys.find(key => key.includes('(Produto 1)'));
-          const product2Key = dataKeys.find(key => key.includes('(Produto 2)'));
-          
-          if (!product1Key || !product2Key) return null;
-
-          const pieDataProduct1 = displayData.map((item, index) => ({
-            name: item.name,
-            value: item[product1Key] || 0,
-            fill: colors[index % colors.length],
-            seriesName: product1Key,
-          })).filter(item => item.value > 0);
-
-          const pieDataProduct2 = displayData.map((item, index) => ({
-            name: item.name,
-            value: item[product2Key] || 0,
-            fill: colors[(index + 2) % colors.length],
-            seriesName: product2Key,
-          })).filter(item => item.value > 0);
-          
-          const legendPayload = [...pieDataProduct1, ...pieDataProduct2].map(entry => ({
-            value: `${entry.seriesName} - ${entry.name}`,
-            type: 'square' as const,
-            color: entry.fill
-          }));
-
-          return (
-            <ResponsiveContainer width="100%" height={350}>
-              <PieChart>
-                <Pie data={pieDataProduct1} cx="50%" cy="50%" labelLine={false} label={false} innerRadius={30} outerRadius={60} fill="#8884d8" dataKey="value" name={product1Key}>
-                  {pieDataProduct1.map((entry, index) => ( <Cell key={`inner-cell-${index}`} fill={entry.fill} /> ))}
-                </Pie>
-                {/* --- FIX: Labels removed from the outer pie for multi-series charts to avoid clutter --- */}
-                <Pie data={pieDataProduct2} cx="50%" cy="50%" labelLine={false} label={false} innerRadius={70} outerRadius={100} fill="#8884d8" dataKey="value" name={product2Key}>
-                  {pieDataProduct2.map((entry, index) => ( <Cell key={`outer-cell-${index}`} fill={entry.fill} /> ))}
-                </Pie>
-                <Tooltip 
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0];
-                      const seriesName = data.name; 
-                      const categoryName = data.payload.name; 
-                      
-                      return (
-                        <div className="p-2 bg-white border border-gray-300 rounded-md shadow-lg">
-                          <p className="font-bold text-gray-800">{categoryName}</p>
-                          <p style={{ color: data.payload.fill }}>
-                            {`${seriesName}: ${data.value}`}
-                          </p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Legend payload={legendPayload} wrapperStyle={{ paddingTop: '20px' }} iconType="square" />
-              </PieChart>
-            </ResponsiveContainer>
-          );
-        } else {
-          // Single pie chart logic: labels are kept here
-          const pieData = displayData.map((item, index) => {
-            const dataKey = dataKeys[0];
-            return {
+        const pieDataProduct1 = product1Key
+          ? displayData.map((item, index) => ({
               name: item.name,
-              value: item[dataKey] || 0,
-              fill: colors[index % colors.length]
-            };
-          }).filter(item => item.value > 0);
+              value: item[product1Key] || 0,
+              fill: colors[index % colors.length],
+            })).filter(item => item.value > 0)
+          : [];
 
+        const pieDataProduct2 = product2Key
+          ? displayData.map((item, index) => ({
+              name: item.name,
+              value: item[product2Key] || 0,
+              fill: colors[(index + 2) % colors.length],
+            })).filter(item => item.value > 0)
+          : [];
+
+        const hasProduct1Data = pieDataProduct1.length > 0;
+        const hasProduct2Data = pieDataProduct2.length > 0;
+
+        // Tooltip renderer is now universal for all pie charts
+        const renderPieTooltip = ({ active, payload }: any) => {
+          if (active && payload && payload.length) {
+            const data = payload[0];
+            const seriesName = data.name; 
+            const categoryName = data.payload.name;
+            
+            return (
+              <div className="p-2 bg-white border border-gray-300 rounded-md shadow-lg">
+                <p className="font-bold text-gray-800">{categoryName}</p>
+                <p style={{ color: data.payload.fill }}>
+                  {`${seriesName}: ${data.value}`}
+                </p>
+              </div>
+            );
+          }
+          return null;
+        };
+
+        // Case 1: Nested Pie Chart (Both products have data)
+        if (hasProduct1Data && hasProduct2Data && product1Key && product2Key) {
           return (
             <ResponsiveContainer width="100%" height={350}>
               <PieChart>
-                <Pie data={pieData} cx="50%" cy="50%" labelLine={false} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} outerRadius={80} fill="#8884d8" dataKey="value" name={dataKeys[0]}>
-                  {pieData.map((entry, index) => ( <Cell key={`cell-${index}`} fill={entry.fill} /> ))}
+                <Pie data={pieDataProduct1} dataKey="value" name={product1Key} cx="50%" cy="50%" outerRadius={60} innerRadius={30} label={false} labelLine={false}>
+                  {pieDataProduct1.map(entry => <Cell key={`cell-${entry.name}-p1`} fill={entry.fill} />)}
                 </Pie>
-                <Tooltip 
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0];
-                      const seriesName = data.name;
-                      const categoryName = data.payload.name;
-                      
-                      return (
-                        <div className="p-2 bg-white border border-gray-300 rounded-md shadow-lg">
-                          <p className="font-bold text-gray-800">{categoryName}</p>
-                          <p style={{ color: data.payload.fill }}>
-                            {`${seriesName}: ${data.value}`}
-                          </p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Legend payload={pieData.map((item) => ({ value: `${dataKeys[0]} - ${item.name}`, type: 'square' as const, color: item.fill }))} wrapperStyle={{ paddingTop: '20px' }} iconType="square" />
+                <Pie data={pieDataProduct2} dataKey="value" name={product2Key} cx="50%" cy="50%" outerRadius={100} innerRadius={70} label={false} labelLine={false}>
+                  {pieDataProduct2.map(entry => <Cell key={`cell-${entry.name}-p2`} fill={entry.fill} />)}
+                </Pie>
+                <Tooltip content={renderPieTooltip} />
+                <Legend payload={[...pieDataProduct1.map(e => ({ value: `${product1Key} - ${e.name}`, type: 'square' as const, color: e.fill })), ...pieDataProduct2.map(e => ({ value: `${product2Key} - ${e.name}`, type: 'square' as const, color: e.fill }))]} wrapperStyle={{ paddingTop: '20px' }} />
               </PieChart>
             </ResponsiveContainer>
           );
         }
+
+        // Case 2: Single Pie Chart (Only one product has data OR it's a non-product KPI)
+        let singlePieData: any[] = [];
+        let singleDataKey = '';
+
+        if (hasProduct1Data && product1Key) {
+          singlePieData = pieDataProduct1;
+          singleDataKey = product1Key;
+        } else if (hasProduct2Data && product2Key) {
+          singlePieData = pieDataProduct2;
+          singleDataKey = product2Key;
+        } else if (dataKeys.length > 0) {
+          // This handles the non-ByProduct case
+          singleDataKey = dataKeys[0];
+          singlePieData = displayData.map((item, index) => ({
+            name: item.name,
+            value: item[singleDataKey] || 0,
+            fill: colors[index % colors.length]
+          })).filter(item => item.value > 0);
+        }
+
+        if (singlePieData.length > 0 && singleDataKey) {
+          return (
+            <ResponsiveContainer width="100%" height={350}>
+              <PieChart>
+                <Pie data={singlePieData} dataKey="value" name={singleDataKey} cx="50%" cy="50%" outerRadius={80} labelLine={false} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                  {singlePieData.map(entry => <Cell key={`cell-${entry.name}`} fill={entry.fill} />)}
+                </Pie>
+                <Tooltip content={renderPieTooltip} />
+                <Legend payload={singlePieData.map(e => ({ value: `${singleDataKey} - ${e.name}`, type: 'square' as const, color: e.fill }))} wrapperStyle={{ paddingTop: '20px' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          );
+        }
+
+        // Fallback if no pie data can be shown
+        return <div className="text-center">Não há dados de pizza para exibir.</div>;
+      }
+      // --- END: Re-implemented Pie Chart Logic ---
+
       case "scatter":
         return (
           <ResponsiveContainer width="100%" height={350}>
