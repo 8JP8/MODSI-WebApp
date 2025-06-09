@@ -46,7 +46,7 @@ const ChartSelector = ({ charts, activeChartId, onChartSelect, onAddChart }: Cha
                   <div className="text-left">
                     <p className="font-medium">{chart.chartType}</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {chart.xAxis && chart.yAxis ? `${chart.xAxis} vs ${chart.yAxis}` : "Não configurado"}
+                      {chart.xAxis && chart.yAxis ? `${chart.xAxis} | ${chart.yAxis}` + (chart.zAxis ? ` | ${chart.zAxis}` : "") : "Não configurado"}
                     </p>
                   </div>
                 </Button>
