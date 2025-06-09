@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState, useRef } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -8,90 +8,43 @@ interface RequireAuthProps {
 }
 
 const RequireAuth = ({ children }: RequireAuthProps) => {
-  const { validateToken, logout } = useAuth();
+  const { isAuthenticated, isInitialized, validateToken, logout } = useAuth();
   const navigate = useNavigate();
   const [authState, setAuthState] = useState<'checking' | 'authenticated' | 'unauthenticated'>('checking');
-  const hasValidated = useRef(false);
-  const isNavigating = useRef(false);
 
   useEffect(() => {
-    // Prevent multiple validations
-    if (hasValidated.current || isNavigating.current) return;
-
     const validateAuthentication = async () => {
       try {
-        hasValidated.current = true;
+        console.log('RequireAuth: Starting authentication check...');
         
-        // Simple local token check first
-        const tokenData = localStorage.getItem("authToken");
-        
-        if (!tokenData) {
-          console.log('No token found, redirecting to login');
-          setAuthState('unauthenticated');
-          isNavigating.current = true;
-          navigate("/login", { replace: true });
+        // Wait for auth context to be initialized
+        if (!isInitialized) {
+          console.log('RequireAuth: Auth context not initialized yet, waiting...');
           return;
         }
 
-        // Parse and check expiry locally
-        try {
-          const parsedToken = JSON.parse(tokenData);
-          if (!parsedToken.token || !parsedToken.expiry) {
-            console.log('Invalid token format, redirecting to login');
-            localStorage.removeItem("authToken");
-            setAuthState('unauthenticated');
-            isNavigating.current = true;
-            navigate("/login", { replace: true });
-            return;
-          }
-
-          // Check local expiry
-          if (new Date().getTime() >= parsedToken.expiry) {
-            console.log('Token expired locally, redirecting to login');
-            localStorage.removeItem("authToken");
-            setAuthState('unauthenticated');
-            isNavigating.current = true;
-            navigate("/login", { replace: true });
-            return;
-          }
-
-          // Token exists and is not expired locally, validate with server
-          console.log('Token found, validating with server...');
-          const isValid = await validateToken();
-          
-          if (!isValid) {
-            console.log('Server validation failed, redirecting to login');
-            toast.error("Sessão expirada. Por favor, faça login novamente.");
-            logout();
-            setAuthState('unauthenticated');
-            isNavigating.current = true;
-            navigate("/login", { replace: true });
-            return;
-          }
-
-          console.log('Authentication successful');
+        // If auth context says we're authenticated, trust it initially
+        if (isAuthenticated) {
+          console.log('RequireAuth: Auth context indicates user is authenticated');
           setAuthState('authenticated');
-          
-        } catch (parseError) {
-          console.error('Error parsing token:', parseError);
-          localStorage.removeItem("authToken");
-          setAuthState('unauthenticated');
-          isNavigating.current = true;
-          navigate("/login", { replace: true });
+          return;
         }
 
+        console.log('RequireAuth: User not authenticated, redirecting to login');
+        setAuthState('unauthenticated');
+        navigate("/login", { replace: true });
+        
       } catch (error) {
-        console.error("Error during authentication validation:", error);
+        console.error("RequireAuth: Error during authentication validation:", error);
         toast.error("Erro ao validar sessão. Por favor, faça login novamente.");
         logout();
         setAuthState('unauthenticated');
-        isNavigating.current = true;
         navigate("/login", { replace: true });
       }
     };
 
     validateAuthentication();
-  }, []); // Empty dependency array to run only once
+  }, [isAuthenticated, isInitialized, logout, navigate]);
 
   // Show loading while checking authentication
   if (authState === 'checking') {

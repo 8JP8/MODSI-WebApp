@@ -23,6 +23,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   username: string | null;
   userData: UserData | null;
+  isInitialized: boolean; // Add this to track initialization
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   checkAuth: () => boolean;
@@ -39,6 +40,7 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   username: null,
   userData: null,
+  isInitialized: false,
   login: () => Promise.resolve(false),
   logout: () => {},
   checkAuth: () => false,
@@ -74,7 +76,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     console.log('Initializing auth state...');
     const hasToken = checkAuth();
-    setIsInitialized(true);
+    setIsInitialized(true); // Mark as initialized after checking
     
     // Set up periodic validation only if we have a token
     if (hasToken) {
@@ -344,7 +346,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.log('Storing authentication token in localStorage');
         localStorage.setItem("authToken", JSON.stringify(tokenData));
         
-        // Update state immediately after storing token
+        // Update state immediately after storing token - this is crucial!
+        console.log('Updating auth state after successful login');
         setIsAuthenticated(true);
         setUsername(userDetails.username || email);
         setUserData(userDetails);
@@ -500,6 +503,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isAuthenticated, 
       username, 
       userData,
+      isInitialized, // Provide initialization status
       login, 
       logout, 
       checkAuth,
