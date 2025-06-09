@@ -22,7 +22,7 @@ export function HelpButton() {
         <div className="space-y-4 py-4">
           <p className="text-sm text-muted-foreground">
             O MODSiVR é uma ferramenta avançada de visualização de dados e KPIs empresariais em realidade virtual 
-            desenvolvida para análise de dados internos complexos para investidores e gestores.
+            desenvolvida para análise de dados internos para investidores e gestores.
           </p>
           <p className="text-sm text-muted-foreground">
             Esta plataforma permite a visualização interativa de indicadores-chave de desempenho em ambientes imersivos, 

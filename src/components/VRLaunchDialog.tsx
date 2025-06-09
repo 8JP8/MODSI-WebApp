@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { saveVisualizationToHistory } from "@/utils/visualizationUtils";
-import { Play, CircleChevronRight, HousePlus, HousePlug } from "lucide-react";
+import { Play, CircleChevronRight, HousePlus, HousePlug, TextCursorInput } from "lucide-react";
 
 interface VRLaunchDialogProps {
   open: boolean;
@@ -94,12 +94,15 @@ const VRLaunchDialog = ({
               <p className="text-sm text-muted-foreground">
                 Insira um código de sala para entrar numa visualização VR existente.
               </p>
-              <Input
-                id="room-code"
-                placeholder="Insira o código da sala"
-                value={roomCode}
-                onChange={(e) => setRoomCode(e.target.value)}
-              />
+              <div className="relative group">
+                <TextCursorInput className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 group-hover:rotate-12" />
+                <Input
+                  id="room-code"
+                  placeholder="Insira o código da sala"
+                  value={roomCode}
+                  onChange={(e) => setRoomCode(e.target.value)}
+                />
+              </div>
             </div>
             
             <DialogFooter>

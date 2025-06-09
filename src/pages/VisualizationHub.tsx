@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Settings, Layers, User, ArrowLeft, Clock, Zap, Play, Trash2 } from "lucide-react";
+import { Settings, Layers, User, ArrowLeft, Clock, Zap, Play, Trash2, TextCursorInput } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { HelpButton } from "@/components/HelpButton";
 import { persistentStorage } from "@/utils/persistentStorage";
@@ -94,11 +94,12 @@ const VisualizationHub = () => {
                 Entrar na Visualização
               </CardTitle>
               <CardDescription>
-                Insira um código para entrar numa experiência VR existente
+                Insira um código para entrar numa sala VR existente.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-4 group">
+                <TextCursorInput className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 group-hover:rotate-12" />
                 <Input
                   placeholder="Insira o código de visualização"
                   value={visualizationId}
@@ -124,7 +125,7 @@ const VisualizationHub = () => {
                 Editor de Visualizações
               </CardTitle>
               <CardDescription>
-                Crie e personalize as suas experiências VR de visualização de dados
+                Crie e personalize as suas experiências VR de visualização de dados.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -153,7 +154,7 @@ const VisualizationHub = () => {
                 As Minhas Visualizações
               </CardTitle>
               <CardDescription>
-                Aceda às suas visualizações de dados VR recentes
+                Aceda às suas visualizações de dados VR recentes.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -199,7 +200,7 @@ const VisualizationHub = () => {
 
         <div className="mt-8 text-center text-sm text-muted-foreground">
           <p>
-            Plataforma de gestão e visualização de indicadores empresariais em VR para análise de dados internos complexos
+            Plataforma de gestão e visualização de indicadores empresariais em VR para análise de dados.
           </p>
         </div>
       </div>

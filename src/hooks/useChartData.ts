@@ -208,7 +208,7 @@ export const useChartData = () => {
           }
           if (chart.zAxis) {
             const zAxisKpi = kpiOptions.find(option => option.id === chart.zAxis);
-            if (zAxisKpi) graphname = `${graphname} / ${zAxisKpi.name}`;
+            if (zAxisKpi) graphname = `${graphname}  ${zAxisKpi.name}`;
           }
           
           return {
