@@ -165,7 +165,7 @@ const EmailVerification = () => {
 
             {verificationStatus === 'idle' && (
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2 group">
+                <div className="space-y-2 relative group">
                   <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 group-hover:rotate-12" />
                   <Input
                     id="code"
@@ -173,7 +173,7 @@ const EmailVerification = () => {
                     type="text"
                     value={verificationCode}
                     onChange={(e) => setVerificationCode(e.target.value)}
-                    className="text-base p-4"
+                    className="text-base p-4 pl-10"
                     disabled={isLoading}
                   />
                 </div>
@@ -232,7 +232,7 @@ const EmailVerification = () => {
             <p className="text-center text-sm text-muted-foreground w-full mt-2">
               {verificationStatus === 'idle' 
                 ? "Introduza o código que recebeu por email para verificar a sua conta."
-                : "Obrigado por utilizar a plataforma MODSiVR."
+                : (verificationStatus === 'error') ? "Faça login para obter um novo código de verificação." : "Obrigado por utilizar a plataforma MODSiVR."
               }
             </p>
           </CardFooter>
