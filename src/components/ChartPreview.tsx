@@ -309,10 +309,19 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                 />
                 <Legend 
                   payload={[
-                    { value: product1Keys[0], type: 'square', color: colors[0] },
-                    { value: product2Keys[0], type: 'square', color: colors[2] }
+                    ...pieDataProduct1.map((item, index) => ({
+                      value: `${product1Keys[0]} - ${item.name}`,
+                      type: 'square' as const,
+                      color: item.fill
+                    })),
+                    ...pieDataProduct2.map((item, index) => ({
+                      value: `${product2Keys[0]} - ${item.name}`,
+                      type: 'square' as const,
+                      color: item.fill
+                    }))
                   ]}
-                  wrapperStyle={{ paddingTop: '20px', color: '#666' }}
+                  wrapperStyle={{ paddingTop: '20px', color: '#374151' }}
+                  iconType="square"
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -365,12 +374,13 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                   }}
                 />
                 <Legend 
-                  payload={dataKeys.map((key, index) => ({
-                    value: key,
+                  payload={pieData.map((item, index) => ({
+                    value: `${dataKeys[0]} - ${item.name}`,
                     type: 'square' as const,
-                    color: colors[0] // Use consistent color for single series
+                    color: item.fill
                   }))}
-                  wrapperStyle={{ paddingTop: '20px', color: '#666' }}
+                  wrapperStyle={{ paddingTop: '20px', color: '#374151' }}
+                  iconType="square"
                 />
               </PieChart>
             </ResponsiveContainer>
