@@ -63,16 +63,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (isAuthenticated) {
       const interval = setInterval(async () => {
         console.log("Performing periodic token validation...");
+        
+        // Double check we still have a token before validating
+        const tokenData = localStorage.getItem("authToken");
+        if (!tokenData) {
+          console.log("No token found during periodic check, clearing interval");
+          logout();
+          return;
+        }
+        
         const isValid = await validateToken();
         if (!isValid) {
+          console.log("Periodic validation failed, logging out");
           toast.error("Sessão expirada. Por favor, faça login novamente.");
           logout();
           // Force page reload to trigger navigation to login
           window.location.href = "/login";
+        } else {
+          console.log("Periodic validation successful");
         }
       }, 30 * 60 * 1000); // 30 minutes
 
-      return () => clearInterval(interval);
+      return () => {
+        console.log("Clearing periodic validation interval");
+        clearInterval(interval);
+      };
     }
   }, [isAuthenticated]);
 
@@ -81,6 +96,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const tokenData = localStorage.getItem("authToken");
     
     if (!tokenData) {
+      console.log("No token found in localStorage for validation");
       return false;
     }
     
@@ -89,6 +105,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       // Check if token is expired locally first
       if (new Date().getTime() >= parsedToken.expiry) {
+        console.log("Token expired locally");
         localStorage.removeItem("authToken");
         setIsAuthenticated(false);
         setUsername(null);
@@ -96,6 +113,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
       
+      console.log("Validating token with server...");
       // Validate token with server - use Bearer authorization header
       const response = await fetch(
         `${API_BASE_URL}/User/CheckToken?code=${API_CODE}`,
@@ -109,7 +127,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       );
       
       if (!response.ok) {
-        console.error("Token validation failed:", response.statusText);
+        console.error("Token validation failed:", response.status, response.statusText);
         localStorage.removeItem("authToken");
         setIsAuthenticated(false);
         setUsername(null);
@@ -118,13 +136,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       const data = await response.json();
+      console.log("Server validation response:", data);
       
       if (data && data.IsValid === true) {
+        console.log("Token validation successful");
         setIsAuthenticated(true);
         setUsername(parsedToken.username);
         setUserData(parsedToken.userData);
         return true;
       } else {
+        console.log("Server reported token as invalid");
         localStorage.removeItem("authToken");
         setIsAuthenticated(false);
         setUsername(null);
