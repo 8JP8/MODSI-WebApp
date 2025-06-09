@@ -22,21 +22,13 @@ import { Button } from "@/components/ui/button";
 import { useChartDataProcessor } from "@/hooks/useChartDataProcessor";
 import { fetchKPIById } from "@/services/kpiService";
 
-// --- FIX 1: Custom component for rotated X-Axis labels ---
+// --- Custom component for rotated X-Axis labels ---
 const CustomizedAxisTick = (props: any) => {
   const { x, y, payload } = props;
 
   return (
     <g transform={`translate(${x},${y})`}>
-      <text
-        x={0}
-        y={0}
-        dy={16}
-        textAnchor="end"
-        fill="#666" // You can adjust this color to match your theme
-        transform="rotate(-45)"
-        fontSize={12}
-      >
+      <text x={0} y={0} dy={16} textAnchor="end" fill="#666" transform="rotate(-45)" fontSize={12} >
         {payload.value}
       </text>
     </g>
@@ -69,6 +61,7 @@ interface ChartPreviewProps {
 }
 
 const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProps) => {
+  // ... (all state, hooks, and functions up to renderChart remain the same)
   const [showYAxis, setShowYAxis] = useState(true);
   const [showCombined, setShowCombined] = useState(false);
   const [combinedType, setCombinedType] = useState<1 | 2>(1);
@@ -121,61 +114,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
 
   const displayData = getDisplayData();
   
-  const getFilteredDataKeys = () => {
-    if (showCombined && zAxis && zAxis !== "none" && yAxis) {
-      if (yAxisByProduct && zAxisByProduct) {
-        if (combinedType === 1) {
-          return [ `KPI ${yAxis} (Produto 1)`, `KPI ${zAxis} (Produto 1)` ].filter(key => data.some(item => key in item));
-        } else {
-          return [ `KPI ${yAxis} (Produto 2)`, `KPI ${zAxis} (Produto 2)` ].filter(key => data.some(item => key in item));
-        }
-      } else {
-        return [ `KPI ${yAxis}`, `KPI ${zAxis}` ].filter(key => data.some(item => key in item));
-      }
-    }
-    
-    const targetKpiId = showYAxis ? yAxis : zAxis;
-    if (!targetKpiId || targetKpiId === "none" || displayData.length === 0) {
-        return [];
-    }
-    
-    const allKeys = Object.keys(displayData[0] || {});
-    
-    return allKeys.filter(key => 
-      key.includes(`KPI ${targetKpiId}`) && key !== "name" && key !== "originalKey"
-    );
-  };
-
-  const dataKeys = getFilteredDataKeys();
-
-  if (!displayData || displayData.length === 0 || dataKeys.length === 0) {
-    const message = yAxis && xAxis 
-      ? "Não há dados para a seleção atual." 
-      : "Nenhum dado disponível. Configure os eixos para visualizar o gráfico.";
-      
-    return (
-      <Card className="h-[400px] flex items-center justify-center">
-        <CardContent>
-          <p className="text-muted-foreground">{message}</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff7300", "#dd88dd"];
-
-  const getYAxisLabel = () => {
-    if (showCombined && yAxis && zAxis && zAxis !== "none") {
-      const yUnit = kpiUnits[yAxis] || "";
-      const zUnit = kpiUnits[zAxis] || "";
-      if (yUnit === zUnit) return `Valor (${yUnit})`;
-      if (yUnit && zUnit) return `Valor (${yUnit}|${zUnit})`;
-      return `Valor (${yUnit || zUnit})`;
-    }
-    const activeKpiId = showYAxis ? yAxis : zAxis;
-    const unit = kpiUnits[activeKpiId];
-    return unit ? `Valor (${unit})` : "Valor";
-  };
+  const getFilteredDataKeys = ().
   
   const renderChart = () => {
     const shouldRotateLabels = displayData.length > 3;
@@ -188,6 +127,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
     };
 
     switch (chartType) {
+      // ... (bar, cyls, line cases remain unchanged)
       case "bar":
       case "cyls":
         return (
@@ -219,6 +159,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
             </LineChart>
           </ResponsiveContainer>
         );
+
       case "pie":
         const hasProduct1Data = dataKeys.some(key => key.includes('(Produto 1)'));
         const hasProduct2Data = dataKeys.some(key => key.includes('(Produto 2)'));
@@ -244,10 +185,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
             seriesName: product2Key,
           })).filter(item => item.value > 0);
           
-          const legendPayload = [
-            ...pieDataProduct1,
-            ...pieDataProduct2
-          ].map(entry => ({
+          const legendPayload = [...pieDataProduct1, ...pieDataProduct2].map(entry => ({
             value: `${entry.seriesName} - ${entry.name}`,
             type: 'square' as const,
             color: entry.fill
@@ -267,8 +205,10 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       const data = payload[0];
-                      const categoryName = data.name; // e.g., "Jun 2025"
-                      const seriesName = data.payload.seriesName; // e.g., "KPI 28 (Produto 1)"
+                      // `data.name` is from the <Pie name> prop (e.g., "KPI 28 (Produto 1)")
+                      const seriesName = data.name; 
+                      // `data.payload.name` is the original slice name (e.g., "Jun 2025")
+                      const categoryName = data.payload.name; 
                       
                       return (
                         <div className="p-2 bg-white border border-gray-300 rounded-md shadow-lg">
@@ -287,7 +227,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
             </ResponsiveContainer>
           );
         } else {
-          // Single pie chart logic (remains the same)
+          // Single pie chart logic
           const pieData = displayData.map((item, index) => {
             const dataKey = dataKeys[0];
             return {
@@ -303,15 +243,19 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                 <Pie data={pieData} cx="50%" cy="50%" labelLine={false} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} outerRadius={80} fill="#8884d8" dataKey="value" name={dataKeys[0]}>
                   {pieData.map((entry, index) => ( <Cell key={`cell-${index}`} fill={entry.fill} /> ))}
                 </Pie>
+                {/* --- FIX: Also corrected Tooltip for single pie for consistency --- */}
                 <Tooltip 
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       const data = payload[0];
+                      const seriesName = data.name;
+                      const categoryName = data.payload.name;
+                      
                       return (
                         <div className="p-2 bg-white border border-gray-300 rounded-md shadow-lg">
-                          <p className="font-bold text-gray-800">{data.name}</p>
+                          <p className="font-bold text-gray-800">{categoryName}</p>
                           <p style={{ color: data.payload.fill }}>
-                            {`${dataKeys[0]}: ${data.value}`}
+                            {`${seriesName}: ${data.value}`}
                           </p>
                         </div>
                       );
@@ -325,6 +269,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
           );
         }
       case "scatter":
+        // ... (scatter case remains unchanged)
         return (
           <ResponsiveContainer width="100%" height={350}>
             <ScatterChart data={displayData} margin={{ top: 5, right: 20, left: 10, bottom: shouldRotateLabels ? 25 : 5 }}>
@@ -345,6 +290,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
   };
 
   const renderToggleButtons = () => {
+    // ... (This function remains unchanged)
     const hasZAxis = zAxis && zAxis !== "none";
     const bothByProduct = yAxisByProduct && zAxisByProduct;
     return (
