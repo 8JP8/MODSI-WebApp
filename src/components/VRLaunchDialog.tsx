@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { saveVisualizationToHistory } from "@/utils/visualizationUtils";
-import { Play, CircleChevronRight } from "lucide-react";
+import { Play, CircleChevronRight, HousePlus, HousePlug } from "lucide-react";
 
 interface VRLaunchDialogProps {
   open: boolean;
@@ -52,8 +52,14 @@ const VRLaunchDialog = ({
         
         <Tabs defaultValue="launch" className="w-full">
           <TabsList className="grid grid-cols-2">
-            <TabsTrigger value="launch">Iniciar Sala</TabsTrigger>
-            <TabsTrigger value="join">Entrar em Sala</TabsTrigger>
+            <TabsTrigger value="launch" className="group">
+              <HousePlus className="mr-2 h-4 w-4 group-hover:rotate-12" />
+              Iniciar Sala
+            </TabsTrigger>
+            <TabsTrigger value="join" className="group">
+              <HousePlug className="mr-2 h-4 w-4 group-hover:rotate-12" />
+              Entrar em Sala
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="launch" className="space-y-4 py-4">

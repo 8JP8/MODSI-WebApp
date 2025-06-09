@@ -26,8 +26,8 @@ export interface KPIValueHistory {
   OldValue_1: string | null;
   OldValue_2: string | null;
   ChangedAt: string;
-  Unit?: string;
-  ByProduct?: boolean;
+  Unit: string;
+  ByProduct: boolean;
 }
 
 export interface KPIDetails {
