@@ -8,53 +8,59 @@ interface RequireAuthProps {
 }
 
 const RequireAuth = ({ children }: RequireAuthProps) => {
-  const { checkAuth, validateToken, logout, isAuthenticated: authIsAuthenticated } = useAuth();
+  const { checkAuth, validateToken, logout } = useAuth();
   const navigate = useNavigate();
   const [isValidating, setIsValidating] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
     const validateAuthentication = async () => {
+      // Prevent multiple validations
+      if (hasRedirected) return;
+      
       setIsValidating(true);
 
-      // First check local token validity
-      if (!checkAuth()) {
-        toast.error("Sessão expirada. Por favor, faça login novamente.");
-        navigate("/login", { replace: true });
-        setIsValidating(false);
-        return;
-      }
-
       try {
-        // Then validate with server - only if we have a token
-        const isValid = await validateToken();
+        // First check if we have a valid local token
+        const hasValidLocalToken = checkAuth();
         
-        if (!isValid) {
+        if (!hasValidLocalToken) {
+          console.log('No valid local token found, redirecting to login');
+          setHasRedirected(true);
+          navigate("/login", { replace: true });
+          return;
+        }
+
+        // If we have a local token, validate it with the server
+        console.log('Local token found, validating with server...');
+        const isServerValid = await validateToken();
+        
+        if (!isServerValid) {
+          console.log('Server validation failed, redirecting to login');
           toast.error("Sessão expirada. Por favor, faça login novamente.");
           logout();
+          setHasRedirected(true);
           navigate("/login", { replace: true });
-        } else {
-          setIsAuthenticated(true);
+          return;
         }
+
+        console.log('Authentication successful');
+        setIsAuthenticated(true);
+        
       } catch (error) {
-        console.error("Error validating token:", error);
+        console.error("Error during authentication validation:", error);
         toast.error("Erro ao validar sessão. Por favor, faça login novamente.");
         logout();
+        setHasRedirected(true);
         navigate("/login", { replace: true });
       } finally {
         setIsValidating(false);
       }
     };
 
-    // Only validate if we think we should be authenticated
-    if (authIsAuthenticated || localStorage.getItem("authToken")) {
-      validateAuthentication();
-    } else {
-      // No token, redirect immediately
-      navigate("/login", { replace: true });
-      setIsValidating(false);
-    }
-  }, [checkAuth, validateToken, logout, navigate, authIsAuthenticated]);
+    validateAuthentication();
+  }, [checkAuth, validateToken, logout, navigate, hasRedirected]);
 
   // Show loading while validating
   if (isValidating) {
@@ -69,7 +75,7 @@ const RequireAuth = ({ children }: RequireAuthProps) => {
   }
 
   // Don't render children until we've verified auth
-  if (!isAuthenticated) {
+  if (!isAuthenticated || hasRedirected) {
     return null;
   }
 

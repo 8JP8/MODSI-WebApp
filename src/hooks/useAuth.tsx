@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import forge from "node-forge";
@@ -53,14 +53,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [username, setUsername] = useState<string | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
   
+  // Memoized logout function to prevent recreation on every render
+  const logout = useCallback(() => {
+    console.log('Logging out user');
+    localStorage.removeItem("authToken");
+    setIsAuthenticated(false);
+    setUsername(null);
+    setUserData(null);
+  }, []);
+
+  // Initialize auth state on mount
   useEffect(() => {
+    console.log('Initializing auth state...');
     checkAuth();
+    setIsInitialized(true);
   }, []);
 
   // Periodic token validation - every 30 minutes
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && isInitialized) {
+      console.log('Setting up periodic token validation');
       const interval = setInterval(async () => {
         console.log("Performing periodic token validation...");
         
@@ -89,7 +103,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         clearInterval(interval);
       };
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isInitialized, logout]);
 
   // Validate token with server
   const validateToken = async (): Promise<boolean> => {
@@ -106,10 +120,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Check if token is expired locally first
       if (new Date().getTime() >= parsedToken.expiry) {
         console.log("Token expired locally");
-        localStorage.removeItem("authToken");
-        setIsAuthenticated(false);
-        setUsername(null);
-        setUserData(null);
+        logout();
         return false;
       }
       
@@ -128,10 +139,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (!response.ok) {
         console.error("Token validation failed:", response.status, response.statusText);
-        localStorage.removeItem("authToken");
-        setIsAuthenticated(false);
-        setUsername(null);
-        setUserData(null);
+        logout();
         return false;
       }
       
@@ -140,24 +148,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (data && data.IsValid === true) {
         console.log("Token validation successful");
+        // Update local state to ensure consistency
         setIsAuthenticated(true);
         setUsername(parsedToken.username);
         setUserData(parsedToken.userData);
         return true;
       } else {
         console.log("Server reported token as invalid");
-        localStorage.removeItem("authToken");
-        setIsAuthenticated(false);
-        setUsername(null);
-        setUserData(null);
+        logout();
         return false;
       }
     } catch (error) {
       console.error("Error validating token:", error);
-      localStorage.removeItem("authToken");
-      setIsAuthenticated(false);
-      setUsername(null);
-      setUserData(null);
+      logout();
       return false;
     }
   };
@@ -258,10 +261,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Reset state
-    setIsAuthenticated(false);
-    setUsername(null);
-    setUserData(null);
+    console.log('Starting login process for:', email);
     
     // Validate input
     if (!validateEmail(email)) {
@@ -324,7 +324,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return false;
         }
         
-        // Store token with expiry (8 hours instead of 1)
+        // Store token with expiry (8 hours)
         const tokenData: AuthTokenData = {
           token: loginData.Token,
           expiry: new Date().getTime() + 8 * 60 * 60 * 1000, // 8 hours
@@ -332,12 +332,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           userData: userDetails
         };
         
+        console.log('Storing authentication token in localStorage');
         localStorage.setItem("authToken", JSON.stringify(tokenData));
         
+        // Update state immediately after storing token
         setIsAuthenticated(true);
         setUsername(userDetails.username || email);
         setUserData(userDetails);
         
+        console.log('Login successful, user authenticated');
         toast.success("Login efetuado com sucesso");
         return true;
       } else {
@@ -368,32 +371,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const isValid = new Date().getTime() < parsedToken.expiry;
       
       if (!isValid) {
-        localStorage.removeItem("authToken");
-        setIsAuthenticated(false);
-        setUsername(null);
-        setUserData(null);
+        console.log('Token expired locally');
+        logout();
         return false;
       }
       
+      // Update state if token is valid
       setIsAuthenticated(true);
       setUsername(parsedToken.username);
       setUserData(parsedToken.userData);
       return true;
     } catch (error) {
       console.error("Error parsing auth token:", error);
-      localStorage.removeItem("authToken");
-      setIsAuthenticated(false);
-      setUsername(null);
-      setUserData(null);
+      logout();
       return false;
     }
-  };
-
-  const logout = () => {
-    localStorage.removeItem("authToken");
-    setIsAuthenticated(false);
-    setUsername(null);
-    setUserData(null);
   };
 
   // Request password reset
