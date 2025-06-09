@@ -7,9 +7,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// Importar os serviços e tipos necessários
-import { fetchUserKPIs, fetchKPIById, KPIOption, KPIDetails, AuthError } from "@/services/kpiService";
-import { useAuth } from "@/hooks/useAuth";
+import { fetchUserKPIs, fetchKPIById, KPIOption } from "@/services/kpiService";
 import { toast } from "sonner";
 
 interface KPIAxisSelectorProps {
@@ -33,9 +31,6 @@ const KPIAxisSelector = ({
   const [kpiUnits, setKpiUnits] = useState<{[key: string]: string}>({});
   const [kpiByProduct, setKpiByProduct] = useState<{[key: string]: boolean}>({});
   const [loading, setLoading] = useState(true);
-  
-  // Obter a função de logout do contexto de autenticação
-  const { logout } = useAuth();
 
   const timeOptions = [
     { value: "days", label: "Dias" },
@@ -53,34 +48,29 @@ const KPIAxisSelector = ({
         
         const units: {[key: string]: string} = {};
         const byProducts: {[key: string]: boolean} = {};
-
-        // Usar Promise.all para carregar detalhes em paralelo é mais eficiente
-        await Promise.all(options.map(async (option) => {
+        for (const option of options) {
+          try {
             const kpiDetails = await fetchKPIById(option.id);
             units[option.id] = kpiDetails.Unit;
             byProducts[option.id] = kpiDetails.ByProduct;
-        }));
-
+          } catch (error) {
+            console.error(`Error loading details for KPI ${option.id}:`, error);
+            units[option.id] = "";
+            byProducts[option.id] = false;
+          }
+        }
         setKpiUnits(units);
         setKpiByProduct(byProducts);
       } catch (error) {
-        // PONTO-CHAVE: Tratamento de erros
-        if (error instanceof AuthError) {
-          // Se for um erro de autenticação, o serviço detetou um 401.
-          // A função logout já lida com a notificação e o redirecionamento.
-          logout();
-        } else {
-          // Se for outro tipo de erro (rede, 500, etc.)
-          toast.error("Erro ao carregar os dados dos KPIs.");
-          console.error("Error loading KPIs:", error);
-        }
+        toast.error("Erro ao carregar KPIs");
+        console.error("Error loading KPIs:", error);
       } finally {
         setLoading(false);
       }
     };
 
     loadKPIs();
-  }, [logout]); // Adicionar logout como dependência
+  }, []);
 
   if (loading) {
     return (
