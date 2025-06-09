@@ -146,8 +146,8 @@ const Login = () => {
           <CardContent>
              <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <div className="relative group">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 group-hover:rotate-12" />
                   <Input
                     id="email"
                     placeholder="Email"
@@ -177,8 +177,8 @@ const Login = () => {
                 )}
               </div>
               <div className="space-y-2">
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <div className="relative group">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 group-hover:rotate-12" />
                   <Input
                     id="password"
                     placeholder="Palavra-passe"
