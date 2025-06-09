@@ -228,53 +228,141 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
           </ResponsiveContainer>
         );
       case "pie":
-        // For pie charts, we need to transform the data differently
-        const pieData = displayData.map((item, index) => {
-          const dataKey = dataKeys[0]; // Use the first (and typically only) data key
-          return {
-            name: item.name,
-            value: item[dataKey] || 0,
-            fill: colors[index % colors.length]
-          };
-        }).filter(item => item.value > 0); // Filter out zero values
+        // Check if we have Product 1 and Product 2 data (ByProduct KPIs)
+        const hasProduct1Data = dataKeys.some(key => key.includes('(Produto 1)'));
+        const hasProduct2Data = dataKeys.some(key => key.includes('(Produto 2)'));
+        const hasBothProducts = hasProduct1Data && hasProduct2Data;
 
-        return (
-          <ResponsiveContainer width="100%" height={350}>
-            <PieChart>
-              <Pie
-                data={pieData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {pieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} />
-                ))}
-              </Pie>
-              <Tooltip 
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    const data = payload[0];
-                    return (
-                      <div className="p-2 bg-white border border-gray-300 rounded-md shadow-lg">
-                        <p className="font-bold text-gray-800">{data.name}</p>
-                        <p style={{ color: data.color }}>
-                          Valor: {data.value}
-                        </p>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        );
+        if (hasBothProducts) {
+          // Create nested pie chart for Product 1 (inner) and Product 2 (outer)
+          const product1Keys = dataKeys.filter(key => key.includes('(Produto 1)'));
+          const product2Keys = dataKeys.filter(key => key.includes('(Produto 2)'));
+          
+          const pieDataProduct1 = displayData.map((item, index) => ({
+            name: item.name,
+            value: item[product1Keys[0]] || 0,
+            fill: colors[index % colors.length]
+          })).filter(item => item.value > 0);
+
+          const pieDataProduct2 = displayData.map((item, index) => ({
+            name: item.name,
+            value: item[product2Keys[0]] || 0,
+            fill: colors[(index + 2) % colors.length] // Offset colors for distinction
+          })).filter(item => item.value > 0);
+
+          return (
+            <ResponsiveContainer width="100%" height={350}>
+              <PieChart>
+                {/* Inner pie for Product 1 */}
+                <Pie
+                  data={pieDataProduct1}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={false} // Disable labels for inner pie to avoid overlap
+                  innerRadius={30}
+                  outerRadius={60}
+                  fill="#8884d8"
+                  dataKey="value"
+                  name="Produto 1"
+                >
+                  {pieDataProduct1.map((entry, index) => (
+                    <Cell key={`inner-cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                {/* Outer pie for Product 2 */}
+                <Pie
+                  data={pieDataProduct2}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  innerRadius={70}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
+                  name="Produto 2"
+                >
+                  {pieDataProduct2.map((entry, index) => (
+                    <Cell key={`outer-cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0];
+                      const isProduct1 = payload[0].payload.name && pieDataProduct1.some(p => p.name === payload[0].payload.name);
+                      const productLabel = isProduct1 ? 'Produto 1' : 'Produto 2';
+                      return (
+                        <div className="p-2 bg-white border border-gray-300 rounded-md shadow-lg">
+                          <p className="font-bold text-gray-800">{data.name}</p>
+                          <p style={{ color: data.color }}>
+                            {productLabel}: {data.value}
+                          </p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Legend 
+                  payload={[
+                    { value: 'Produto 1 (centro)', type: 'square', color: colors[0] },
+                    { value: 'Produto 2 (exterior)', type: 'square', color: colors[2] }
+                  ]}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          );
+        } else {
+          // Single pie chart for non-ByProduct KPIs or single product
+          const pieData = displayData.map((item, index) => {
+            const dataKey = dataKeys[0]; // Use the first (and typically only) data key
+            return {
+              name: item.name,
+              value: item[dataKey] || 0,
+              fill: colors[index % colors.length]
+            };
+          }).filter(item => item.value > 0); // Filter out zero values
+
+          return (
+            <ResponsiveContainer width="100%" height={350}>
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0];
+                      return (
+                        <div className="p-2 bg-white border border-gray-300 rounded-md shadow-lg">
+                          <p className="font-bold text-gray-800">{data.name}</p>
+                          <p style={{ color: data.color }}>
+                            Valor: {data.value}
+                          </p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          );
+        }
       case "scatter":
         return (
           <ResponsiveContainer width="100%" height={350}>
@@ -297,6 +385,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
   };
 
   const renderToggleButtons = () => {
+    // ... (This function remains unchanged)
     const hasZAxis = zAxis && zAxis !== "none";
     const bothByProduct = yAxisByProduct && zAxisByProduct;
     return (
