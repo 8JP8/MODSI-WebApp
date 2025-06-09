@@ -9,6 +9,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fetchUserKPIs, fetchKPIById, KPIOption } from "@/services/kpiService";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth"; // Correctly import the hook
 
 interface KPIAxisSelectorProps {
   selectedYAxis: string;
@@ -31,6 +32,7 @@ const KPIAxisSelector = ({
   const [kpiUnits, setKpiUnits] = useState<{[key: string]: string}>({});
   const [kpiByProduct, setKpiByProduct] = useState<{[key: string]: boolean}>({});
   const [loading, setLoading] = useState(true);
+  const { logout } = useAuth(); // Get the logout function from the hook
 
   const timeOptions = [
     { value: "days", label: "Dias" },
@@ -44,6 +46,11 @@ const KPIAxisSelector = ({
       try {
         setLoading(true);
         const options = await fetchUserKPIs();
+        
+        if (!options) {
+          throw new Error("Failed to fetch KPIs or data is null.");
+        }
+
         setKpiOptions(options);
         
         const units: {[key: string]: string} = {};
@@ -62,15 +69,17 @@ const KPIAxisSelector = ({
         setKpiUnits(units);
         setKpiByProduct(byProducts);
       } catch (error) {
-        toast.error("Erro ao carregar KPIs");
-        console.error("Error loading KPIs:", error);
+        // This is the key change: Call the logout function from the hook.
+        console.error("Error loading KPIs, logging out:", error);
+        toast.error("Sua sessão expirou. Por favor, faça login novamente.");
+        logout(); // This will now correctly log out and redirect the user.
       } finally {
         setLoading(false);
       }
     };
 
     loadKPIs();
-  }, []);
+  }, [logout]); // Add logout to dependency array as it's used in the effect
 
   if (loading) {
     return (
