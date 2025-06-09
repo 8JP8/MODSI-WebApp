@@ -228,12 +228,50 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
           </ResponsiveContainer>
         );
       case "pie":
-        // Pie chart has no X-Axis, so no changes needed here
+        // For pie charts, we need to transform the data differently
+        const pieData = displayData.map((item, index) => {
+          const dataKey = dataKeys[0]; // Use the first (and typically only) data key
+          return {
+            name: item.name,
+            value: item[dataKey] || 0,
+            fill: colors[index % colors.length]
+          };
+        }).filter(item => item.value > 0); // Filter out zero values
+
         return (
-          // ... pie chart code remains the same
           <ResponsiveContainer width="100%" height={350}>
             <PieChart>
-              {/* ... */}
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {pieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                ))}
+              </Pie>
+              <Tooltip 
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    const data = payload[0];
+                    return (
+                      <div className="p-2 bg-white border border-gray-300 rounded-md shadow-lg">
+                        <p className="font-bold text-gray-800">{data.name}</p>
+                        <p style={{ color: data.color }}>
+                          Valor: {data.value}
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+              <Legend />
             </PieChart>
           </ResponsiveContainer>
         );
@@ -259,7 +297,6 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
   };
 
   const renderToggleButtons = () => {
-    // ... (This function remains unchanged)
     const hasZAxis = zAxis && zAxis !== "none";
     const bothByProduct = yAxisByProduct && zAxisByProduct;
     return (
