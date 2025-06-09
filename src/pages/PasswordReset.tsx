@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowLeft, Lock, Loader2, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Lock, Loader2, Eye, EyeOff, KeyRound, Repeat2, UserLock } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const PasswordReset = () => {
@@ -105,7 +105,8 @@ const PasswordReset = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
+              <div className="relative space-y-2 group">
+                <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 group-hover:rotate-12" />
                 <Input
                   id="code"
                   placeholder="Código de recuperação"
@@ -118,7 +119,8 @@ const PasswordReset = () => {
               </div>
               
               <div className="space-y-2">
-                <div className="relative">
+                <div className="relative group">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 group-hover:rotate-12" />
                   <Input
                     id="password"
                     placeholder="Nova palavra-passe"
@@ -146,7 +148,8 @@ const PasswordReset = () => {
               </div>
               
               <div className="space-y-2">
-                <div className="relative">
+                <div className="relative group">
+                  <Repeat2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 group-hover:rotate-12" />
                   <Input
                     id="confirmPassword"
                     placeholder="Confirmar palavra-passe"
@@ -175,7 +178,7 @@ const PasswordReset = () => {
               
               <Button 
                 type="submit" 
-                className="w-full text-base py-5"
+                className="w-full text-base py-5 group"
                 disabled={isLoading || !resetCode.trim() || !password || !confirmPassword}
               >
                 {isLoading ? (
@@ -185,7 +188,7 @@ const PasswordReset = () => {
                   </>
                 ) : (
                   <>
-                    <Lock className="mr-2 h-4 w-4" />
+                    <UserLock className="mr-2 h-4 w-4 group-hover:rotate-12" />
                     Alterar Password
                   </>
                 )}
