@@ -264,7 +264,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                   outerRadius={60}
                   fill="#8884d8"
                   dataKey="value"
-                  name="Produto 1"
+                  name={product1Keys[0]}
                 >
                   {pieDataProduct1.map((entry, index) => (
                     <Cell key={`inner-cell-${index}`} fill={entry.fill} />
@@ -281,7 +281,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
-                  name="Produto 2"
+                  name={product2Keys[0]}
                 >
                   {pieDataProduct2.map((entry, index) => (
                     <Cell key={`outer-cell-${index}`} fill={entry.fill} />
@@ -291,13 +291,11 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       const data = payload[0];
-                      const isProduct1 = payload[0].payload.name && pieDataProduct1.some(p => p.name === payload[0].payload.name);
-                      const productLabel = isProduct1 ? 'Produto 1' : 'Produto 2';
                       return (
                         <div className="p-2 bg-white border border-gray-300 rounded-md shadow-lg">
                           <p className="font-bold text-gray-800">{data.name}</p>
                           <p style={{ color: data.color }}>
-                            {productLabel}: {data.value}
+                            {data.payload.name}: {data.value}
                           </p>
                         </div>
                       );
@@ -307,8 +305,8 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                 />
                 <Legend 
                   payload={[
-                    { value: 'Produto 1 (centro)', type: 'square', color: colors[0] },
-                    { value: 'Produto 2 (exterior)', type: 'square', color: colors[2] }
+                    { value: product1Keys[0], type: 'square', color: colors[0] },
+                    { value: product2Keys[0], type: 'square', color: colors[2] }
                   ]}
                 />
               </PieChart>
@@ -337,6 +335,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
+                  name={dataKeys[0]}
                 >
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -350,7 +349,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                         <div className="p-2 bg-white border border-gray-300 rounded-md shadow-lg">
                           <p className="font-bold text-gray-800">{data.name}</p>
                           <p style={{ color: data.color }}>
-                            Valor: {data.value}
+                            {dataKeys[0]}: {data.value}
                           </p>
                         </div>
                       );
