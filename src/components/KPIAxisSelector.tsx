@@ -9,6 +9,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fetchUserKPIs, fetchKPIById, KPIOption } from "@/services/kpiService";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 interface KPIAxisSelectorProps {
   selectedYAxis: string;

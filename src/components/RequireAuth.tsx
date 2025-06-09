@@ -1,6 +1,5 @@
-
-import { ReactNode, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { ReactNode, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
@@ -9,24 +8,62 @@ interface RequireAuthProps {
 }
 
 const RequireAuth = ({ children }: RequireAuthProps) => {
-  const { checkAuth } = useAuth();
+  const { checkAuth, validateToken, logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
+  const [isValidating, setIsValidating] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Only check local token validity, no server validation
-    if (!checkAuth()) {
-      toast.error("Sessão expirada. Por favor, faça login novamente.");
-      navigate("/login", { replace: true });
-    }
-  }, [checkAuth, navigate]);
+    const validateAuthentication = async () => {
+      setIsValidating(true);
+
+      // First check local token validity
+      if (!checkAuth()) {
+        toast.error("Sessão expirada. Por favor, faça login novamente.");
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      try {
+        // Then validate with server
+        const isValid = await validateToken();
+        
+        if (!isValid) {
+          toast.error("Sessão expirada. Por favor, faça login novamente.");
+          logout();
+          navigate("/login", { replace: true });
+        } else {
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        console.error("Error validating token:", error);
+        toast.error("Erro ao validar sessão. Por favor, faça login novamente.");
+        logout();
+        navigate("/login", { replace: true });
+      } finally {
+        setIsValidating(false);
+      }
+    };
+
+    validateAuthentication();
+  }, [checkAuth, validateToken, logout, navigate]);
+
+  // Show loading while validating
+  if (isValidating) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Validando sessão...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Don't render children until we've verified auth
-  if (!checkAuth()) {
+  if (!isAuthenticated) {
     return null;
   }
 
   return <>{children}</>;
 };
-
-export default RequireAuth;

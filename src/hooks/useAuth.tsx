@@ -58,6 +58,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkAuth();
   }, []);
 
+  // Periodic token validation - every 30 minutes
+  useEffect(() => {
+    if (isAuthenticated) {
+      const interval = setInterval(async () => {
+        console.log("Performing periodic token validation...");
+        const isValid = await validateToken();
+        if (!isValid) {
+          toast.error("Sessão expirada. Por favor, faça login novamente.");
+          logout();
+          // Force page reload to trigger navigation to login
+          window.location.href = "/login";
+        }
+      }, 30 * 60 * 1000); // 30 minutes
+
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated]);
+
   // Validate token with server
   const validateToken = async (): Promise<boolean> => {
     const tokenData = localStorage.getItem("authToken");
