@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowLeft, Check, X, Loader2, Mail } from "lucide-react";
+import { ArrowLeft, Check, X, Loader2, Mail, KeyRound, ShieldCheck } from "lucide-react";
 
 const EmailVerification = () => {
   const { code } = useParams<{ code: string }>();
@@ -165,7 +165,8 @@ const EmailVerification = () => {
 
             {verificationStatus === 'idle' && (
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
+                <div className="space-y-2 group">
+                  <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 group-hover:rotate-12" />
                   <Input
                     id="code"
                     placeholder="Código de verificação"
@@ -189,7 +190,7 @@ const EmailVerification = () => {
                     </>
                   ) : (
                     <>
-                      <Check className="mr-2 h-4 w-4" />
+                      <ShieldCheck className="mr-2 h-4 w-4" />
                       Verificar
                     </>
                   )}
