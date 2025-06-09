@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowLeft, Check, X, Loader2, Mail, KeyRound, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Check, X, Loader2, Mail, KeyRound, ShieldCheck, RotateCcw, Home } from "lucide-react";
 
 const EmailVerification = () => {
   const { code } = useParams<{ code: string }>();
@@ -180,7 +180,7 @@ const EmailVerification = () => {
                 
                 <Button 
                   type="submit" 
-                  className="w-full text-base py-5"
+                  className="w-full text-base py-5 group"
                   disabled={isLoading || !verificationCode.trim()}
                 >
                   {isLoading ? (
@@ -190,7 +190,7 @@ const EmailVerification = () => {
                     </>
                   ) : (
                     <>
-                      <ShieldCheck className="mr-2 h-4 w-4" />
+                      <ShieldCheck className="mr-2 h-4 w-4 group-hover:rotate-12" />
                       Verificar
                     </>
                   )}
@@ -213,16 +213,18 @@ const EmailVerification = () => {
               <div className="space-y-4">
                 <Button 
                   onClick={handleRetry}
-                  className="w-full text-base py-5"
+                  className="w-full text-base py-5 group"
                   variant="outline"
                 >
+                  <RotateCcw className="mr-2 h-4 w-4 group-hover:rotate-12" />
                   Tentar Novamente
                 </Button>
                 <Button 
                   onClick={handleGoToMainPage}
-                  className="w-full text-base py-5"
+                  className="w-full text-base py-5 group"
                   variant="ghost"
                 >
+                  <Home className="mr-2 h-4 w-4 group-hover:rotate-12" />
                   Página Principal
                 </Button>
               </div>
