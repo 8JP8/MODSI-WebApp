@@ -265,6 +265,8 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                   fill="#8884d8"
                   dataKey="value"
                   name={product1Keys[0]}
+                  animationBegin={0}
+                  animationDuration={800}
                 >
                   {pieDataProduct1.map((entry, index) => (
                     <Cell key={`inner-cell-${index}`} fill={entry.fill} />
@@ -282,6 +284,8 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                   fill="#8884d8"
                   dataKey="value"
                   name={product2Keys[0]}
+                  animationBegin={0}
+                  animationDuration={800}
                 >
                   {pieDataProduct2.map((entry, index) => (
                     <Cell key={`outer-cell-${index}`} fill={entry.fill} />
@@ -308,6 +312,7 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                     { value: product1Keys[0], type: 'square', color: colors[0] },
                     { value: product2Keys[0], type: 'square', color: colors[2] }
                   ]}
+                  wrapperStyle={{ paddingTop: '20px', color: '#666' }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -336,6 +341,8 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                   fill="#8884d8"
                   dataKey="value"
                   name={dataKeys[0]}
+                  animationBegin={0}
+                  animationDuration={800}
                 >
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -357,7 +364,14 @@ const ChartPreview = ({ chartType, data, xAxis, yAxis, zAxis }: ChartPreviewProp
                     return null;
                   }}
                 />
-                <Legend />
+                <Legend 
+                  payload={dataKeys.map((key, index) => ({
+                    value: key,
+                    type: 'square' as const,
+                    color: colors[0] // Use consistent color for single series
+                  }))}
+                  wrapperStyle={{ paddingTop: '20px', color: '#666' }}
+                />
               </PieChart>
             </ResponsiveContainer>
           );
