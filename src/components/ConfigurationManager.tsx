@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Save, Trash2, RefreshCw, FileDown, FileUp, Download, Upload } from "lucide-react";
+import { Save, Trash2, RefreshCw, FileDown, Upload, Download } from "lucide-react";
+import ImportConfigModal from "./ImportConfigModal";
 
 interface Chart {
   id: string;
@@ -56,8 +56,7 @@ const ConfigurationManager = ({
   const [savedConfigs, setSavedConfigs] = useState<{ name: string; config: ConfigurationSettings }[]>([]);
   const [configName, setConfigName] = useState("");
 
-  useEffect(() => {
-    // Load saved configurations from localStorage
+  const loadSavedConfigs = () => {
     const savedConfigsStr = localStorage.getItem("vrDataConfigs");
     if (savedConfigsStr) {
       try {
@@ -67,6 +66,10 @@ const ConfigurationManager = ({
         console.error("Erro ao carregar configurações guardadas", e);
       }
     }
+  };
+
+  useEffect(() => {
+    loadSavedConfigs();
   }, []);
 
   const saveCurrentConfig = () => {
@@ -147,6 +150,16 @@ const ConfigurationManager = ({
     toast.success("Exportadas todas as configurações");
   };
 
+  const handleImportConfig = (config: any) => {
+    onLoadConfig(config);
+    toast.success("Configuração importada com sucesso");
+  };
+
+  const handleConfigSaved = () => {
+    // Refresh the saved configurations list
+    loadSavedConfigs();
+  };
+
   const importConfigs = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -217,16 +230,7 @@ const ConfigurationManager = ({
                 <span className="hidden sm:inline truncate">Exportar Todas</span>
                 <span className="sm:hidden truncate">Todas</span>
               </Button>
-              <Button variant="outline" className="relative group flex-shrink-0">
-                <FileUp className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
-                <span className="truncate">Importar</span>
-                <input
-                  type="file"
-                  onChange={importConfigs}
-                  accept=".json"
-                  className="absolute inset-0 opacity-0 cursor-pointer"
-                />
-              </Button>
+              <ImportConfigModal onImport={handleImportConfig} onConfigSaved={handleConfigSaved} />
             </div>
           </div>
 

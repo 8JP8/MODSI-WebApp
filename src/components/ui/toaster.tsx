@@ -1,12 +1,13 @@
-import { useToast } from "@/hooks/use-toast"
+
 import {
   Toast,
-  ToastClose,
+  ToastClose, // 1. Import ToastClose
   ToastDescription,
   ToastProvider,
   ToastTitle,
   ToastViewport,
 } from "@/components/ui/toast"
+import { useToast } from "@/components/ui/use-toast"
 
 export function Toaster() {
   const { toasts } = useToast()
@@ -23,6 +24,7 @@ export function Toaster() {
               )}
             </div>
             {action}
+            {/* 2. Add the ToastClose component here */}
             <ToastClose />
           </Toast>
         )

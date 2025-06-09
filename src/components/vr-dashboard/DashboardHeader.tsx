@@ -71,13 +71,13 @@ const DashboardHeader = ({ onLaunch, configSaved, onSave }: DashboardHeaderProps
         </Button>
         
         <div className="flex items-center gap-2 ml-2 border-l pl-3 border-gray-600">
+          <span className="text-sm hidden md:inline text-muted-foreground">
+            <span className="font-medium text-foreground">{username || "Utilizador"}</span>
+          </span>
           <Avatar>
             <AvatarImage src={userData?.photo || ""} />
             <AvatarFallback>{username ? username[0].toUpperCase() : "U"}</AvatarFallback>
           </Avatar>
-          <span className="text-sm hidden md:inline text-muted-foreground">
-            Ligado como <span className="font-medium text-foreground">{username || "Utilizador"}</span>
-          </span>
         </div>
         
         {isMobile && (

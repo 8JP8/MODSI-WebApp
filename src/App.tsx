@@ -1,4 +1,4 @@
-
+// App.tsx
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,8 +23,9 @@ import React from 'react';
 const queryClient = new QueryClient();
 
 const App = () => {
-  // Handle GitHub Pages routing
+  // This useEffect now only handles PWA and routing logic.
   React.useEffect(() => {
+    // Handle GitHub Pages routing
     const search = window.location.search;
     if (search.includes('/?/')) {
       // GitHub Pages SPA routing detected
@@ -65,37 +66,45 @@ const App = () => {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system">
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <AuthProvider>
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/visualization-hub" element={<VisualizationHub />} />
-                <Route path="/configurator" element={
-                  <RequireAuth>
-                    <VRConfiguratorPage />
-                  </RequireAuth>
-                } />
-                <Route path="/room/:roomCode" element={<VRRoom />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/passwordreset" element={<PasswordReset />} />
-                <Route path="/passwordreset/:code" element={<PasswordReset />} />
-                <Route path="/emailverification" element={<EmailVerification />} />
-                <Route path="/emailverification/:code" element={<EmailVerification />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <PWAInstallPrompt />
-            </BrowserRouter>
-          </AuthProvider>
-        </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="system">
+          <TooltipProvider>
+            <Toaster />
+            <Sonner 
+              closeButton={true}
+              //richColors={true}
+              position="bottom-right"
+              expand={true}
+              duration={4000}
+            />
+            <AuthProvider>
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/visualization-hub" element={<VisualizationHub />} />
+                  <Route path="/configurator" element={
+                    <RequireAuth>
+                      <VRConfiguratorPage />
+                    </RequireAuth>
+                  } />
+                  <Route path="/room/:roomCode" element={<VRRoom />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/passwordreset" element={<PasswordReset />} />
+                  <Route path="/passwordreset/:code" element={<PasswordReset />} />
+                  <Route path="/emailverification" element={<EmailVerification />} />
+                  <Route path="/emailverification/:code" element={<EmailVerification />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <PWAInstallPrompt />
+              </BrowserRouter>
+            </AuthProvider>
+          </TooltipProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </>
   );
 };
 

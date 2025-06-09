@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Chart, VRPosition, defaultPosition, CHART_COLORS } from "@/types/vr-dashboard";
 import { useChartDataProcessor } from "./useChartDataProcessor";
-import { fetchMultipleKPIHistories, fetchUserKPIs, fetchKPIValueHistory } from "@/services/kpiService";
+import { fetchKPIValueHistory, fetchUserKPIs } from "@/services/kpiService";
 import { toast } from "sonner";
 
 // Helper function to translate chart types to VR format
@@ -25,15 +25,15 @@ export const useChartData = () => {
   const [activeChartId, setActiveChartId] = useState<string>("");
   const [chartType, setChartType] = useState("bar");
   const [position, setPosition] = useState<VRPosition>(defaultPosition);
-  const [zAxis, setZAxis] = useState("");
-  const [secondaryAxis, setSecondaryAxis] = useState("");
-  const [yAxis, setYAxis] = useState("");
+  const [yAxis, setYAxis] = useState(""); // Main KPI - Y axis selector
+  const [secondaryAxis, setSecondaryAxis] = useState(""); // X axis - time
+  const [zAxis, setZAxis] = useState(""); // Optional KPI - Z axis selector
   const [data, setData] = useState<any[]>([]);
   const [configSaved, setConfigSaved] = useState(false);
 
   // Function to check if configuration is valid
   const isConfigurationValid = (): boolean => {
-    return charts.some(chart => chart.zAxis && chart.zAxis.trim() !== "");
+    return charts.some(chart => chart.yAxis && chart.yAxis.trim() !== "");
   };
 
   // Initialize with one chart
@@ -48,9 +48,9 @@ export const useChartData = () => {
       if (activeChart) {
         setChartType(activeChart.chartType);
         setPosition(activeChart.position);
-        setZAxis(activeChart.zAxis); // Z axis for main indicator
-        setSecondaryAxis(activeChart.xAxis); // X axis for time/product
-        setYAxis(activeChart.yAxis); // Y axis for secondary indicator
+        setYAxis(activeChart.yAxis);
+        setSecondaryAxis(activeChart.xAxis);
+        setZAxis(activeChart.zAxis);
       }
     }
   }, [activeChartId, charts]);
@@ -85,45 +85,48 @@ export const useChartData = () => {
       )
     );
     
-    // Update local state if chart type is being changed
     if (updates.chartType) {
       setChartType(updates.chartType);
     }
   };
   
-  // Handle position change
   const handlePositionChange = (newPosition: VRPosition) => {
     setPosition(newPosition);
     updateActiveChart({ position: newPosition });
   };
   
-  // Handle Z axis change (main indicator) - use KPI ID directly
-  const handleZAxisChange = (value: string) => {
-    setZAxis(value);
-    updateActiveChart({ zAxis: value });
+  // FIX: This function now resets the Z-axis when the Y-axis is changed.
+  const handleYAxisChange = (value: string) => {
+    setYAxis(value);
+    
+    // Reset Z-axis since the context for comparison has changed.
+    setZAxis(""); 
+    
+    // Update the active chart with the new Y-axis and the reset Z-axis.
+    updateActiveChart({ yAxis: value, zAxis: "" }); 
+    
+    // Notify the user.
+    //toast.info("O indicador de comparação (Eixo Z) foi redefinido.");
   };
   
-  // Handle secondary axis change (X axis - time/product)
   const handleSecondaryAxisChange = (value: string) => {
     setSecondaryAxis(value);
     updateActiveChart({ xAxis: value });
   };
   
-  // Handle Y axis change (secondary indicator) - use KPI ID directly
-  const handleYAxisChange = (value: string) => {
-    const yAxisValue = value === "none" ? "" : value;
-    setYAxis(yAxisValue);
-    updateActiveChart({ yAxis: yAxisValue });
+  const handleZAxisChange = (value: string) => {
+    const zAxisValue = value === "none" ? "" : value;
+    setZAxis(zAxisValue);
+    updateActiveChart({ zAxis: zAxisValue });
   };
 
   const resetConfiguration = () => {
     setChartType("bar");
     setPosition(defaultPosition);
-    setZAxis("");
-    setSecondaryAxis("");
     setYAxis("");
+    setSecondaryAxis("");
+    setZAxis("");
     
-    // Update active chart
     if (activeChartId) {
       updateActiveChart({
         chartType: "bar",
@@ -138,7 +141,6 @@ export const useChartData = () => {
   };
 
   const handleLoadConfig = (config: any) => {
-    // Parse the configuration array format
     let configToLoad = config;
     
     if (Array.isArray(config) && config.length > 0) {
@@ -154,7 +156,6 @@ export const useChartData = () => {
           height: chart.position.height || 1,
           depth: chart.position.depth || 1
         },
-        // Convert back from VR format to configurator format
         chartType: chart.chartType === 'babia-bars' ? 'bar' : 
                   chart.chartType === 'babia-pie' ? 'pie' :
                   chart.chartType === 'babia-cyls' ? 'cyls' :
@@ -168,9 +169,9 @@ export const useChartData = () => {
         setActiveChartId(activeChart.id);
         setChartType(activeChart.chartType);
         setPosition(activeChart.position);
-        setZAxis(activeChart.zAxis);
+        setYAxis(activeChart.yAxis);
         setSecondaryAxis(activeChart.xAxis);
-        setYAxis(activeChart.yAxis || "");
+        setZAxis(activeChart.zAxis || "");
       }
     }
     
@@ -180,20 +181,13 @@ export const useChartData = () => {
 
   const getCurrentConfiguration = async () => {
     try {
-      // Get all unique KPI IDs used in charts
       const allKpiIds: string[] = [];
       charts.forEach(chart => {
-        if (chart.zAxis && !allKpiIds.includes(chart.zAxis)) {
-          allKpiIds.push(chart.zAxis);
-        }
-        if (chart.yAxis && !allKpiIds.includes(chart.yAxis)) {
-          allKpiIds.push(chart.yAxis);
-        }
+        if (chart.yAxis && !allKpiIds.includes(chart.yAxis)) allKpiIds.push(chart.yAxis);
+        if (chart.zAxis && !allKpiIds.includes(chart.zAxis)) allKpiIds.push(chart.zAxis);
       });
 
-      // Fetch histories for all unique KPIs
       const allHistories: any[] = [];
-      
       for (const kpiId of allKpiIds) {
         try {
           const history = await fetchKPIValueHistory(kpiId);
@@ -203,28 +197,18 @@ export const useChartData = () => {
         }
       }
 
-      // Get KPI names
       const kpiOptions = await fetchUserKPIs();
       
-      // Build unified chart configs in the exact format you specified
       const unifiedCharts = await Promise.all(
         charts.map(async (chart) => {
           let graphname = "KPIName";
-          
-          // Get the KPI name from zAxis (main KPI)
-          if (chart.zAxis) {
-            const kpi = kpiOptions.find(option => option.id === chart.zAxis);
-            if (kpi) {
-              graphname = kpi.name;
-            }
-          }
-
-          // If both Y and Z axis are defined, combine their names
           if (chart.yAxis) {
-            const yAxisKpi = kpiOptions.find(option => option.id === chart.yAxis);
-            if (yAxisKpi) {
-              graphname = `${graphname} / ${yAxisKpi.name}`;
-            }
+            const kpi = kpiOptions.find(option => option.id === chart.yAxis);
+            if (kpi) graphname = kpi.name;
+          }
+          if (chart.zAxis) {
+            const zAxisKpi = kpiOptions.find(option => option.id === chart.zAxis);
+            if (zAxisKpi) graphname = `${graphname} / ${zAxisKpi.name}`;
           }
           
           return {
@@ -240,19 +224,14 @@ export const useChartData = () => {
         })
       );
 
-      // Return in the exact format you specified
-      const unifiedConfig = [
-        {
+      return [{
           name: "Configuração VR",
           config: {
             kpihistory: allHistories,
             charts: unifiedCharts,
             activeChartId: activeChartId
           }
-        }
-      ];
-      
-      return unifiedConfig;
+        }];
     } catch (error) {
       console.error("Error getting current configuration:", error);
       throw error;
@@ -263,13 +242,7 @@ export const useChartData = () => {
     try {
       const config = await getCurrentConfiguration();
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-      
-      console.log("Export Configuration:", JSON.stringify(config, null, 2));
-      
-      // Create blob and download
-      const blob = new Blob([JSON.stringify(config, null, 2)], { 
-        type: 'application/json' 
-      });
+      const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -278,7 +251,6 @@ export const useChartData = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
       toast.success("Configuração exportada com sucesso");
       setConfigSaved(true);
     } catch (error) {
@@ -287,26 +259,16 @@ export const useChartData = () => {
     }
   };
 
-  // Auto-save configuration when launching VR
   const autoSaveConfiguration = async () => {
     try {
       const config = await getCurrentConfiguration();
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
       const configName = `Configuração VR ${timestamp}`;
-      
-      // Save to localStorage for the configuration manager widget
       const savedConfigsStr = localStorage.getItem("vrDataConfigs");
       const savedConfigs = savedConfigsStr ? JSON.parse(savedConfigsStr) : [];
-      
-      const newConfig = {
-        name: configName,
-        config: config[0].config
-      };
-      
-      const newConfigs = [newConfig, ...savedConfigs.slice(0, 9)]; // Keep only last 10
+      const newConfig = { name: configName, config: config[0].config };
+      const newConfigs = [newConfig, ...savedConfigs.slice(0, 9)];
       localStorage.setItem("vrDataConfigs", JSON.stringify(newConfigs));
-      
-      console.log(`Configuração guardada automaticamente: ${configName}`);
       toast.success(`Configuração guardada: ${configName}`);
       return config;
     } catch (error) {
@@ -316,19 +278,11 @@ export const useChartData = () => {
   };
 
   const getConfigurationForVR = async () => {
-    try {
-      // Auto-save and return the unified configuration
-      const config = await autoSaveConfiguration();
-      return config;
-    } catch (error) {
-      console.error("Error getting configuration for VR:", error);
-      throw error;
-    }
+    return await autoSaveConfiguration();
   };
 
-  const { chartData, loading: dataLoading, kpiUnits } = useChartDataProcessor(zAxis, secondaryAxis, yAxis);
+  const { chartData, loading: dataLoading, kpiUnits } = useChartDataProcessor(yAxis, secondaryAxis, zAxis);
 
-  // Update the data when chartData changes
   useEffect(() => {
     setData(chartData);
   }, [chartData]);
@@ -338,9 +292,9 @@ export const useChartData = () => {
     activeChartId,
     chartType,
     position,
-    zAxis,
-    secondaryAxis,
     yAxis,
+    secondaryAxis,
+    zAxis,
     data: chartData,
     configSaved: isConfigurationValid(),
     loading: dataLoading,
@@ -348,9 +302,9 @@ export const useChartData = () => {
     setActiveChartId,
     updateActiveChart,
     handlePositionChange,
-    handleZAxisChange,
-    handleSecondaryAxisChange,
     handleYAxisChange,
+    handleSecondaryAxisChange,
+    handleZAxisChange,
     addNewChart,
     resetConfiguration,
     handleLoadConfig,
