@@ -35,7 +35,7 @@ const ChartSelector = ({
     <Card>
       <CardHeader className="p-4">
         <div className="flex justify-between items-center">
-          <CardTitle>Gráficos - {localCharts.length}</CardTitle>
+          <CardTitle>Gráficos [{localCharts.length}]</CardTitle>
           <Button
             variant="ghost"
             size="sm"
