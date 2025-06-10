@@ -98,7 +98,7 @@ const VisualizationHub = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4 group">
+              <div className="relative space-y-2 group">
                 <TextCursorInput className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 group-hover:rotate-12" />
                 <Input
                   placeholder="Insira o código de visualização"

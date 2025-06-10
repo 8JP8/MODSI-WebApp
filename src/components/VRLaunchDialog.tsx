@@ -94,7 +94,7 @@ const VRLaunchDialog = ({
               <p className="text-sm text-muted-foreground">
                 Insira um código de sala para entrar numa visualização VR existente.
               </p>
-              <div className="relative group">
+              <div className="relative space-y-2 group">
                 <TextCursorInput className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 group-hover:rotate-12" />
                 <Input
                   id="room-code"
