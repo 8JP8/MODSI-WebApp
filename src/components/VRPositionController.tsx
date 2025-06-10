@@ -85,14 +85,19 @@ const VRPositionController = ({ position, onPositionChange }: VRPositionControll
         <CardTitle>Controlo de Posicionamento 3D</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center space-x-2 border p-3 rounded-md">
+        {/* --- CHANGE 1: Made toggle more evident --- */}
+        <div className="flex items-center space-x-4 rounded-lg bg-slate-800 p-4">
           <Switch id="position-toggle" checked={isEnabled} onCheckedChange={handleToggle} />
-          <Label htmlFor="position-toggle" className="cursor-pointer">
+          <Label htmlFor="position-toggle" className="flex-grow cursor-pointer text-base font-semibold">
             Posicionamento personalizado
           </Label>
         </div>
 
-        <fieldset disabled={!isEnabled} className="space-y-4">
+        {/* --- CHANGE 2: Made disabled state clearer --- */}
+        <fieldset
+          disabled={!isEnabled}
+          className={`space-y-4 transition-opacity duration-300 ${!isEnabled ? 'opacity-50' : 'opacity-100'}`}
+        >
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid grid-cols-3 mb-4 w-full">
               <TabsTrigger value="position" className="text-xs px-1">
