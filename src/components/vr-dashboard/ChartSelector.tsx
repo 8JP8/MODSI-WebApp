@@ -88,10 +88,9 @@ const ChartSelector = ({
                       variant="ghost"
                       className={`absolute right-2 group flex-shrink-0 rounded-md transition-all duration-200 opacity-0 group-hover/item:opacity-100 ${
                         activeChartId === chart.id
-                          ? "text-red-500 hover:text-red-600 opacity-100"
+                          ? "text-red-500 hover:text-red-600"
                           : "text-gray-500 hover:text-red-600"
                       }`}
-                      // FIX: onClick now calls the new handleDelete handler
                       onClick={(e) => handleDelete(e, chart.id)}
                       title="Remover gráfico"
                     >
