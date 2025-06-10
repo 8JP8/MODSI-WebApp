@@ -9,6 +9,7 @@ interface ChartSelectorProps {
   activeChartId: string;
   onChartSelect: (id: string) => void;
   onAddChart: () => void;
+  onDeleteChart: (updatedCharts: Chart[]) => void; // Add a callback for deleting charts
 }
 
 const ChartSelector = ({
@@ -16,6 +17,7 @@ const ChartSelector = ({
   activeChartId,
   onChartSelect,
   onAddChart,
+  onDeleteChart,
 }: ChartSelectorProps) => {
   const [localCharts, setLocalCharts] = useState<Chart[]>(charts);
 
@@ -28,6 +30,7 @@ const ChartSelector = ({
     if (localCharts.length > 1) {
       const updatedCharts = localCharts.filter((chart) => chart.id !== id);
       setLocalCharts(updatedCharts);
+      onDeleteChart(updatedCharts); // Update parent state via callback
     }
   };
 
