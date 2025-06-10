@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlusCircle, Trash } from "lucide-react";
@@ -14,6 +14,11 @@ interface ChartSelectorProps {
 const ChartSelector = ({ charts, activeChartId, onChartSelect, onAddChart }: ChartSelectorProps) => {
   const [localCharts, setLocalCharts] = useState<Chart[]>(charts);
 
+  // Synchronize local state with parent charts prop
+  useEffect(() => {
+    setLocalCharts(charts);
+  }, [charts]);
+
   const handleDelete = (id: string) => {
     if (localCharts.length > 1) {
       const updatedCharts = localCharts.filter((chart) => chart.id !== id);
@@ -21,25 +26,16 @@ const ChartSelector = ({ charts, activeChartId, onChartSelect, onAddChart }: Cha
     }
   };
 
-  const handleAddFallback = () => {
-    if (localCharts.length === 0) {
-      onAddChart();
-    }
-  };
-
   return (
     <Card>
       <CardHeader className="p-4">
         <div className="flex justify-between items-center">
-          <CardTitle>&nbsp;Gráficos ({localCharts.length})</CardTitle>
+          <CardTitle>Gráficos ({localCharts.length})</CardTitle>
           <Button
             variant="ghost"
             size="sm"
             className="h-8 px-2 group"
-            onClick={() => {
-              onAddChart();
-              handleAddFallback();
-            }}
+            onClick={onAddChart}
           >
             <PlusCircle className="mr-1 h-4 w-4 transition-transform duration-200 group-hover:rotate-90" />
             Adicionar
@@ -55,7 +51,9 @@ const ChartSelector = ({ charts, activeChartId, onChartSelect, onAddChart }: Cha
                   <Button
                     variant="ghost"
                     className={`flex-grow flex items-center justify-start p-3 rounded-md h-auto transition-all duration-200 hover:scale-105 ${
-                      activeChartId === chart.id ? "bg-accent text-accent-foreground" : "hover:bg-accent/50"
+                      activeChartId === chart.id
+                        ? "bg-accent text-accent-foreground"
+                        : "hover:bg-accent/50"
                     }`}
                     onClick={() => onChartSelect(chart.id)}
                   >
@@ -63,8 +61,12 @@ const ChartSelector = ({ charts, activeChartId, onChartSelect, onAddChart }: Cha
                       <p className="font-medium">{chart.chartType}</p>
                       <p className="text-sm text-muted-foreground mt-1">
                         {chart.xAxis && chart.yAxis
-                          ? `${chart.xAxis} | ${chart.yAxis}` +
-                            (chart.zAxis ? ` | ${chart.zAxis}` : "")
+                          ? `${chart.xAxis.replace("years", "Anos")
+                              .replace("months", "Meses")
+                              .replace("days", "Dias")
+                              .replace("change", "Alteração")}
+                           - KPI ${chart.yAxis}` +
+                            (chart.zAxis ? ` vs. ${chart.zAxis}` : "")
                           : "Não configurado"}
                       </p>
                     </div>
