@@ -35,7 +35,7 @@ const ChartSelector = ({
     <Card>
       <CardHeader className="p-4">
         <div className="flex justify-between items-center">
-          <CardTitle>Gráficos ({localCharts.length})</CardTitle>
+          <CardTitle>Gráficos - {localCharts.length}</CardTitle>
           <Button
             variant="ghost"
             size="sm"
@@ -83,23 +83,19 @@ const ChartSelector = ({
 
                   {/* Delete Icon */}
                   {localCharts.length > 1 && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className={`absolute right-2 group flex-shrink-0 ${
-                      activeChartId === chart.id ? "text-red-700" : "text-red-500"
-                    } hover:text-red-600`}
-                    onClick={() => handleDelete(chart.id)}
-                    title="Remover gráfico"
-                  >
-                    <Trash2
-                       className={`relative flex items-center justify-center w-full h-12 rounded-lg transition-colors duration-200 ${
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className={`absolute right-2 group flex-shrink-0 rounded-md transition-all duration-200 ${
                         activeChartId === chart.id
-                          ? "bg-red-100 hover:bg-red-200"
-                          : "hover:bg-gray-100"
+                          ? "text-red-500 hover:text-red-600 hover:bg-gray-300"
+                          : "text-gray-500 hover:text-red-600 hover:bg-gray-200"
                       }`}
-                    />
-                  </Button>
+                      onClick={() => handleDelete(chart.id)}
+                      title="Remover gráfico"
+                    >
+                      <Trash2 className="w-4 h-4 group-hover:rotate-12 transition-transform duration-200" />
+                    </Button>
                   )}
                 </div>
               ))
