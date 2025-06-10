@@ -86,7 +86,7 @@ const ChartSelector = ({
                     <Button
                       size="sm"
                       variant="ghost"
-                      className={`absolute right-2 group flex-shrink-0 rounded-md transition-all duration-200 opacity-0 group-hover/item:opacity-100 ${
+                      className={`absolute right-2 group flex-shrink-0 rounded-md transition-all opacity-0 group-hover/item:opacity-100 ${
                         activeChartId === chart.id
                           ? "text-red-500 hover:text-red-600"
                           : "text-gray-500 hover:text-red-600"
