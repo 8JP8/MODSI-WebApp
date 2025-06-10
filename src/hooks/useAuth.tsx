@@ -93,7 +93,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     window.location.href = "/login";
   }, []);
 
-  // Improved validateToken function with better error handling and delayed logout
+  // Improved validateToken function that checks only HTTP status codes
   const validateToken = useCallback(async (): Promise<boolean> => {
     const tokenData = localStorage.getItem("authToken");
     if (!tokenData) {
@@ -131,58 +131,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         clearTimeout(timeoutId);
 
-        // Handle different HTTP status codes
+        // Simply check if response status is 200 OK
+        if (response.status === 200) {
+          console.log("Token validation successful - HTTP 200 OK");
+          return true;
+        }
+
+        // Handle authentication errors
         if (response.status === 401 || response.status === 403) {
           console.log("Token rejected by server (401/403). Logging out.");
           handleSessionExpired();
           return false;
         }
 
-        if (!response.ok) {
-          console.error("Server validation failed with status:", response.status);
-          // Don't log out on server errors (5xx), only on auth errors
-          if (response.status >= 500) {
-            console.log("Server error - keeping user logged in for now");
-            return true; // Assume token is still valid during server issues
-          }
-          handleSessionExpired();
-          return false;
-        }
-
-        let data;
-        try {
-          data = await response.json();
-        } catch (jsonError) {
-          console.error("Failed to parse response JSON:", jsonError);
-          handleSessionExpired();
-          return false;
-        }
-
-        // Log response for debugging (without toast)
-        console.log("CheckToken API Response:", data);
-
-        // Check for multiple possible response formats
-        const isValid = data?.IsValid === true || 
-                       data?.isValid === true || 
-                       data?.valid === true ||
-                       (data?.status === 'valid') ||
-                       (data?.success === true && data?.valid !== false);
-
-        if (isValid) {
-          console.log("Token validation successful.");
+        // Handle server errors - don't logout, keep user logged in
+        if (response.status >= 500) {
+          console.log("Server error - keeping user logged in for now");
           return true;
-        } else {
-          console.log("Server reported token as invalid. Response:", data);
-          handleSessionExpired();
-          return false;
         }
+
+        // Any other non-200 status code means token is invalid
+        console.log("Token validation failed with status:", response.status);
+        handleSessionExpired();
+        return false;
 
       } catch (fetchError: any) {
         clearTimeout(timeoutId);
         
         if (fetchError.name === 'AbortError') {
           console.error("Token validation request timed out");
-          toast.error("Timeout na verificação de sessão");
           return true; // Don't log out on timeout, assume token is still valid
         }
         
