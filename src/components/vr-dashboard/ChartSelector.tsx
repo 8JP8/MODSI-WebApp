@@ -11,7 +11,12 @@ interface ChartSelectorProps {
   onAddChart: () => void;
 }
 
-const ChartSelector = ({ charts, activeChartId, onChartSelect, onAddChart }: ChartSelectorProps) => {
+const ChartSelector = ({
+  charts,
+  activeChartId,
+  onChartSelect,
+  onAddChart,
+}: ChartSelectorProps) => {
   const [localCharts, setLocalCharts] = useState<Chart[]>(charts);
 
   // Synchronize local state with parent charts prop
@@ -48,6 +53,7 @@ const ChartSelector = ({ charts, activeChartId, onChartSelect, onAddChart }: Cha
             {localCharts.length > 0 ? (
               localCharts.map((chart) => (
                 <div key={chart.id} className="flex items-center space-x-2 mx-2">
+                  {/* Chart Button */}
                   <Button
                     variant="ghost"
                     className={`flex-grow flex items-center justify-start p-3 rounded-md h-auto transition-all duration-200 hover:scale-105 ${
@@ -70,15 +76,17 @@ const ChartSelector = ({ charts, activeChartId, onChartSelect, onAddChart }: Cha
                           : "Não configurado"}
                       </p>
                     </div>
-                    <Button
-                      variant="ghost"
-                      className="p-2 group"
-                      disabled={localCharts.length === 1}
-                      onClick={() => handleDelete(chart.id)}
-                    >
-                      <Trash2 className="h-4 w-4 group-hover:rotate-12" />
                   </Button>
-                  </Button>
+
+                  {/* Delete Icon */}
+                  <button
+                    className="p-2 rounded-md transition-transform duration-200 hover:rotate-12 hover:scale-110"
+                    disabled={localCharts.length === 1}
+                    onClick={() => handleDelete(chart.id)}
+                    title="Remover gráfico"
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </button>
                 </div>
               ))
             ) : (
