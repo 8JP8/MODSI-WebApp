@@ -73,10 +73,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUserData(null);
     
     // Show toast notification
-    toast.error("Sessão expirada, a redirecionar em 3s", {
-      duration: 3000,
-      description: "A sua sessão expirou. Será redirecionado para a página de login."
-    });
+    toast.error("Sessão expirada, autentique-se novamente");
     
     // Redirect after 3 seconds using React Router
     setTimeout(() => {
@@ -242,8 +239,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Initial check after 5 seconds (give time for app to load)
     const initialCheckTimeoutId = setTimeout(performValidation, 5 * 1000);
     
-    // Then check every 15 minutes
-    const intervalCheckId = setInterval(performValidation, 15 * 60 * 1000);
+    // Then check every 5 minutes
+    const intervalCheckId = setInterval(performValidation, 5 * 60 * 1000);
 
     return () => {
       clearTimeout(initialCheckTimeoutId);
