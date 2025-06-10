@@ -1,7 +1,8 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { toast } from "sonner";
 import forge from "node-forge";
 
+// --- TYPE DEFINITIONS ---
 interface UserData {
   name: string | null;
   email: string | null;
@@ -23,7 +24,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   username: string | null;
   userData: UserData | null;
-  isInitialized: boolean; // Add this to track initialization
+  isInitialized: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   checkAuth: () => boolean;
@@ -33,9 +34,11 @@ interface AuthContextType {
   resetPassword: (code: string, password: string) => Promise<boolean>;
 }
 
+// --- CONSTANTS ---
 const API_BASE_URL = "https://modsi-api-ffhhfgecfdehhscv.spaincentral-01.azurewebsites.net/api";
 const API_CODE = "z4tKbNFdaaXzHZ4ayn9pRQokNWYgRkbVkCjOxTxP-8ChAzFuMigGCw==";
 
+// --- CONTEXT CREATION ---
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   username: null,
@@ -50,145 +53,241 @@ const AuthContext = createContext<AuthContextType>({
   resetPassword: () => Promise.resolve(false)
 });
 
+
+// --- AUTH PROVIDER COMPONENT ---
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [username, setUsername] = useState<string | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
-  const periodicValidationRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Memoized logout function to prevent recreation on every render
+
   const logout = useCallback(() => {
-    console.log('Logging out user');
+    console.log('Logging out user and forcing redirect...');
     localStorage.removeItem("authToken");
     setIsAuthenticated(false);
     setUsername(null);
     setUserData(null);
-    
-    // Clear periodic validation
-    if (periodicValidationRef.current) {
-      clearInterval(periodicValidationRef.current);
-      periodicValidationRef.current = null;
-    }
+    // Use window.location.href for a hard redirect. This is the most reliable
+    // way to handle a redirect from a background task like a timer, as it
+    // clears all application state and ensures a clean start on the login page.
+    window.location.href = "/login";
   }, []);
 
-  // Initialize auth state on mount
-  useEffect(() => {
-    console.log('Initializing auth state...');
-    const hasToken = checkAuth();
-    setIsInitialized(true); // Mark as initialized after checking
-    
-    // Set up periodic validation only if we have a token
-    if (hasToken) {
-      setupPeriodicValidation();
-    }
-  }, []);
-
-  // Setup periodic validation
-  const setupPeriodicValidation = useCallback(() => {
-    // Clear existing interval if any
-    if (periodicValidationRef.current) {
-      clearInterval(periodicValidationRef.current);
-    }
-
-    console.log('Setting up periodic token validation');
-    periodicValidationRef.current = setInterval(async () => {
-      console.log("Performing periodic token validation...");
-      
-      // Double check we still have a token before validating
-      const tokenData = localStorage.getItem("authToken");
-      if (!tokenData) {
-        console.log("No token found during periodic check");
-        logout();
-        return;
-      }
-      
-      const isValid = await validateToken();
-      if (!isValid) {
-        console.log("Periodic validation failed, logging out");
-        toast.error("Sessão expirada. Por favor, faça login novamente.");
-        logout();
-        // Force redirect to login
-        window.location.href = "/login";
-      } else {
-        console.log("Periodic validation successful");
-      }
-    }, 30 * 60 * 1000); // 30 minutes
-  }, [logout]);
-
-  // Validate token with server
-  const validateToken = async (): Promise<boolean> => {
+  const validateToken = useCallback(async (): Promise<boolean> => {
     const tokenData = localStorage.getItem("authToken");
-    
     if (!tokenData) {
-      console.log("No token found in localStorage for validation");
+      // Don't trigger a full logout if there's no token to begin with.
+      // This prevents redirect loops if this function is ever called on a public page.
       return false;
     }
-    
+
     try {
       const parsedToken = JSON.parse(tokenData) as AuthTokenData;
-      
-      // Check if token is expired locally first
       if (new Date().getTime() >= parsedToken.expiry) {
-        console.log("Token expired locally");
+        console.log("Token expired locally. Logging out.");
         logout();
         return false;
       }
-      
+
       console.log("Validating token with server...");
-      // Validate token with server - use Bearer authorization header
       const response = await fetch(
         `${API_BASE_URL}/User/CheckToken?code=${API_CODE}`,
         {
           method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${parsedToken.token}`,
-            'Content-Type': 'application/json'
-          }
+          headers: { 'Authorization': `Bearer ${parsedToken.token}` }
         }
       );
-      
+
       if (!response.ok) {
-        console.error("Token validation failed:", response.status, response.statusText);
+        console.error("Server validation failed, logging out:", response.status);
         logout();
         return false;
       }
       
       const data = await response.json();
-      console.log("Server validation response:", data);
-      
-      if (data && data.IsValid === true) {
-        console.log("Token validation successful");
-        // Update local state to ensure consistency
-        setIsAuthenticated(true);
-        setUsername(parsedToken.username);
-        setUserData(parsedToken.userData);
+      if (data?.IsValid === true) {
+        console.log("Token validation successful.");
         return true;
       } else {
-        console.log("Server reported token as invalid");
+        console.log("Server reported token as invalid, logging out.");
         logout();
         return false;
       }
     } catch (error) {
-      console.error("Error validating token:", error);
+      console.error("Error during token validation, logging out:", error);
       logout();
       return false;
     }
-  };
-
-  // Check if email exists in the system
-  const checkEmail = async (email: string): Promise<boolean> => {
-    if (!validateEmail(email)) return false;
-    
+  }, [logout]);
+  
+  const checkAuth = useCallback(() => {
+    const tokenData = localStorage.getItem("authToken");
+    if (!tokenData) {
+      setIsAuthenticated(false);
+      return false;
+    }
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/User/EmailExists?email=${encodeURIComponent(email)}&code=${API_CODE}`
-      );
-      
-      if (!response.ok) {
-        throw new Error(`Error checking email: ${response.statusText}`);
+      const parsedToken = JSON.parse(tokenData) as AuthTokenData;
+      if (new Date().getTime() >= parsedToken.expiry) {
+        console.log('Token expired locally during initial check.');
+        localStorage.removeItem("authToken");
+        setIsAuthenticated(false);
+        return false;
+      }
+      setIsAuthenticated(true);
+      setUsername(parsedToken.username);
+      setUserData(parsedToken.userData);
+      return true;
+    } catch (error) {
+      console.error("Error parsing auth token on initial check:", error);
+      localStorage.removeItem("authToken");
+      setIsAuthenticated(false);
+      return false;
+    }
+  }, []);
+
+  // Effect 1: Initialize auth state on first application load.
+  useEffect(() => {
+    console.log('Initializing auth state...');
+    checkAuth();
+    setIsInitialized(true);
+  }, [checkAuth]);
+  
+  // Effect 2: Manage periodic token validation when the user is authenticated.
+  useEffect(() => {
+    // This effect should only run if the context is initialized and the user is authenticated.
+    if (!isInitialized || !isAuthenticated) {
+      return; 
+    }
+
+    // This function will be called by the timers.
+    const performValidation = async () => {
+      console.log("Performing scheduled token validation...");
+      const isValid = await validateToken();
+      if (!isValid) {
+        // The `logout` function, which is called inside `validateToken` on failure,
+        // handles the redirect. We only need to show the toast message here.
+        toast.error("Sessão expirada. Por favor, faça login novamente.");
+      } else {
+        console.log("Scheduled validation successful.");
+      }
+    };
+    
+    // 1. Initial check: 5 seconds after authentication is confirmed.
+    console.log('User is authenticated. Setting up initial check in 5 seconds.');
+    const initialCheckTimeoutId = setTimeout(performValidation, 5 * 1000); // 5 seconds
+    
+    // 2. Interval check: Every 15 minutes thereafter.
+    console.log('Setting up recurring 15-minute check.');
+    const intervalCheckId = setInterval(performValidation, 15 * 60 * 1000); // 15 minutes
+
+    // **CRITICAL**: Cleanup function. This runs when the component unmounts
+    // or when a dependency changes (e.g., user logs out, isAuthenticated becomes false).
+    // It prevents memory leaks and multiple timers from running simultaneously.
+    return () => {
+      console.log('Cleaning up validation timers.');
+      clearTimeout(initialCheckTimeoutId);
+      clearInterval(intervalCheckId);
+    };
+    
+  }, [isInitialized, isAuthenticated, validateToken]);
+
+  const login = async (email: string, password: string): Promise<boolean> => {
+    if (!validateEmail(email)) {
+      toast.error("Formato de email inválido");
+      return false;
+    }
+    if (!validatePassword(password)) {
+      toast.error("A password deve ter pelo menos 5 caracteres");
+      return false;
+    }
+
+    try {
+      const emailExists = await checkEmail(email);
+      if (!emailExists) {
+        toast.error("Email não registado no sistema");
+        return false;
       }
       
+      const salt = await getSaltForUser(email);
+      if (!salt) {
+        toast.error("Erro ao obter dados de autenticação");
+        return false;
+      }
+      
+      const hashedPassword = hashPassword(password, salt);
+      
+      const loginResponse = await fetch(`${API_BASE_URL}/User/Login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Email: email, Password: hashedPassword, Code: API_CODE })
+      });
+      
+      if (!loginResponse.ok) {
+        toast.error(loginResponse.status === 401 ? "Password incorreta" : `Erro no login: ${loginResponse.statusText}`);
+        return false;
+      }
+      
+      const loginData = await loginResponse.json();
+      if (loginData && loginData.Token) {
+        const userDetails = await getUserDetails(email, loginData.Token);
+        if (!userDetails) {
+          toast.error("Não foi possível obter os detalhes do utilizador");
+          return false;
+        }
+        
+        const tokenData: AuthTokenData = {
+          token: loginData.Token,
+          expiry: new Date().getTime() + 8 * 60 * 60 * 1000, // 8 hours
+          username: userDetails.username || email,
+          userData: userDetails
+        };
+        
+        localStorage.setItem("authToken", JSON.stringify(tokenData));
+        
+        // Update React state to reflect the new authenticated status
+        setIsAuthenticated(true);
+        setUsername(userDetails.username || email);
+        setUserData(userDetails);
+        
+        toast.success("Login efetuado com sucesso");
+        // Return true to signal success to the LoginPage component.
+        return true;
+      } else {
+        toast.error("Falha no login: Resposta da API inválida");
+        return false;
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error(`Erro no login: ${(error as Error).message || "Erro desconhecido"}`);
+      return false;
+    }
+  };
+  
+  // --- HELPER & UTILITY FUNCTIONS ---
+
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePassword = (password: string): boolean => {
+    const passwordRegex = /^(?!.*(?:--|;|\/\*|\*\/|xp_|union|select|insert|update|delete|drop|alter|create|truncate|exec|declare)).{5,}$/;
+    return passwordRegex.test(password);
+  };
+  
+  const hashPassword = (password: string, salt: string): string => {
+    const combined = password + salt;
+    const md = forge.md.sha256.create();
+    md.update(combined);
+    return forge.util.encode64(md.digest().bytes());
+  };
+
+  const checkEmail = async (email: string): Promise<boolean> => {
+    if (!validateEmail(email)) return false;
+    try {
+      const response = await fetch(`${API_BASE_URL}/User/EmailExists?email=${encodeURIComponent(email)}&code=${API_CODE}`);
+      if (!response.ok) throw new Error(`Server responded with ${response.status}`);
       const data = await response.json();
       return data.Exists === true;
     } catch (error) {
@@ -196,18 +295,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   };
-  
-  // Get salt for the user
+
   const getSaltForUser = async (email: string): Promise<string | null> => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/User/GetUserSalt?identifier=${encodeURIComponent(email)}&code=${API_CODE}`
-      );
-      
-      if (!response.ok) {
-        throw new Error(`Error getting salt: ${response.statusText}`);
-      }
-      
+      const response = await fetch(`${API_BASE_URL}/User/GetUserSalt?identifier=${encodeURIComponent(email)}&code=${API_CODE}`);
+      if (!response.ok) throw new Error(`Server responded with ${response.status}`);
       const data = await response.json();
       return data.Salt || null;
     } catch (error) {
@@ -215,34 +307,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return null;
     }
   };
-  
-  // Hash password with salt
-  const hashPassword = (password: string, salt: string): string => {
-    const combined = password + salt;
-    const md = forge.md.sha256.create();
-    md.update(combined);
-    const hash = md.digest().bytes();
-    return forge.util.encode64(hash);
-  };
-  
-  // Get user details from API using token
+
   const getUserDetails = async (email: string, token: string): Promise<UserData | null> => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/User/GetByEmail?email=${encodeURIComponent(email)}&code=${API_CODE}`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-      
-      if (!response.ok) {
-        throw new Error(`Error getting user details: ${response.statusText}`);
-      }
-      
+      const response = await fetch(`${API_BASE_URL}/User/GetByEmail?email=${encodeURIComponent(email)}&code=${API_CODE}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error(`Server responded with ${response.status}`);
       const data = await response.json();
       return {
         name: data.Name || null,
@@ -258,180 +329,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return null;
     }
   };
-  
-  // Validate email format
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    return emailRegex.test(email);
-  };
-  
-  // Validate password format
-  const validatePassword = (password: string): boolean => {
-    const passwordRegex = /^(?!.*(?:--|;|\/\*|\*\/|xp_|union|select|insert|update|delete|drop|alter|create|truncate|exec|declare)).{5,}$/;
-    return passwordRegex.test(password);
-  };
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    console.log('Starting login process for:', email);
-    
-    // Validate input
-    if (!validateEmail(email)) {
-      toast.error("Formato de email inválido");
-      return false;
-    }
-    
-    if (!validatePassword(password)) {
-      toast.error("A password deve ter pelo menos 5 caracteres");
-      return false;
-    }
-    
-    try {
-      // First check if email exists
-      const emailExists = await checkEmail(email);
-      if (!emailExists) {
-        toast.error("Email não registado no sistema");
-        return false;
-      }
-      
-      // Get salt for hashing
-      const salt = await getSaltForUser(email);
-      if (!salt) {
-        toast.error("Erro ao obter dados de autenticação");
-        return false;
-      }
-      
-      // Hash the password
-      const hashedPassword = hashPassword(password, salt);
-      
-      // Attempt login
-      const loginResponse = await fetch(`${API_BASE_URL}/User/Login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          Email: email,
-          Password: hashedPassword,
-          Code: API_CODE
-        })
-      });
-      
-      if (!loginResponse.ok) {
-        if (loginResponse.status === 401) {
-          toast.error("Password incorreta");
-        } else {
-          toast.error(`Erro no login: ${loginResponse.statusText}`);
-        }
-        return false;
-      }
-      
-      const loginData = await loginResponse.json();
-      
-      if (loginData && loginData.Token) {
-        // Now get user details using the received token
-        const userDetails = await getUserDetails(email, loginData.Token);
-        if (!userDetails) {
-          toast.error("Não foi possível obter os detalhes do utilizador");
-          return false;
-        }
-        
-        // Store token with expiry (8 hours)
-        const tokenData: AuthTokenData = {
-          token: loginData.Token,
-          expiry: new Date().getTime() + 8 * 60 * 60 * 1000, // 8 hours
-          username: userDetails.username || email,
-          userData: userDetails
-        };
-        
-        console.log('Storing authentication token in localStorage');
-        localStorage.setItem("authToken", JSON.stringify(tokenData));
-        
-        // Update state immediately after storing token - this is crucial!
-        console.log('Updating auth state after successful login');
-        setIsAuthenticated(true);
-        setUsername(userDetails.username || email);
-        setUserData(userDetails);
-        
-        // Setup periodic validation after successful login
-        setupPeriodicValidation();
-        
-        console.log('Login successful, user authenticated');
-        toast.success("Login efetuado com sucesso");
-        return true;
-      } else {
-        toast.error("Falha no login: Resposta da API inválida");
-        return false;
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      toast.error(`Erro no login: ${(error as Error).message || "Erro desconhecido"}`);
-      return false;
-    }
-  };
-
-  const checkAuth = (): boolean => {
-    const tokenData = localStorage.getItem("authToken");
-    
-    if (!tokenData) {
-      setIsAuthenticated(false);
-      setUsername(null);
-      setUserData(null);
-      return false;
-    }
-    
-    try {
-      const parsedToken = JSON.parse(tokenData) as AuthTokenData;
-      
-      // Only check local expiry - don't validate with server on every check
-      const isValid = new Date().getTime() < parsedToken.expiry;
-      
-      if (!isValid) {
-        console.log('Token expired locally');
-        logout();
-        return false;
-      }
-      
-      // Update state if token is valid
-      setIsAuthenticated(true);
-      setUsername(parsedToken.username);
-      setUserData(parsedToken.userData);
-      return true;
-    } catch (error) {
-      console.error("Error parsing auth token:", error);
-      logout();
-      return false;
-    }
-  };
-
-  // Request password reset
   const requestPasswordReset = async (email: string): Promise<boolean> => {
     if (!validateEmail(email)) {
       toast.error("Formato de email inválido");
       return false;
     }
-
+    const emailExists = await checkEmail(email);
+    if (!emailExists) {
+      toast.error("Email não registado no sistema");
+      return false;
+    }
     try {
-      // First check if email exists
-      const emailExists = await checkEmail(email);
-      if (!emailExists) {
-        toast.error("Email não registado no sistema");
-        return false;
-      }
-
       const response = await fetch(`${API_BASE_URL}/User/RequestPasswordReset?code=${API_CODE}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          Email: email
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Email: email })
       });
-
-      if (!response.ok) {
-        throw new Error(`Error requesting password reset: ${response.statusText}`);
-      }
-
+      if (!response.ok) throw new Error(`Server responded with ${response.status}`);
       toast.success("Email de recuperação de password enviado com sucesso");
       return true;
     } catch (error) {
@@ -441,45 +356,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Generate salt
   const generateSalt = (): string => {
-    const randomBytes = forge.random.getBytesSync(16);
-    return forge.util.encode64(randomBytes);
+    return forge.util.encode64(forge.random.getBytesSync(16));
   };
 
-  // Reset password with code
   const resetPassword = async (code: string, password: string): Promise<boolean> => {
     if (!validatePassword(password)) {
       toast.error("Deve inserir uma password válida com pelo menos 5 caracteres");
       return false;
     }
-
     try {
-      // Generate new salt and hash password
       const salt = generateSalt();
       const hashedPassword = hashPassword(password, salt);
-
       const response = await fetch(`${API_BASE_URL}/User/SetPasswordByResetCode?code=${API_CODE}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          code: code,
-          password: hashedPassword,
-          salt: salt
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code, password: hashedPassword, salt: salt })
       });
-
       if (!response.ok) {
-        if (response.status === 400) {
-          toast.error("Código inválido ou expirado");
-        } else {
-          toast.error(`Erro ao alterar password: ${response.statusText}`);
-        }
+        toast.error(response.status === 400 ? "Código inválido ou expirado" : `Erro ao alterar password`);
         return false;
       }
-
       toast.success("Password alterada com sucesso");
       return true;
     } catch (error) {
@@ -489,21 +386,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (periodicValidationRef.current) {
-        clearInterval(periodicValidationRef.current);
-      }
-    };
-  }, []);
 
+  // --- PROVIDER VALUE & RENDER ---
   return (
     <AuthContext.Provider value={{ 
       isAuthenticated, 
       username, 
       userData,
-      isInitialized, // Provide initialization status
+      isInitialized,
       login, 
       logout, 
       checkAuth,
@@ -517,4 +407,5 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+// --- CUSTOM HOOK ---
 export const useAuth = () => useContext(AuthContext);
