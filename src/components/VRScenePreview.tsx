@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import * as THREE from "three";
@@ -78,13 +77,13 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
     renderer.setSize(width, height);
     
     // Add grid
-    const gridHelper = new THREE.GridHelper(10, 10);
-    gridHelper.position.y = -1;
+    const gridHelper = new THREE.GridHelper(20, 20); // Extended grid to 20x20
+    gridHelper.position.y = 0; // Set grid to be the floor at y=0
     scene.add(gridHelper);
     
     // Add axes helper
-    const axesHelper = new THREE.AxesHelper(2);
-    axesHelper.position.y = -1;
+    const axesHelper = new THREE.AxesHelper(5); // Made axes larger for visibility
+    axesHelper.position.y = 0; // Align with the floor
     scene.add(axesHelper);
     
     // Add lighting
@@ -149,7 +148,7 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
       // Zoom in/out
       cameraPositionRef.current.radius = Math.max(
         2,
-        Math.min(10, cameraPositionRef.current.radius + e.deltaY * 0.01)
+        Math.min(20, cameraPositionRef.current.radius + e.deltaY * 0.01) // Increased max zoom out
       );
       updateCameraPosition();
       e.preventDefault(); // Prevent default scrolling
@@ -334,7 +333,12 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
   
   // Update chart mesh position - each chart has its own individual position and rotation
   const updateChartMeshPosition = (mesh: THREE.Mesh, position: VRPosition) => {
-    mesh.position.set(position.x, position.y, position.z);
+    // The final height of the mesh is its geometry height multiplied by its scale.
+    // The Y position from the controller should be the "floor" of the object.
+    // We offset the mesh's center position by half of its final height to place its bottom correctly.
+    const finalHeight = (position.height || 1) * position.scale;
+    mesh.position.set(position.x, position.y + finalHeight / 2, position.z);
+
     mesh.scale.set(position.scale, position.scale, position.scale);
     mesh.rotation.set(
       (position.rotation.x * Math.PI) / 180,

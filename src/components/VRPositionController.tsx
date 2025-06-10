@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
@@ -55,12 +54,12 @@ const VRPositionController = ({ position, onPositionChange }: VRPositionControll
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="text-sm font-medium">Eixo X: {position.x.toFixed(1)}</label>
-                  <span className="text-xs text-muted-foreground">[-5, 5]</span>
+                  <span className="text-xs text-muted-foreground">[-10, 10]</span>
                 </div>
                 <Slider 
                   value={[position.x]} 
-                  min={-5} 
-                  max={5} 
+                  min={-10} 
+                  max={10} 
                   step={0.1} 
                   onValueChange={(values) => handlePositionChange("x", values[0])} 
                 />
@@ -68,12 +67,12 @@ const VRPositionController = ({ position, onPositionChange }: VRPositionControll
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="text-sm font-medium">Eixo Y: {position.y.toFixed(1)}</label>
-                  <span className="text-xs text-muted-foreground">[0, 5]</span>
+                  <span className="text-xs text-muted-foreground">[0, 10]</span>
                 </div>
                 <Slider 
                   value={[position.y]} 
                   min={0} 
-                  max={5} 
+                  max={10} 
                   step={0.1} 
                   onValueChange={(values) => handlePositionChange("y", values[0])} 
                 />
@@ -81,12 +80,12 @@ const VRPositionController = ({ position, onPositionChange }: VRPositionControll
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="text-sm font-medium">Eixo Z: {position.z.toFixed(1)}</label>
-                  <span className="text-xs text-muted-foreground">[-5, 0]</span>
+                  <span className="text-xs text-muted-foreground">[-10, 10]</span>
                 </div>
                 <Slider 
                   value={[position.z]} 
-                  min={-5} 
-                  max={0} 
+                  min={-10} 
+                  max={10} 
                   step={0.1} 
                   onValueChange={(values) => handlePositionChange("z", values[0])} 
                 />
