@@ -105,7 +105,7 @@ const VisualizationHub = () => {
                     placeholder="Insira o código de visualização"
                     value={visualizationId}
                     onChange={(e) => setVisualizationId(e.target.value)}
-                    className="text-base p-4"
+                    className="text-base p-4 pl-10"
                   />
                 </div>
                 <Button 
