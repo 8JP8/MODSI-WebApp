@@ -40,12 +40,10 @@ const App = () => {
         navigator.serviceWorker.register('/sw.js')
           .then((registration) => {
             console.log('SW registered: ', registration);
-            
             // Check for service worker updates
             registration.addEventListener('updatefound', () => {
               const newWorker = registration.installing;
               console.log('SW update found!');
-              
               newWorker?.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                   console.log('New content is available; please refresh.');
@@ -56,7 +54,7 @@ const App = () => {
           .catch((registrationError) => {
             console.log('SW registration failed: ', registrationError);
           });
-          
+
         // Handle controller change (when a new service worker takes control)
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           console.log('New service worker controller');
@@ -78,8 +76,8 @@ const App = () => {
               expand={true}
               duration={4000}
             />
-            <AuthProvider>
-              <BrowserRouter>
+            <BrowserRouter>
+              <AuthProvider>
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/dashboard" element={<Dashboard />} />
@@ -99,8 +97,8 @@ const App = () => {
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <PWAInstallPrompt />
-              </BrowserRouter>
-            </AuthProvider>
+              </AuthProvider>
+            </BrowserRouter>
           </TooltipProvider>
         </ThemeProvider>
       </QueryClientProvider>
