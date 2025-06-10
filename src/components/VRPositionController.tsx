@@ -11,10 +11,11 @@ interface VRPositionControllerProps {
   onPositionChange: (position: VRPosition) => void;
 }
 
+// --- CHANGE: Default position is now 0, 0, -2 ---
 const DEFAULT_VR_POSITION: VRPosition = {
   x: 0,
   y: 0,
-  z: 0,
+  z: -2,
   scale: 1,
   width: 1,
   height: 1,
@@ -85,7 +86,6 @@ const VRPositionController = ({ position, onPositionChange }: VRPositionControll
         <CardTitle>Controlo de Posicionamento 3D</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* --- CHANGE 1: Made toggle more evident --- */}
         <div className="flex items-center space-x-4 rounded-lg bg-slate-800 p-4">
           <Switch id="position-toggle" checked={isEnabled} onCheckedChange={handleToggle} />
           <Label htmlFor="position-toggle" className="flex-grow cursor-pointer text-base font-semibold">
@@ -93,7 +93,6 @@ const VRPositionController = ({ position, onPositionChange }: VRPositionControll
           </Label>
         </div>
 
-        {/* --- CHANGE 2: Made disabled state clearer --- */}
         <fieldset
           disabled={!isEnabled}
           className={`space-y-4 transition-opacity duration-300 ${!isEnabled ? 'opacity-50' : 'opacity-100'}`}
@@ -141,7 +140,7 @@ const VRPositionController = ({ position, onPositionChange }: VRPositionControll
                     <span className="text-xs text-muted-foreground">[-10, 10]</span>
                   </div>
                   <Slider 
-                    value={[editedPosition.z ?? 0]} 
+                    value={[editedPosition.z ?? -2]} 
                     min={-10} max={10} step={0.1} 
                     onValueChange={(values) => handleValueChange({ z: values[0] })} 
                   />
