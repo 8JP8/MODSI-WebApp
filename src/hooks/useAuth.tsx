@@ -53,7 +53,6 @@ const AuthContext = createContext<AuthContextType>({
   resetPassword: () => Promise.resolve(false)
 });
 
-
 // --- AUTH PROVIDER COMPONENT ---
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -61,15 +60,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  const logout = useCallback(() => {
-    console.log('Logging out user and forcing redirect...');
+  // New function to handle session expiry with toast and delayed redirect
+  const handleSessionExpired = useCallback(() => {
+    console.log('Session expired, showing notification and scheduling logout...');
+    
+    // Clear auth data immediately
     localStorage.removeItem("authToken");
     setIsAuthenticated(false);
     setUsername(null);
     setUserData(null);
+    
+    // Show toast notification
+    toast.error("Sessão expirada, a redirecionar em 3s", {
+      duration: 3000,
+      description: "A sua sessão expirou. Será redirecionado para a página de login."
+    });
+    
+    // Redirect after 3 seconds
+    setTimeout(() => {
+      window.location.href = "/login";
+    }, 3000);
+  }, []);
+
+  // Update the logout function to use immediate redirect for manual logout
+  const logout = useCallback(() => {
+    console.log('Manual logout - immediate redirect...');
+    localStorage.removeItem("authToken");
+    setIsAuthenticated(false);
+    setUsername(null);
+    setUserData(null);
+    // Immediate redirect for manual logout
     window.location.href = "/login";
   }, []);
 
+  // Improved validateToken function with better error handling and delayed logout
   const validateToken = useCallback(async (): Promise<boolean> => {
     const tokenData = localStorage.getItem("authToken");
     if (!tokenData) {
@@ -78,56 +102,101 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const parsedToken = JSON.parse(tokenData) as AuthTokenData;
+      
+      // Check local expiry first
       if (new Date().getTime() >= parsedToken.expiry) {
         console.log("Token expired locally. Logging out.");
-        logout();
+        handleSessionExpired();
         return false;
       }
 
       console.log("Validating token with server...");
-      const response = await fetch(
-        `${API_BASE_URL}/User/CheckToken?code=${API_CODE}`,
-        {
-          method: 'GET',
-          headers: { 'Authorization': `Bearer ${parsedToken.token}` }
-        }
-      );
-
-      // Read the body for debug info, even if the response is not "ok"
-      const data = await response.json();
-
-      // --- DEBUGGING TOAST ---
-      toast.info("CheckToken API Response:", {
-        description: (
-          <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-            <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-          </pre>
-        ),
-      });
-      // --- END DEBUGGING TOAST ---
-
-      if (!response.ok) {
-        console.error("Server validation failed with status:", response.status);
-        logout();
-        return false;
-      }
       
-      // Check for 'IsValid'. Note: Case-sensitive. If API returns 'isValid', this will fail.
-      if (data && data.IsValid === true) {
-        console.log("Token validation successful.");
+      // Add timeout to prevent hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/User/CheckToken?code=${API_CODE}`,
+          {
+            method: 'GET',
+            headers: { 
+              'Authorization': `Bearer ${parsedToken.token}`,
+              'Content-Type': 'application/json'
+            },
+            signal: controller.signal
+          }
+        );
+
+        clearTimeout(timeoutId);
+
+        // Handle different HTTP status codes
+        if (response.status === 401 || response.status === 403) {
+          console.log("Token rejected by server (401/403). Logging out.");
+          handleSessionExpired();
+          return false;
+        }
+
+        if (!response.ok) {
+          console.error("Server validation failed with status:", response.status);
+          // Don't log out on server errors (5xx), only on auth errors
+          if (response.status >= 500) {
+            console.log("Server error - keeping user logged in for now");
+            return true; // Assume token is still valid during server issues
+          }
+          handleSessionExpired();
+          return false;
+        }
+
+        let data;
+        try {
+          data = await response.json();
+        } catch (jsonError) {
+          console.error("Failed to parse response JSON:", jsonError);
+          handleSessionExpired();
+          return false;
+        }
+
+        // Log response for debugging (without toast)
+        console.log("CheckToken API Response:", data);
+
+        // Check for multiple possible response formats
+        const isValid = data?.IsValid === true || 
+                       data?.isValid === true || 
+                       data?.valid === true ||
+                       (data?.status === 'valid') ||
+                       (data?.success === true && data?.valid !== false);
+
+        if (isValid) {
+          console.log("Token validation successful.");
+          return true;
+        } else {
+          console.log("Server reported token as invalid. Response:", data);
+          handleSessionExpired();
+          return false;
+        }
+
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        
+        if (fetchError.name === 'AbortError') {
+          console.error("Token validation request timed out");
+          toast.error("Timeout na verificação de sessão");
+          return true; // Don't log out on timeout, assume token is still valid
+        }
+        
+        console.error("Network error during token validation:", fetchError);
+        // Don't log out on network errors - keep user logged in
         return true;
-      } else {
-        console.log("Server reported token as invalid OR the 'IsValid' property was not found/false. Logging out.");
-        logout();
-        return false;
       }
+
     } catch (error) {
-      console.error("An error occurred during token validation, logging out:", error);
-      toast.error("Error during token check", { description: "Could not parse server response." });
-      logout();
+      console.error("An error occurred during token validation:", error);
+      handleSessionExpired();
       return false;
     }
-  }, [logout]);
+  }, [handleSessionExpired]);
   
   const checkAuth = useCallback(() => {
     const tokenData = localStorage.getItem("authToken");
@@ -159,21 +228,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsInitialized(true);
   }, [checkAuth]);
   
+  // Updated useEffect that handles periodic validation to be more robust
   useEffect(() => {
     if (!isInitialized || !isAuthenticated) {
       return; 
     }
+
+    let isValidating = false; // Prevent concurrent validations
+
     const performValidation = async () => {
+      if (isValidating) {
+        console.log("Validation already in progress, skipping...");
+        return;
+      }
+      
+      isValidating = true;
       console.log("Performing scheduled token validation...");
-      const isValid = await validateToken();
-      if (!isValid) {
-        toast.error("Sessão expirada. Por favor, faça login novamente.");
-      } else {
-        console.log("Scheduled validation successful.");
+      
+      try {
+        const isValid = await validateToken();
+        if (!isValid) {
+          // handleSessionExpired is already called within validateToken
+          console.log("Scheduled validation failed - user will be logged out");
+        } else {
+          console.log("Scheduled validation successful.");
+        }
+      } catch (error) {
+        console.error("Error during scheduled validation:", error);
+      } finally {
+        isValidating = false;
       }
     };
+
+    // Initial check after 5 seconds (give time for app to load)
     const initialCheckTimeoutId = setTimeout(performValidation, 5 * 1000);
+    
+    // Then check every 15 minutes
     const intervalCheckId = setInterval(performValidation, 15 * 60 * 1000);
+
     return () => {
       clearTimeout(initialCheckTimeoutId);
       clearInterval(intervalCheckId);
