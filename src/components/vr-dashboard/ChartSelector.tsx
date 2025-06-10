@@ -1,3 +1,5 @@
+// src/components/ChartSelector.tsx
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +11,9 @@ interface ChartSelectorProps {
   activeChartId: string;
   onChartSelect: (id: string) => void;
   onAddChart: () => void;
-  onDeleteChart: (updatedCharts: Chart[]) => void; // Add a callback for deleting charts
+  // FIX 1: Changed the prop signature. The component should only be responsible
+  // for reporting which chart ID to delete, not for creating the new array.
+  onDeleteChart: (id: string) => void;
 }
 
 const ChartSelector = ({
@@ -17,20 +21,20 @@ const ChartSelector = ({
   activeChartId,
   onChartSelect,
   onAddChart,
+  // FIX 2: Correctly destructure the onDeleteChart prop.
   onDeleteChart,
 }: ChartSelectorProps) => {
   const [localCharts, setLocalCharts] = useState<Chart[]>(charts);
 
-  // Synchronize local state with parent charts prop
+  // This is correct, it keeps the local view in sync with the parent state.
   useEffect(() => {
     setLocalCharts(charts);
   }, [charts]);
 
+  // FIX 3: This function now correctly calls the prop passed from the parent.
   const handleDelete = (id: string) => {
     if (localCharts.length > 1) {
-      const updatedCharts = localCharts.filter((chart) => chart.id !== id);
-      setLocalCharts(updatedCharts);
-      onDeleteChart(updatedCharts); // Update parent state via callback
+      onDeleteChart(id); // Call the parent's delete function with the chart ID
     }
   };
 
@@ -59,7 +63,6 @@ const ChartSelector = ({
                   key={chart.id}
                   className="relative flex items-center space-x-2 mx-2"
                 >
-                  {/* Chart Button */}
                   <Button
                     variant="ghost"
                     className={`w-full flex items-center justify-start p-3 rounded-md h-auto transition-all duration-200 hover:scale-105 ${
@@ -69,11 +72,13 @@ const ChartSelector = ({
                     }`}
                     onClick={() => onChartSelect(chart.id)}
                   >
+                    {/* ... (rest of the button content is unchanged) ... */}
                     <div className="text-left">
                       <p className="font-medium">{chart.chartType}</p>
                       <p className="text-sm text-muted-foreground mt-1">
                         {chart.xAxis && chart.yAxis
-                          ? `${chart.xAxis.replace("years", "Anos")
+                          ? `${chart.xAxis
+                              .replace("years", "Anos")
                               .replace("months", "Meses")
                               .replace("days", "Dias")
                               .replace("change", "Alteração")}
@@ -84,7 +89,6 @@ const ChartSelector = ({
                     </div>
                   </Button>
 
-                  {/* Delete Icon */}
                   {localCharts.length > 1 && (
                     <Button
                       size="sm"
@@ -94,6 +98,7 @@ const ChartSelector = ({
                           ? "text-red-500 hover:text-red-600"
                           : "text-gray-500 hover:text-red-600"
                       }`}
+                      // The onClick handler is correct and calls our fixed handleDelete
                       onClick={() => handleDelete(chart.id)}
                       title="Remover gráfico"
                     >

@@ -80,6 +80,7 @@ const VRDashboard = () => {
           handleYAxisChange,
           addNewChart,
           resetConfiguration,
+          deleteChart,
           handleLoadConfig,
           handleExportJSON,
           setConfigSaved,
@@ -101,6 +102,7 @@ const VRDashboard = () => {
                   activeChartId={activeChartId}
                   onChartSelect={setActiveChartId}
                   onAddChart={addNewChart}
+                  onDeleteChart={deleteChart}
                 />
                 
                 <Card>
