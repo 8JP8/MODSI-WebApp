@@ -38,7 +38,9 @@ export const useChartData = () => {
 
   // Initialize with one chart
   useEffect(() => {
-    addNewChart();
+    if (charts.length === 0) {
+      addNewChart();
+    }
   }, []);
 
   // When a chart is added or selected
@@ -75,6 +77,24 @@ export const useChartData = () => {
     toast.success("Novo gráfico adicionado");
   };
 
+  // FIX: Add a function to handle chart deletion
+  const deleteChart = (id: string) => {
+    if (charts.length <= 1) {
+      toast.error("Não é possível remover o último gráfico.");
+      return;
+    }
+
+    const updatedCharts = charts.filter(chart => chart.id !== id);
+    setCharts(updatedCharts);
+    toast.success("Gráfico removido com sucesso.");
+
+    // If the active chart was deleted, set a new active chart (e.g., the first one)
+    if (activeChartId === id) {
+      const newActiveId = updatedCharts.length > 0 ? updatedCharts[0].id : "";
+      setActiveChartId(newActiveId);
+    }
+  };
+
   // Update properties of the active chart
   const updateActiveChart = (updates: Partial<Chart>) => {
     setCharts(prevCharts => 
@@ -95,18 +115,10 @@ export const useChartData = () => {
     updateActiveChart({ position: newPosition });
   };
   
-  // FIX: This function now resets the Z-axis when the Y-axis is changed.
   const handleYAxisChange = (value: string) => {
     setYAxis(value);
-    
-    // Reset Z-axis since the context for comparison has changed.
     setZAxis(""); 
-    
-    // Update the active chart with the new Y-axis and the reset Z-axis.
     updateActiveChart({ yAxis: value, zAxis: "" }); 
-    
-    // Notify the user.
-    //toast.info("O indicador de comparação (Eixo Z) foi redefinido.");
   };
   
   const handleSecondaryAxisChange = (value: string) => {
@@ -208,7 +220,7 @@ export const useChartData = () => {
           }
           if (chart.zAxis) {
             const zAxisKpi = kpiOptions.find(option => option.id === chart.zAxis);
-            if (zAxisKpi) graphname = `${graphname}  ${zAxisKpi.name}`;
+            if (zAxisKpi) graphname = `${graphname} / ${zAxisKpi.name}`;
           }
           
           return {
@@ -306,6 +318,7 @@ export const useChartData = () => {
     handleSecondaryAxisChange,
     handleZAxisChange,
     addNewChart,
+    deleteChart,
     resetConfiguration,
     handleLoadConfig,
     handleExportJSON,

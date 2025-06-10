@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import ChartDataManager from "./ChartDataManager";
 import DashboardHeader from "./DashboardHeader";
@@ -31,22 +30,18 @@ const VRDashboard = () => {
     try {
       console.log("Creating room with VR configuration...");
       
-      // Get unified configuration with auto-save
       const configurationData = await getConfigurationForVR();
       
-      // Send the full unified configuration
       const roomCode = await createRoom(configurationData);
       
       if (!roomCode) {
         throw new Error("Falha ao criar sala - código não recebido");
       }
       
-      // Save the room code to visualization history
       saveVisualizationToHistory(roomCode);
       
       console.log("Room created with code:", roomCode);
       
-      // Direct redirect without loading state
       window.location.href = `/room/${roomCode}`;
       setLaunchDialogOpen(false);
     } catch (error) {
@@ -79,8 +74,8 @@ const VRDashboard = () => {
           handleSecondaryAxisChange,
           handleYAxisChange,
           addNewChart,
-          resetConfiguration,
           deleteChart,
+          resetConfiguration,
           handleLoadConfig,
           handleExportJSON,
           setConfigSaved,

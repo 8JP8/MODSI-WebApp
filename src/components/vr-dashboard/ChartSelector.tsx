@@ -1,6 +1,3 @@
-// src/components/ChartSelector.tsx
-
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlusCircle, Trash2 } from "lucide-react";
@@ -11,9 +8,7 @@ interface ChartSelectorProps {
   activeChartId: string;
   onChartSelect: (id: string) => void;
   onAddChart: () => void;
-  // FIX 1: Changed the prop signature. The component should only be responsible
-  // for reporting which chart ID to delete, not for creating the new array.
-  onDeleteChart: (id: string) => void;
+  onDeleteChart: (id:string) => void; // FIX: Prop now expects the ID of the chart to delete
 }
 
 const ChartSelector = ({
@@ -21,20 +16,15 @@ const ChartSelector = ({
   activeChartId,
   onChartSelect,
   onAddChart,
-  // FIX 2: Correctly destructure the onDeleteChart prop.
   onDeleteChart,
 }: ChartSelectorProps) => {
-  const [localCharts, setLocalCharts] = useState<Chart[]>(charts);
 
-  // This is correct, it keeps the local view in sync with the parent state.
-  useEffect(() => {
-    setLocalCharts(charts);
-  }, [charts]);
-
-  // FIX 3: This function now correctly calls the prop passed from the parent.
-  const handleDelete = (id: string) => {
-    if (localCharts.length > 1) {
-      onDeleteChart(id); // Call the parent's delete function with the chart ID
+  // FIX: Simplified handler that calls the parent function with the chart ID
+  // It also stops the event from bubbling up to the chart selection button.
+  const handleDelete = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation(); 
+    if (charts.length > 1) {
+      onDeleteChart(id);
     }
   };
 
@@ -42,7 +32,8 @@ const ChartSelector = ({
     <Card>
       <CardHeader className="p-4">
         <div className="flex justify-between items-center">
-          <CardTitle>Gráficos [{localCharts.length}]</CardTitle>
+          {/* FIX: Use charts prop directly */}
+          <CardTitle>Gráficos [{charts.length}]</CardTitle>
           <Button
             variant="ghost"
             size="sm"
@@ -57,28 +48,28 @@ const ChartSelector = ({
       <CardContent className="p-0">
         <div className="max-h-[300px] overflow-y-auto">
           <div className="flex flex-col p-2 space-y-1">
-            {localCharts.length > 0 ? (
-              localCharts.map((chart) => (
+            {/* FIX: Use charts prop directly */}
+            {charts.length > 0 ? (
+              charts.map((chart) => (
                 <div
                   key={chart.id}
-                  className="relative flex items-center space-x-2 mx-2"
+                  className="relative flex items-center group/item space-x-2 mx-2"
                 >
+                  {/* Chart Button */}
                   <Button
                     variant="ghost"
-                    className={`w-full flex items-center justify-start p-3 rounded-md h-auto transition-all duration-200 hover:scale-105 ${
+                    className={`w-full flex items-center justify-start p-3 rounded-md h-auto transition-all duration-200 hover:bg-accent/50 ${
                       activeChartId === chart.id
                         ? "bg-accent text-accent-foreground"
-                        : "hover:bg-accent/50"
+                        : ""
                     }`}
                     onClick={() => onChartSelect(chart.id)}
                   >
-                    {/* ... (rest of the button content is unchanged) ... */}
                     <div className="text-left">
                       <p className="font-medium">{chart.chartType}</p>
                       <p className="text-sm text-muted-foreground mt-1">
                         {chart.xAxis && chart.yAxis
-                          ? `${chart.xAxis
-                              .replace("years", "Anos")
+                          ? `${chart.xAxis.replace("years", "Anos")
                               .replace("months", "Meses")
                               .replace("days", "Dias")
                               .replace("change", "Alteração")}
@@ -89,17 +80,19 @@ const ChartSelector = ({
                     </div>
                   </Button>
 
-                  {localCharts.length > 1 && (
+                  {/* Delete Icon */}
+                  {/* FIX: Use charts prop directly */}
+                  {charts.length > 1 && (
                     <Button
                       size="sm"
                       variant="ghost"
-                      className={`absolute right-2 group flex-shrink-0 rounded-md transition-all duration-200 ${
+                      className={`absolute right-2 group flex-shrink-0 rounded-md transition-all duration-200 opacity-0 group-hover/item:opacity-100 ${
                         activeChartId === chart.id
-                          ? "text-red-500 hover:text-red-600"
+                          ? "text-red-500 hover:text-red-600 opacity-100"
                           : "text-gray-500 hover:text-red-600"
                       }`}
-                      // The onClick handler is correct and calls our fixed handleDelete
-                      onClick={() => handleDelete(chart.id)}
+                      // FIX: onClick now calls the new handleDelete handler
+                      onClick={(e) => handleDelete(e, chart.id)}
                       title="Remover gráfico"
                     >
                       <Trash2 className="w-4 h-4 group-hover:rotate-12 transition-transform duration-200" />
