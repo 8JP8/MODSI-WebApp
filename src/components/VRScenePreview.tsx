@@ -21,7 +21,7 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
   
   const isDraggingRef = useRef(false);
   const previousMousePositionRef = useRef({ x: 0, y: 0 });
-  const cameraPositionRef = useRef({ radius: 15, phi: Math.PI / 3, theta: Math.PI / 4 });
+  const cameraPositionRef = useRef({ radius: 15, phi: Math.PI / 3, theta: Math.PI / 2 });
 
   // Initialize scene
   useEffect(() => {
@@ -309,9 +309,9 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
           />
           <div className="absolute bottom-2 left-2 text-xs text-slate-400 bg-slate-900/70 p-1 rounded">
             Posição: (
-              {displayPosition.x?.toFixed(1) ?? 'N/A'},{' '}
-              {displayPosition.y?.toFixed(1) ?? 'N/A'},{' '}
-              {displayPosition.z?.toFixed(1) ?? 'N/A'}
+              {displayPosition.x?.toFixed(1) ?? '-'},{' '}
+              {displayPosition.y?.toFixed(1) ?? '-'},{' '}
+              {displayPosition.z?.toFixed(1) ?? '-'}
             )
           </div>
           <div className="absolute top-2 right-2 text-xs text-slate-400 bg-slate-900/70 p-1 rounded">
@@ -326,9 +326,9 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
           </p>
           <p>
             Dimensões: 
-            L:{displayPosition.width?.toFixed(1) ?? "N/A"}{' '}
-            A:{displayPosition.height?.toFixed(1) ?? "N/A"}{' '}
-            P:{displayPosition.depth?.toFixed(1) ?? "N/A"}
+            L:{displayPosition.width?.toFixed(1) ?? "-"}{' '}
+            A:{displayPosition.height?.toFixed(1) ?? "-"}{' '}
+            P:{displayPosition.depth?.toFixed(1) ?? "-"}
           </p>
         </div>
       </CardContent>
