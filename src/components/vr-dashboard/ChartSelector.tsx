@@ -93,10 +93,10 @@ const ChartSelector = ({
                     title="Remover gráfico"
                   >
                     <Trash2
-                      className={`w-4 h-4 transition-transform duration-200 ${
+                       className={`relative flex items-center justify-center w-full h-12 rounded-lg transition-colors duration-200 ${
                         activeChartId === chart.id
-                          ? "group-hover:scale-125 group-hover:text-red-800"
-                          : "group-hover:rotate-12"
+                          ? "bg-red-100 hover:bg-red-200"
+                          : "hover:bg-gray-100"
                       }`}
                     />
                   </Button>
