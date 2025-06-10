@@ -107,7 +107,7 @@ const KPIAxisSelector = ({
       <CardHeader><CardTitle>Configuração dos Eixos</CardTitle></CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Eixo Y - Indicador Principal</label>
+          <label className="text-sm font-medium">Indicador Principal</label>
           <Select value={selectedYAxis} onValueChange={onSelectYAxis}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Selecione o indicador principal">
@@ -125,7 +125,7 @@ const KPIAxisSelector = ({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Eixo X - Por Tempo ou por Alteração</label>
+          <label className="text-sm font-medium">Divisão Temporal do Histórico de Alteração</label>
           <Select value={selectedSecondaryAxis} onValueChange={onSelectSecondaryAxis}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Selecione uma divisão de tempo ou alteração" />
@@ -139,7 +139,7 @@ const KPIAxisSelector = ({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Eixo Z - Indicador para Comparação (Opcional)</label>
+          <label className="text-sm font-medium">Indicador para Comparação (Opcional)</label>
           <Select value={selectedZAxis || "none"} onValueChange={onSelectZAxis} disabled={!selectedYAxis}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder={!selectedYAxis ? "Selecione primeiro o indicador principal" : "Selecione indicador para comparação"}>
