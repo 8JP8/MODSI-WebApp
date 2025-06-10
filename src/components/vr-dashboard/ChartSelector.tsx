@@ -52,11 +52,14 @@ const ChartSelector = ({
           <div className="flex flex-col p-2 space-y-1">
             {localCharts.length > 0 ? (
               localCharts.map((chart) => (
-                <div key={chart.id} className="flex items-center space-x-2 mx-2">
+                <div
+                  key={chart.id}
+                  className="relative flex items-center space-x-2 mx-2"
+                >
                   {/* Chart Button */}
                   <Button
                     variant="ghost"
-                    className={`flex-grow flex items-center justify-start p-3 rounded-md h-auto transition-all duration-200 hover:scale-105 ${
+                    className={`w-full flex items-center justify-start p-3 rounded-md h-auto transition-all duration-200 hover:scale-105 ${
                       activeChartId === chart.id
                         ? "bg-accent text-accent-foreground"
                         : "hover:bg-accent/50"
@@ -79,14 +82,16 @@ const ChartSelector = ({
                   </Button>
 
                   {/* Delete Icon */}
-                  <button
-                    className="p-2 rounded-md transition-transform duration-200 hover:rotate-12 hover:scale-110"
-                    disabled={localCharts.length === 1}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="absolute right-2 text-red-500 hover:text-red-600 group flex-shrink-0"
                     onClick={() => handleDelete(chart.id)}
+                    disabled={localCharts.length === 1}
                     title="Remover gráfico"
                   >
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                  </button>
+                    <Trash2 className="w-4 h-4 group-hover:rotate-12 transition-transform duration-200" />
+                  </Button>
                 </div>
               ))
             ) : (
