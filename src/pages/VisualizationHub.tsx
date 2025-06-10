@@ -102,7 +102,7 @@ const VisualizationHub = () => {
                 <div className="relative group">
                   <TextCursorInput className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 group-hover:rotate-12" />
                   <Input
-                    placeholder="Insira o código de visualização"
+                    placeholder="Insira o código da sala"
                     value={visualizationId}
                     onChange={(e) => setVisualizationId(e.target.value)}
                     className="text-base p-4 pl-10"
