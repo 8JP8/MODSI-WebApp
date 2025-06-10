@@ -86,7 +86,7 @@ const VRPositionController = ({ position, onPositionChange }: VRPositionControll
         <CardTitle>Controlo de Posicionamento 3D</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center space-x-4 rounded-lg bg-slate-800 px-4 py-1">
+        <div className="flex items-center space-x-4 rounded-lg bg-slate-800 px-4 py-3">
           <Switch id="position-toggle" checked={isEnabled} onCheckedChange={handleToggle} />
           <Label htmlFor="position-toggle" className="flex-grow cursor-pointer text-base font-semibold">
             Posicionamento personalizado
