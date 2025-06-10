@@ -64,7 +64,6 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
     if (charts.length > 0) {
       charts.forEach(chart => createChartMesh(chart));
     } else {
-      // FIX IS HERE: Added the 'color' property to the object to satisfy the Chart type.
       createChartMesh({ 
         id: 'default', 
         chartType, 
@@ -187,6 +186,10 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
     });
     
     const mesh = new THREE.Mesh(geometry, material);
+    
+    // Set initial visibility based on whether position data exists
+    mesh.visible = chart.position.x !== null;
+
     sceneRef.current.add(mesh);
     chartMeshesRef.current.set(chart.id, mesh);
     
@@ -216,6 +219,14 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
     const mesh = chartMeshesRef.current.get(id);
     if (!mesh || !sceneRef.current) return;
     
+    // Set visibility based on whether position data exists
+    mesh.visible = position.x !== null;
+
+    // If the mesh is not visible, no need to update its properties
+    if (!mesh.visible) {
+      return;
+    }
+
     updateChartMeshPosition(mesh, position);
     
     const width = position.width ?? 1;
