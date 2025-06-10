@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlusCircle, Trash } from "lucide-react";
+import { PlusCircle, Trash2 } from "lucide-react";
 import { Chart } from "@/types/vr-dashboard";
 
 interface ChartSelectorProps {
@@ -70,14 +70,14 @@ const ChartSelector = ({ charts, activeChartId, onChartSelect, onAddChart }: Cha
                           : "Não configurado"}
                       </p>
                     </div>
+                    <Button
+                      variant="ghost"
+                      className="p-2 group"
+                      disabled={localCharts.length === 1}
+                      onClick={() => handleDelete(chart.id)}
+                    >
+                      <Trash2 className="h-4 w-4 group-hover:rotate-12" />
                   </Button>
-                  <Button
-                    variant="destructive"
-                    className="p-2"
-                    disabled={localCharts.length === 1}
-                    onClick={() => handleDelete(chart.id)}
-                  >
-                    <Trash className="h-4 w-4" />
                   </Button>
                 </div>
               ))
