@@ -47,7 +47,7 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
   // Mouse controls state
   const isDraggingRef = useRef(false);
   const previousMousePositionRef = useRef({ x: 0, y: 0 });
-  const cameraPositionRef = useRef({ radius: 5, phi: Math.PI / 2, theta: Math.PI / 2 });
+  const cameraPositionRef = useRef({ radius: 15, phi: Math.PI / 3, theta: Math.PI / 4 });
 
   // Initialize scene
   useEffect(() => {
@@ -336,14 +336,22 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
     // The final height of the mesh is its geometry height multiplied by its scale.
     // The Y position from the controller should be the "floor" of the object.
     // We offset the mesh's center position by half of its final height to place its bottom correctly.
-    const finalHeight = (position.height || 1) * position.scale;
-    mesh.position.set(position.x, position.y + finalHeight / 2, position.z);
+    const x = position.x ?? 0;
+    const y = position.y ?? 0;
+    const z = position.z ?? 0;
+    const scale = position.scale ?? 1;
+    const height = position.height ?? 1;
+    const rotX = position.rotation.x ?? 0;
+    const rotY = position.rotation.y ?? 0;
+    const rotZ = position.rotation.z ?? 0;
+    const finalHeight = height * scale;
+    mesh.position.set(x, y + finalHeight / 2, z);
 
-    mesh.scale.set(position.scale, position.scale, position.scale);
+    mesh.scale.set(scale, scale, scale);
     mesh.rotation.set(
-      (position.rotation.x * Math.PI) / 180,
-      (position.rotation.y * Math.PI) / 180,
-      (position.rotation.z * Math.PI) / 180
+      (rotX * Math.PI) / 180,
+      (rotY * Math.PI) / 180,
+      (rotZ * Math.PI) / 180
     );
   };
   
