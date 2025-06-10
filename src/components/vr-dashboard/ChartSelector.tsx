@@ -83,15 +83,23 @@ const ChartSelector = ({
 
                   {/* Delete Icon */}
                   <Button
-                    size="sm"
-                    variant="ghost"
-                    className="absolute right-2 text-red-500 hover:text-red-600 group flex-shrink-0"
-                    onClick={() => handleDelete(chart.id)}
-                    disabled={localCharts.length === 1}
-                    title="Remover gráfico"
-                  >
-                    <Trash2 className="w-4 h-4 group-hover:rotate-12 transition-transform duration-200" />
-                  </Button>
+                  size="sm"
+                  variant="ghost"
+                  className={`absolute right-2 group flex-shrink-0 ${
+                    activeChartId === chart.id ? "text-red-700" : "text-red-500"
+                  } hover:text-red-600`}
+                  onClick={() => handleDelete(chart.id)}
+                  disabled={localCharts.length === 1}
+                  title="Remover gráfico"
+                >
+                  <Trash2
+                    className={`w-4 h-4 transition-transform duration-200 ${
+                      activeChartId === chart.id
+                        ? "group-hover:scale-125 group-hover:text-red-800"
+                        : "group-hover:rotate-12"
+                    }`}
+                  />
+                </Button>
                 </div>
               ))
             ) : (
