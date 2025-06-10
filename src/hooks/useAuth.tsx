@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { toast } from "sonner";
 import forge from "node-forge";
+import { useNavigate } from "react-router-dom";
 
 // --- TYPE DEFINITIONS ---
 interface UserData {
@@ -59,6 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [username, setUsername] = useState<string | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const navigate = useNavigate();
 
   // New function to handle session expiry with toast and delayed redirect
   const handleSessionExpired = useCallback(() => {
@@ -76,11 +78,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       description: "A sua sessão expirou. Será redirecionado para a página de login."
     });
     
-    // Redirect after 3 seconds
+    // Redirect after 3 seconds using React Router
     setTimeout(() => {
-      window.location.href = "/login";
+      navigate("/login", { replace: true });
     }, 3000);
-  }, []);
+  }, [navigate]);
 
   // Update the logout function to use immediate redirect for manual logout
   const logout = useCallback(() => {
@@ -89,9 +91,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsAuthenticated(false);
     setUsername(null);
     setUserData(null);
-    // Immediate redirect for manual logout
-    window.location.href = "/login";
-  }, []);
+    // Immediate redirect for manual logout using React Router
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   // Improved validateToken function that checks only HTTP status codes
   const validateToken = useCallback(async (): Promise<boolean> => {
