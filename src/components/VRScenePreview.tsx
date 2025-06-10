@@ -64,7 +64,17 @@ const VRScenePreview = ({ chartType, position, charts = [], activeChartId }: VRS
     if (charts.length > 0) {
       charts.forEach(chart => createChartMesh(chart));
     } else {
-      createChartMesh({ id: 'default', chartType, position, xAxis: '', yAxis: '', zAxis: '', department: '' } as Chart);
+      // FIX IS HERE: Added the 'color' property to the object to satisfy the Chart type.
+      createChartMesh({ 
+        id: 'default', 
+        chartType, 
+        position, 
+        xAxis: '', 
+        yAxis: '', 
+        zAxis: '', 
+        department: '', 
+        color: undefined 
+      } as Chart);
     }
     
     const animate = () => {
