@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { toast } from "sonner";
 import forge from "node-forge";
+import { useNavigate } from "react-router-dom"; // Import useNavigate for programmatic navigation
 
 interface UserData {
   name: string | null;
@@ -23,9 +24,9 @@ interface AuthContextType {
   isAuthenticated: boolean;
   username: string | null;
   userData: UserData | null;
-  isInitialized: boolean; // Add this to track initialization
+  isInitialized: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: (options?: { navigate?: boolean }) => void; // Allow disabling navigation on logout
   checkAuth: () => boolean;
   checkEmail: (email: string) => Promise<boolean>;
   validateToken: () => Promise<boolean>;
@@ -55,88 +56,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [username, setUsername] = useState<string | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
-  const periodicValidationRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Memoized logout function to prevent recreation on every render
-  const logout = useCallback(() => {
-    console.log('Logging out user');
+  // Use a stable navigate function from a wrapper component
+  const navigate = useNavigate();
+
+  const logout = useCallback((options?: { navigate?: boolean }) => {
+    const { navigate: shouldNavigate = true } = options || {};
+
+    console.log('Logging out user...');
     localStorage.removeItem("authToken");
     setIsAuthenticated(false);
     setUsername(null);
     setUserData(null);
-    
-    // Clear periodic validation
-    if (periodicValidationRef.current) {
-      clearInterval(periodicValidationRef.current);
-      periodicValidationRef.current = null;
+    if (shouldNavigate) {
+      console.log('Redirecting to /login');
+      // Use window.location.href for a full page reload to clear all state
+      window.location.href = "/login"; 
     }
   }, []);
-
-  // Initialize auth state on mount
-  useEffect(() => {
-    console.log('Initializing auth state...');
-    const hasToken = checkAuth();
-    setIsInitialized(true); // Mark as initialized after checking
-    
-    // Set up periodic validation only if we have a token
-    if (hasToken) {
-      setupPeriodicValidation();
-    }
-  }, []);
-
-  // Setup periodic validation
-  const setupPeriodicValidation = useCallback(() => {
-    // Clear existing interval if any
-    if (periodicValidationRef.current) {
-      clearInterval(periodicValidationRef.current);
-    }
-
-    console.log('Setting up periodic token validation');
-    periodicValidationRef.current = setInterval(async () => {
-      console.log("Performing periodic token validation...");
-      
-      // Double check we still have a token before validating
-      const tokenData = localStorage.getItem("authToken");
-      if (!tokenData) {
-        console.log("No token found during periodic check");
-        logout();
-        return;
-      }
-      
-      const isValid = await validateToken();
-      if (!isValid) {
-        console.log("Periodic validation failed, logging out");
-        toast.error("Sessão expirada. Por favor, faça login novamente.");
-        logout();
-        // Force redirect to login
-        window.location.href = "/login";
-      } else {
-        console.log("Periodic validation successful");
-      }
-    }, 30 * 60 * 1000); // 30 minutes
-  }, [logout]);
-
-  // Validate token with server
-  const validateToken = async (): Promise<boolean> => {
+  
+  const validateToken = useCallback(async (): Promise<boolean> => {
     const tokenData = localStorage.getItem("authToken");
-    
+
     if (!tokenData) {
       console.log("No token found in localStorage for validation");
       return false;
     }
-    
+
     try {
       const parsedToken = JSON.parse(tokenData) as AuthTokenData;
-      
-      // Check if token is expired locally first
+
       if (new Date().getTime() >= parsedToken.expiry) {
         console.log("Token expired locally");
         logout();
         return false;
       }
-      
+
       console.log("Validating token with server...");
-      // Validate token with server - use Bearer authorization header
       const response = await fetch(
         `${API_BASE_URL}/User/CheckToken?code=${API_CODE}`,
         {
@@ -147,19 +102,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }
         }
       );
-      
+
       if (!response.ok) {
         console.error("Token validation failed:", response.status, response.statusText);
         logout();
         return false;
       }
-      
+
       const data = await response.json();
       console.log("Server validation response:", data);
-      
+
       if (data && data.IsValid === true) {
         console.log("Token validation successful");
-        // Update local state to ensure consistency
         setIsAuthenticated(true);
         setUsername(parsedToken.username);
         setUserData(parsedToken.userData);
@@ -174,21 +128,94 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       logout();
       return false;
     }
-  };
+  }, [logout]);
+
+  const checkAuth = useCallback((): boolean => {
+    const tokenData = localStorage.getItem("authToken");
+
+    if (!tokenData) {
+      if(isAuthenticated) logout({ navigate: false }); // clear state if it's somehow out of sync
+      return false;
+    }
+
+    try {
+      const parsedToken = JSON.parse(tokenData) as AuthTokenData;
+      const isValid = new Date().getTime() < parsedToken.expiry;
+
+      if (!isValid) {
+        console.log('Token expired locally during checkAuth');
+        logout({ navigate: false }); // Don't navigate here, let components decide
+        return false;
+      }
+
+      setIsAuthenticated(true);
+      setUsername(parsedToken.username);
+      setUserData(parsedToken.userData);
+      return true;
+    } catch (error) {
+      console.error("Error parsing auth token:", error);
+      logout({ navigate: false });
+      return false;
+    }
+  }, [logout, isAuthenticated]);
+  
+  // Initialize auth state on component mount
+  useEffect(() => {
+    console.log('Initializing auth state...');
+    checkAuth();
+    setIsInitialized(true);
+  }, [checkAuth]);
+  
+  // *** NEW: EFFECT FOR PERIODIC TOKEN VALIDATION ***
+  useEffect(() => {
+    // Do nothing if not initialized or not authenticated
+    if (!isInitialized || !isAuthenticated) {
+      return;
+    }
+
+    console.log('User is authenticated, setting up validation timers.');
+
+    // Function to perform the check
+    const performValidation = async () => {
+      console.log("Performing scheduled token validation...");
+      const isValid = await validateToken();
+      if (!isValid) {
+        console.log("Scheduled validation failed, user has been logged out.");
+        toast.error("Sessão expirada. Por favor, faça login novamente.");
+        // The logout() function inside validateToken will handle the redirect.
+      } else {
+        console.log("Scheduled validation successful.");
+      }
+    };
+    
+    // 1. Initial check 5 seconds after authentication is confirmed
+    const initialCheckTimeoutId = setTimeout(performValidation, 5 * 1000); // 5 seconds
+    
+    // 2. Then, set up checks every 15 minutes
+    const intervalCheckId = setInterval(performValidation, 15 * 60 * 1000); // 15 minutes
+
+    // Cleanup function to clear timers when the user logs out or component unmounts
+    return () => {
+      console.log('Clearing validation timers.');
+      clearTimeout(initialCheckTimeoutId);
+      clearInterval(intervalCheckId);
+    };
+    
+  }, [isInitialized, isAuthenticated, validateToken]);
 
   // Check if email exists in the system
   const checkEmail = async (email: string): Promise<boolean> => {
     if (!validateEmail(email)) return false;
-    
+
     try {
       const response = await fetch(
         `${API_BASE_URL}/User/EmailExists?email=${encodeURIComponent(email)}&code=${API_CODE}`
       );
-      
+
       if (!response.ok) {
         throw new Error(`Error checking email: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       return data.Exists === true;
     } catch (error) {
@@ -196,18 +223,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   };
-  
+
   // Get salt for the user
   const getSaltForUser = async (email: string): Promise<string | null> => {
     try {
       const response = await fetch(
         `${API_BASE_URL}/User/GetUserSalt?identifier=${encodeURIComponent(email)}&code=${API_CODE}`
       );
-      
+
       if (!response.ok) {
         throw new Error(`Error getting salt: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       return data.Salt || null;
     } catch (error) {
@@ -215,7 +242,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return null;
     }
   };
-  
+
   // Hash password with salt
   const hashPassword = (password: string, salt: string): string => {
     const combined = password + salt;
@@ -224,7 +251,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const hash = md.digest().bytes();
     return forge.util.encode64(hash);
   };
-  
+
   // Get user details from API using token
   const getUserDetails = async (email: string, token: string): Promise<UserData | null> => {
     try {
@@ -238,11 +265,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`Error getting user details: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       return {
         name: data.Name || null,
@@ -258,8 +285,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return null;
     }
   };
-  
-  // Validate email format
+
+   // Validate email format
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return emailRegex.test(email);
@@ -273,90 +300,67 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     console.log('Starting login process for:', email);
-    
-    // Validate input
+
     if (!validateEmail(email)) {
       toast.error("Formato de email inválido");
       return false;
     }
-    
+
     if (!validatePassword(password)) {
       toast.error("A password deve ter pelo menos 5 caracteres");
       return false;
     }
-    
+
     try {
-      // First check if email exists
       const emailExists = await checkEmail(email);
       if (!emailExists) {
         toast.error("Email não registado no sistema");
         return false;
       }
-      
-      // Get salt for hashing
+
       const salt = await getSaltForUser(email);
       if (!salt) {
         toast.error("Erro ao obter dados de autenticação");
         return false;
       }
-      
-      // Hash the password
+
       const hashedPassword = hashPassword(password, salt);
-      
-      // Attempt login
+
       const loginResponse = await fetch(`${API_BASE_URL}/User/Login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          Email: email,
-          Password: hashedPassword,
-          Code: API_CODE
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Email: email, Password: hashedPassword, Code: API_CODE })
       });
-      
+
       if (!loginResponse.ok) {
-        if (loginResponse.status === 401) {
-          toast.error("Password incorreta");
-        } else {
-          toast.error(`Erro no login: ${loginResponse.statusText}`);
-        }
+        toast.error(loginResponse.status === 401 ? "Password incorreta" : `Erro no login: ${loginResponse.statusText}`);
         return false;
       }
-      
+
       const loginData = await loginResponse.json();
-      
+
       if (loginData && loginData.Token) {
-        // Now get user details using the received token
         const userDetails = await getUserDetails(email, loginData.Token);
         if (!userDetails) {
           toast.error("Não foi possível obter os detalhes do utilizador");
           return false;
         }
-        
-        // Store token with expiry (8 hours)
+
         const tokenData: AuthTokenData = {
           token: loginData.Token,
-          expiry: new Date().getTime() + 8 * 60 * 60 * 1000, // 8 hours
+          expiry: new Date().getTime() + 8 * 60 * 60 * 1000,
           username: userDetails.username || email,
           userData: userDetails
         };
-        
-        console.log('Storing authentication token in localStorage');
+
         localStorage.setItem("authToken", JSON.stringify(tokenData));
-        
-        // Update state immediately after storing token - this is crucial!
-        console.log('Updating auth state after successful login');
         setIsAuthenticated(true);
         setUsername(userDetails.username || email);
         setUserData(userDetails);
-        
-        // Setup periodic validation after successful login
-        setupPeriodicValidation();
-        
-        console.log('Login successful, user authenticated');
+
         toast.success("Login efetuado com sucesso");
+        // Navigate to dashboard on successful login
+        navigate('/configurator'); 
         return true;
       } else {
         toast.error("Falha no login: Resposta da API inválida");
@@ -369,41 +373,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const checkAuth = (): boolean => {
-    const tokenData = localStorage.getItem("authToken");
-    
-    if (!tokenData) {
-      setIsAuthenticated(false);
-      setUsername(null);
-      setUserData(null);
-      return false;
-    }
-    
-    try {
-      const parsedToken = JSON.parse(tokenData) as AuthTokenData;
-      
-      // Only check local expiry - don't validate with server on every check
-      const isValid = new Date().getTime() < parsedToken.expiry;
-      
-      if (!isValid) {
-        console.log('Token expired locally');
-        logout();
-        return false;
-      }
-      
-      // Update state if token is valid
-      setIsAuthenticated(true);
-      setUsername(parsedToken.username);
-      setUserData(parsedToken.userData);
-      return true;
-    } catch (error) {
-      console.error("Error parsing auth token:", error);
-      logout();
-      return false;
-    }
-  };
-
-  // Request password reset
   const requestPasswordReset = async (email: string): Promise<boolean> => {
     if (!validateEmail(email)) {
       toast.error("Formato de email inválido");
@@ -411,7 +380,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      // First check if email exists
       const emailExists = await checkEmail(email);
       if (!emailExists) {
         toast.error("Email não registado no sistema");
@@ -420,12 +388,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const response = await fetch(`${API_BASE_URL}/User/RequestPasswordReset?code=${API_CODE}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          Email: email
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Email: email })
       });
 
       if (!response.ok) {
@@ -440,14 +404,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   };
-
-  // Generate salt
+  
   const generateSalt = (): string => {
     const randomBytes = forge.random.getBytesSync(16);
     return forge.util.encode64(randomBytes);
   };
 
-  // Reset password with code
   const resetPassword = async (code: string, password: string): Promise<boolean> => {
     if (!validatePassword(password)) {
       toast.error("Deve inserir uma password válida com pelo menos 5 caracteres");
@@ -455,28 +417,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      // Generate new salt and hash password
       const salt = generateSalt();
       const hashedPassword = hashPassword(password, salt);
 
       const response = await fetch(`${API_BASE_URL}/User/SetPasswordByResetCode?code=${API_CODE}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          code: code,
-          password: hashedPassword,
-          salt: salt
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, password: hashedPassword, salt })
       });
 
       if (!response.ok) {
-        if (response.status === 400) {
-          toast.error("Código inválido ou expirado");
-        } else {
-          toast.error(`Erro ao alterar password: ${response.statusText}`);
-        }
+        toast.error(response.status === 400 ? "Código inválido ou expirado" : `Erro ao alterar password: ${response.statusText}`);
         return false;
       }
 
@@ -489,23 +440,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (periodicValidationRef.current) {
-        clearInterval(periodicValidationRef.current);
-      }
-    };
-  }, []);
-
   return (
-    <AuthContext.Provider value={{ 
-      isAuthenticated, 
-      username, 
+    <AuthContext.Provider value={{
+      isAuthenticated,
+      username,
       userData,
-      isInitialized, // Provide initialization status
-      login, 
-      logout, 
+      isInitialized,
+      login,
+      logout,
       checkAuth,
       checkEmail,
       validateToken,
@@ -518,3 +460,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+
+// A simple wrapper to provide the navigate function to the context
+// This should wrap your AuthProvider in your App.tsx or main entry file.
+// Example:
+// <BrowserRouter>
+//   <AuthProviderWithNavigation>
+//     <App />
+//   </AuthProviderWithNavigation>
+// </BrowserRouter>
+export const AuthProviderWithNavigation = ({ children }: { children: ReactNode }) => {
+  return (
+      <AuthProvider>{children}</AuthProvider>
+  );
+};
